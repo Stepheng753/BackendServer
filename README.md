@@ -23,4 +23,4 @@ You can place your Flask project code inside this directory and follow the setup
 
 ---
 
-For detailed setup and deployment instructions, refer to [BackendServerSetUp.md](./BackendServerSetUp.md).
+For detailed setup and deployment instructions, refer to [BackendServerSetUp.md](./Setup/BackendServerSetUp.md).
