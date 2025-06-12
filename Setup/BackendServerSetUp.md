@@ -30,11 +30,7 @@ The following diagram and explanation outline the flow of a typical web request 
 **Flow Summary:**
 Client → Hostinger DNS → DDNS → Router (Port Forwarding) → Server (Nginx) → Gunicorn → Flask App
 
-## 1. Nginx Installation and Configuration
-
-Nginx is used as a reverse proxy to direct incoming traffic to a Flask application and to handle SSL termination.
-
-### 1.1. Install Nginx
+## 1. Prepare Your Server
 
 First, update the package list and install Nginx:
 
@@ -43,72 +39,9 @@ sudo apt update
 sudo apt install nginx
 ```
 
-### 1.2. Nginx Server Block Configuration
+---
 
-Create a new Nginx server block configuration file for ```{DOMAIN NAME}```. This configuration handles HTTP to HTTPS redirection and proxies requests to the Flask application running on ```localhost:{INTERNAL_PORT}```.
-
-The configuration file ```/etc/nginx/sites-available/{DOMAIN NAME}``` should contain:
-
-```nginx
-# This block handles HTTP requests on port {HTTP_REDIRECT_PORT}
-# It redirects them to the new HTTPS (port {HTTPS_PORT}) server block.
-# If the ISP blocks port {HTTPS_PORT}, this redirect won't work externally.
-server {
-    listen {HTTP_REDIRECT_PORT}; # Current working HTTP port
-    server_name {DOMAIN NAME};
-
-    # Redirect all HTTP traffic on port {HTTP_REDIRECT_PORT} to HTTPS on default port {HTTPS_PORT}
-    return 301 https://$host$request_uri;
-}
-
-# This is the NEW server block for HTTPS traffic
-server {
-    listen {HTTPS_PORT} ssl;          # Nginx listens for HTTPS connections on standard port {HTTPS_PORT}
-    listen [::]:{HTTPS_PORT} ssl;     # For IPv6, if applicable
-    server_name {DOMAIN NAME};
-
-    # Paths to Let's Encrypt SSL certificate files
-    # These paths are where Certbot saves the certificates after the DNS challenge.
-    ssl_certificate /etc/letsencrypt/live/{DOMAIN NAME}/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/{DOMAIN NAME}/privkey.pem;
-
-    # Recommended SSL settings for security and performance
-    ssl_session_cache shared:SSL:10m;
-    ssl_session_timeout 10m;
-    ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_ciphers 'TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384';
-    ssl_prefer_server_ciphers on;
-
-    # Proxy_pass configuration to the Flask app
-    location / {
-        proxy_pass http://localhost:{INTERNAL_PORT}; # Flask app's internal port
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
-
-        # Add these headers for proper proxying with SSL, they help Flask understand the original request details
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
-}
-```
-
-### 1.3. Enable and Restart Nginx
-
-After creating the configuration file, create a symbolic link to enable it, test the Nginx configuration, and then restart the Nginx service:
-
-```bash
-sudo ln -s /etc/nginx/sites-available/{DOMAIN NAME} /etc/nginx/sites-enabled/
-sudo nginx -t
-sudo systemctl restart nginx
-```
-
-## 2. Dynamic DNS (DDNS) Setup with No-IP
-
-Since most residential internet connections have dynamic IP addresses, a DDNS service is essential to ensure the domain always points to the homeserver's current public IP. No-IP is used for this purpose.
+## 2. Set Up Dynamic DNS (DDNS) with No-IP
 
 ### 2.1. Choose and Set Up a Third-Party DDNS Provider (No-IP)
 
@@ -147,13 +80,15 @@ During installation, the setup will prompt for No-IP account credentials:
 
 The No-IP client will launch after configuration and keep the ```{DDNS HOST NAME}``` hostname updated.
 
+---
+
 ## 3. DNS Configuration (Hostinger)
 
 This step involves configuring the domain's DNS records to point to the homeserver.
 
 ### 3.1. Point the Subdomain to the Home's Public IP
 
-Configure an A record in the Hostinger DNS settings for ```{DOMAIN NAME}```.
+Configure a **CNAME record** in the Hostinger DNS settings for ```{DOMAIN NAME}```.
 
 1. **Find the Public IP:** Find the public IP address by searching "what is my IP" on Google.
 
@@ -161,13 +96,15 @@ Configure an A record in the Hostinger DNS settings for ```{DOMAIN NAME}```.
 
 3. **Navigate to DNS Zone Editor:** Find the DNS settings for the main domain.
 
-4. **Create a New A Record:**
-    - Type: ```A```
+4. **Create a New CNAME Record:**
+    - Type: ```CNAME```
     - Name: ```{SUBDOMAIN}```
     - Points to: ```{DDNS HOST NAME}``` (the DDNS hostname)
     - TTL: Leave as default (or set a low value like 300 seconds if IP changes are anticipated).
 
 Note: Most residential internet connections have a dynamic IP address. Using a DDNS service like ```{DDNS HOST NAME}``` ensures the domain always points to the current public IP.
+
+---
 
 ## 4. Router Port Forwarding
 
@@ -203,11 +140,79 @@ Locate the "Port Forwarding," "Virtual Servers," or "Applications & Gaming" sect
     -   Device/Internal IP: ```{INTERNAL_IP}```
     -   Note: The Nginx configuration's redirect from port ```{HTTP_REDIRECT_PORT}``` to ```443``` means direct external access to port ```80``` might not be necessary if {HTTP_REDIRECT_PORT} is the primary entry point for HTTP before redirection. However, forwarding ```80``` is good practice if any external services might try to access it directly.
 
-## 5. Obtaining SSL Certificates with Certbot (DNS Challenge)
+---
 
-Certbot with the DNS challenge can be used to obtain SSL certificates from Let's Encrypt, which is crucial for securing HTTPS traffic. This method is recommended when the server isn't directly exposed on ports {HTTP_PORT}/{HTTPS_PORT} for validation or when using a wildcard certificate.
+## 5. Nginx Installation and Configuration
 
-### 5.1. Run Certbot with the DNS Challenge Command
+Nginx is used as a reverse proxy to direct incoming traffic to a Flask application and to handle SSL termination.
+
+### 5.1. Nginx Server Block Configuration
+
+Create a new Nginx server block configuration file for ```{DOMAIN NAME}```. This configuration handles HTTP to HTTPS redirection and proxies requests to the Flask application running on ```localhost:{INTERNAL_PORT}```.
+
+The configuration file ```/etc/nginx/sites-available/{DOMAIN NAME}``` should contain:
+
+```nginx
+# This block handles HTTP requests on port {HTTP_REDIRECT_PORT}
+# It redirects them to the new HTTPS (port 443) server block.
+# If the ISP blocks port 443, this redirect won't work externally.
+server {
+    listen {HTTP_REDIRECT_PORT}; # Current working HTTP port
+    server_name {DOMAIN NAME};
+
+    # Redirect all HTTP traffic on port {HTTP_REDIRECT_PORT} to HTTPS on default port 443
+    return 301 https://$host$request_uri;
+}
+
+# This is the NEW server block for HTTPS traffic
+server {
+    listen 443 ssl;          # Nginx listens for HTTPS connections on standard port 443
+    listen [::]:443 ssl;     # For IPv6, if applicable
+    server_name {DOMAIN NAME};
+
+    # Certbot will automatically insert the ssl_certificate and ssl_certificate_key lines here
+
+    # Recommended SSL settings for security and performance
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 10m;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers 'TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384';
+    ssl_prefer_server_ciphers on;
+
+    # Proxy_pass configuration to the Flask app
+    location / {
+        proxy_pass http://localhost:{INTERNAL_PORT}; # Flask app's internal port
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+
+        # Add these headers for proper proxying with SSL, they help Flask understand the original request details
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+```
+
+### 5.2. Enable and Restart Nginx
+
+After creating the configuration file, create a symbolic link to enable it, test the Nginx configuration, and then restart the Nginx service:
+
+```bash
+sudo ln -s /etc/nginx/sites-available/{DOMAIN NAME} /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl restart nginx
+```
+
+---
+
+## 6. Obtaining SSL Certificates with Certbot (DNS Challenge)
+
+Certbot with the DNS challenge can be used to obtain SSL certificates from Let's Encrypt, which is crucial for securing HTTPS traffic. This method is recommended when the server isn't directly exposed on ports 80/443 for validation or when using a wildcard certificate.
+
+### 6.1. Run Certbot with the DNS Challenge Command
 
 On the server, execute the following command to instruct Certbot to use the manual DNS challenge:
 
@@ -217,7 +222,7 @@ sudo certbot certonly --manual --preferred-challenges dns -d {DOMAIN NAME}
 
 Certbot will pause and provide a ```TXT``` record name (e.g., ```_acme-challenge.dev```) and a unique value.
 
-### 5.2. Add the TXT Record to the DNS Management Interface
+### 6.2. Add the TXT Record to the DNS Management Interface
 
 This step is critical for proving ownership of the domain.
 
@@ -232,12 +237,30 @@ This step is critical for proving ownership of the domain.
 
 After adding the TXT record, return to the server and press Enter to allow Certbot to verify the record and issue the SSL certificate.
 
-Following these steps ensures that the homeserver is accessible via a custom domain with secure HTTPS connections, providing a robust backend for applications.
+### 6.3. Certbot Will Automatically Update Your Nginx File
 
-## 6. Setting Up Gunicorn
-Running your Flask application with app.run() is only suitable for development. For production, you need a robust WSGI server like Gunicorn.
+When you use `sudo certbot --nginx -d {DOMAIN NAME}`, Certbot will:
 
-### 6.1. Install Gunicorn
+- Insert the following lines into your HTTPS server block:
+    ```nginx
+    ssl_certificate /etc/letsencrypt/live/{DOMAIN NAME}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/{DOMAIN NAME}/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+    ```
+- Optionally add or update HTTP-to-HTTPS redirects in your HTTP server block.
+- Add comments like `# managed by Certbot` to the lines it manages.
+
+**Certbot will NOT modify your proxy_pass or custom headers. You must keep those in your configuration.**
+
+---
+
+## 7. Setting Up Gunicorn
+
+Running your Flask application with app.run() is only suitable for development. For production, you need a robust WSGI server like Gunicorn, and Nginx must be configured to proxy to Gunicorn's Unix socket.
+
+### 7.1. Install Gunicorn
+
 First, install Gunicorn, preferably within your Flask project's virtual environment.
 
 ```bash
@@ -247,7 +270,8 @@ pip install gunicorn
 deactivate                  # Deactivate when done
 ```
 
-### 6.2. Modify Your Flask App for Gunicorn
+### 7.2. Modify Your Flask App for Gunicorn
+
 Gunicorn will directly import your Flask application instance. You should remove or comment out the ```app.run()``` line that you use for local development.
 
 Example ```app.py``` modification:
@@ -265,7 +289,8 @@ def hello_world():
 #    app.run(host="0.0.0.0", port={INTERNAL_PORT}, debug=True)
 ```
 
-### 6.3. Create a Systemd Service File for Gunicorn
+### 7.3. Create a Systemd Service File for Gunicorn
+
 This file tells systemd how to run and manage your Gunicorn process, ensuring it starts automatically on boot and recovers if it crashes.
 
 1. **Create the service file:**
@@ -307,31 +332,33 @@ Restart=always
 WantedBy=multi-user.target
 ```
 
-### 6.4. Enable and Start the Gunicorn Service
+### 7.4. Enable and Start the Gunicorn Service
+
 After saving the service file:
 
-1. **Reload the systemd daemon: This makes systemd aware of your new or modified service file.**
+1. **Reload the systemd daemon:**
 ```bash
 sudo systemctl daemon-reload
 ```
 
-2. **Enable the service:** This ensures Gunicorn starts automatically every time your server boots.
+2. **Enable the service:**
 ```bash
 sudo systemctl enable my_flask_api.service
 ```
 
-3. **Start the Gunicorn service:** Get your Gunicorn application running immediately.
+3. **Start the Gunicorn service:**
 ```bash
 sudo systemctl start my_flask_api.service
 ```
 
-4. **Check the status:** Verify that Gunicorn is running correctly.
+4. **Check the status:**
 ```bash
 sudo systemctl status my_flask_api.service
 ```
 
-## 7. Modifying Nginx for Gunicorn Proxy
-We will need to point Nginx to the Gunicorn socket instead of the Flask development server. Modify the Nginx server block configuration for ```{DOMAIN NAME}``` to use the Unix socket created by Gunicorn.
+### 7.5. Modify Nginx to Proxy to Gunicorn
+
+Edit your Nginx server block configuration file to use the Unix socket created by Gunicorn.
 
 1. **Edit your Nginx server block configuration file:**
 ```bash
@@ -351,6 +378,8 @@ location / {
 sudo nginx -t
 sudo systemctl reload nginx
 ```
+
+---
 
 ## 8. Testing the Setup
 
@@ -383,6 +412,8 @@ Open a web browser and navigate to `https://{DOMAIN NAME}`. You should see the F
 ### 8.4. Verify SSL Certificate
 
 You can verify the SSL certificate by clicking on the padlock icon in the browser's address bar. Ensure that the certificate is issued by Let's Encrypt and is valid.
+
+---
 
 ## 9. Troubleshooting Common Issues
 
@@ -419,9 +450,13 @@ If you cannot access the server from outside your local network, ensure that:
 - The router's firewall is not blocking the forwarded ports.
 - The server's firewall (if enabled) allows incoming traffic on the relevant ports.
 
+---
+
 ## 10. Conclusion
 
 Setting up a homeserver as a backend server involves configuring Nginx for reverse proxying and SSL, setting up Dynamic DNS with No-IP, and obtaining SSL certificates using Certbot. By following this guide, you can ensure that your homeserver is accessible securely over the internet, providing a reliable backend for your applications.
+
+---
 
 ## 11. Additional Resources
 
@@ -431,8 +466,12 @@ Setting up a homeserver as a backend server involves configuring Nginx for rever
 - [Let's Encrypt Documentation](https://letsencrypt.org/docs/)
 - [Hostinger DNS Management](https://www.hostinger.com/tutorials/how-to-manage-dns-records)
 
+---
+
 ## 12. Maintenance and Updates
 
 Regularly check for updates to Nginx, Certbot, and the No-IP client to ensure security and functionality. Monitor the server logs for any issues and renew SSL certificates as needed (Certbot can automate this with a cron job).
+
+---
 
 **Note:** Replace all placeholders such as `{DOMAIN NAME}`, `{INTERNAL_PORT}`, `{INTERNAL_IP}`, `{DDNS HOST NAME}`, `{SUBDOMAIN}`, and `your_username` with actual values before applying these instructions.
