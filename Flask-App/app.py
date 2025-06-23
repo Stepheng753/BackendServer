@@ -2,7 +2,7 @@
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from WeddingInvitations.rsvp import *
+from WeddingInvitations.v_csv.rsvp import *
 
 app = Flask(__name__)
 CORS(app)
@@ -24,5 +24,5 @@ app.add_url_rule("/", "hello_world", hello_world)
 app.add_url_rule("/rsvp", "rsvp", rsvp, methods=["POST"])
 
 
-# if __name__ == '__main__':
-#     app.run(host="localhost", port=7530)
+if __name__ == '__main__':
+    app.run(host="localhost", port=7530)

@@ -4,3 +4,4 @@ venv
 *.pyc
 *.csv
 *.sh
+Flask-App/WeddingInvitations/v_gs/*.json
