@@ -3,3 +3,4 @@ domainPortSetUp.json
 venv
 *.pyc
 *.csv
+*.sh
