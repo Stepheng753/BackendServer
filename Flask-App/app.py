@@ -24,5 +24,5 @@ app.add_url_rule("/", "hello_world", hello_world)
 app.add_url_rule("/rsvp", "rsvp", rsvp, methods=["POST"])
 
 
-if __name__ == '__main__':
-    app.run(host="localhost", port=7530)
+# if __name__ == '__main__':
+#     app.run(host="localhost", port=7530)
