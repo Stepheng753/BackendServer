@@ -2,7 +2,7 @@
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from WeddingInvitations.v_csv.rsvp import *
+from WeddingInvitations.rsvp import *
 
 app = Flask(__name__)
 CORS(app)
