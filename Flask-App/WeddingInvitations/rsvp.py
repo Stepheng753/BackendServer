@@ -8,15 +8,25 @@ def get_field(data, key, default):
     value = data.get(key)
     if value is None or str(value).strip() == "":
         return default
-    return value
+    return str(value).strip()
+
+def title_case_name(name):
+    return str(name).strip().title()
+
+def capitalize_email(email):
+    if not email or '@' not in email:
+        return str(email).strip()
+    local, domain = email.split('@', 1)
+    domain = domain[0].upper() + domain[1:] if domain else domain
+    return local.strip().capitalize() + '@' + domain.strip()
 
 def rsvp():
     invitee_data = request.form
 
-    full_name = get_field(invitee_data, 'full-name', 'Full Name Not Provided')
-    email = get_field(invitee_data, 'email', 'Email Not Provided')
-    phone = get_field(invitee_data, 'phone-num', 'Phone Number Not Provided')
-    notes = get_field(invitee_data, 'notes', 'No Notes Provided')
+    full_name = title_case_name(get_field(invitee_data, 'full-name', 'Full Name Not Provided'))
+    email = capitalize_email(get_field(invitee_data, 'email', 'Email Not Provided'))
+    phone = str(get_field(invitee_data, 'phone-num', 'Phone Number Not Provided')).strip()
+    notes = str(get_field(invitee_data, 'notes', 'No Notes Provided')).strip()
 
     try:
         num_guests = int(get_field(invitee_data, 'num-guests', 0))
@@ -24,13 +34,13 @@ def rsvp():
         num_guests = 0
 
     name_guests = [
-        get_field(invitee_data, f'guest-{i+1}', f'Guest {i+1} Not Provided')
+        title_case_name(get_field(invitee_data, f'guest-{i+1}', f'Guest {i+1} Not Provided'))
         for i in range(num_guests)
     ]
 
     row_invitee_data = [
         full_name, email, phone, notes, str(num_guests)
-    ] + name_guests
+    ] + [g.strip() for g in name_guests]
 
     write_to_google_sheet(row_invitee_data)
     write_to_csv(row_invitee_data)
@@ -48,8 +58,8 @@ def write_to_csv(row_invitee_data):
         with open(csv_path, 'r', newline='') as csvfile:
             reader = csv.reader(csvfile)
             for row in reader:
-                # If found, only write new row
-                if row and row[0] == full_name:
+                # Case-insensitive comparison for full name
+                if row and row[0].strip().lower() == full_name.strip().lower():
                     rows.append(row_invitee_data)
                     found = True
                 else:
@@ -75,7 +85,12 @@ def write_to_google_sheet(row_invitee_data):
     sheet = workbook.worksheet('API Calls')
 
     full_name = row_invitee_data[0]
-    cell = sheet.find(full_name)
+    cell = None
+    try:
+        cell = next((c for c in sheet.findall(full_name) if c.value.strip().lower() == full_name.strip().lower()), None)
+    except Exception:
+        pass
+
     if cell:
         # Overwrite the entire row with new data
         row_number = cell.row
