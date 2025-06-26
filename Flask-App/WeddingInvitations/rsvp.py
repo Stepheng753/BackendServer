@@ -2,7 +2,9 @@ from flask import request, jsonify
 import csv
 import gspread
 from google.oauth2.service_account import Credentials
-scopes = ["https://www.googleapis.com/auth/spreadsheets"]
+import pytz
+import datetime
+
 
 def get_field(data, key, default):
     value = data.get(key)
@@ -10,8 +12,10 @@ def get_field(data, key, default):
         return default
     return str(value).strip()
 
+
 def title_case_name(name):
     return str(name).strip().title()
+
 
 def capitalize_email(email):
     if not email or '@' not in email:
@@ -19,6 +23,7 @@ def capitalize_email(email):
     local, domain = email.split('@', 1)
     domain = domain[0].upper() + domain[1:] if domain else domain
     return local.strip().capitalize() + '@' + domain.strip()
+
 
 def rsvp():
     invitee_data = request.form
@@ -38,7 +43,10 @@ def rsvp():
         for i in range(num_guests)
     ]
 
-    row_invitee_data = [
+    now_pst = datetime.datetime.now(pytz.timezone('US/Pacific'))
+    timestamp = now_pst.strftime("%d/%m/%y %I:%M:%S %p PST")
+
+    row_invitee_data = [timestamp] + [
         full_name, email, phone, notes, str(num_guests)
     ] + [g.strip() for g in name_guests]
 
@@ -77,6 +85,7 @@ def write_to_csv(row_invitee_data):
 
 
 def write_to_google_sheet(row_invitee_data):
+    scopes = ["https://www.googleapis.com/auth/spreadsheets"]
     creds = Credentials.from_service_account_file("WeddingInvitations/credentials.json", scopes=scopes)
     client = gspread.authorize(creds)
 
