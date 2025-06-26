@@ -44,7 +44,7 @@ def rsvp():
     ]
 
     now_pst = datetime.datetime.now(pytz.timezone('US/Pacific'))
-    timestamp = now_pst.strftime("%d/%m/%y %I:%M:%S %p PST")
+    timestamp = now_pst.strftime("%d/%m/%Y %I:%M:%S %p PST")
 
     row_invitee_data = [timestamp] + [
         full_name, email, phone, notes, str(num_guests)
