@@ -25,4 +25,4 @@ app.add_url_rule("/rsvp", "rsvp", rsvp, methods=["POST"])
 
 
 # if __name__ == '__main__':
-#     app.run(host="localhost", port=7530)
+# 	app.run(host="0.0.0.0", port=5000)
