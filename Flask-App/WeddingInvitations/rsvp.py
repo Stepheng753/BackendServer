@@ -58,7 +58,7 @@ def rsvp():
 
 def write_to_csv(row_invitee_data):
     csv_path = 'WeddingInvitations/rsvp.csv'
-    full_name = row_invitee_data[0]
+    full_name = row_invitee_data[1]
     rows = []
     found = False
 
@@ -93,7 +93,7 @@ def write_to_google_sheet(row_invitee_data):
     workbook = client.open_by_key(sheet_id)
     sheet = workbook.worksheet('API Calls')
 
-    full_name = row_invitee_data[0]
+    full_name = row_invitee_data[1]
     cell = None
     try:
         cell = next((c for c in sheet.findall(full_name) if c.value.strip().lower() == full_name.strip().lower()), None)
