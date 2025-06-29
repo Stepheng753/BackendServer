@@ -38,7 +38,7 @@ def rsvp():
     num_guests = int(get_field(invitee_data, 'num-guests', 0)) if accepted else ''
 
     name_guests = []
-    if type(num_guests) is int or num_guests >= 0:
+    if type(num_guests) is int and num_guests >= 0:
         name_guests = [
             title_case_name(get_field(invitee_data, f'guest-{i+1}', f'Not Provided'))
             for i in range(num_guests)
