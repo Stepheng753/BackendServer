@@ -34,8 +34,8 @@ def rsvp():
     email = capitalize_email(get_field(invitee_data, 'email', 'Not Provided'))
     phone = str(get_field(invitee_data, 'phone-num', 'Not Provided')).strip()
     notes = str(get_field(invitee_data, 'notes', 'Not Provided')).strip()
-    wedding_type = get_field(invitee_data, 'wedding-type', 'Not Provided')
-    num_guests = int(get_field(invitee_data, 'num-guests', 0))
+    wedding_type = get_field(invitee_data, 'wedding-type', '')
+    num_guests = int(get_field(invitee_data, 'num-guests', 0)) if accepted else ''
 
     name_guests = [
         title_case_name(get_field(invitee_data, f'guest-{i+1}', f'Not Provided'))
