@@ -28,26 +28,22 @@ def capitalize_email(email):
 def rsvp():
     invitee_data = request.form
 
-    full_name = title_case_name(get_field(invitee_data, 'full-name', 'Full Name Not Provided'))
-    email = capitalize_email(get_field(invitee_data, 'email', 'Email Not Provided'))
-    phone = str(get_field(invitee_data, 'phone-num', 'Phone Number Not Provided')).strip()
-    notes = str(get_field(invitee_data, 'notes', 'No Notes Provided')).strip()
-
-    try:
-        num_guests = int(get_field(invitee_data, 'num-guests', 0))
-    except ValueError:
-        num_guests = 0
+    timestamp = datetime.datetime.now(pytz.timezone('US/Pacific')).strftime("%d/%m/%Y %I:%M:%S %p PST")
+    accepted = True if int(get_field(invitee_data, 'accepted', '')) == 1 else False
+    full_name = title_case_name(get_field(invitee_data, 'full-name', 'Not Provided'))
+    email = capitalize_email(get_field(invitee_data, 'email', 'Not Provided'))
+    phone = str(get_field(invitee_data, 'phone-num', 'Not Provided')).strip()
+    notes = str(get_field(invitee_data, 'notes', 'Not Provided')).strip()
+    wedding_type = get_field(invitee_data, 'wedding-type', 'Not Provided')
+    num_guests = int(get_field(invitee_data, 'num-guests', 0))
 
     name_guests = [
-        title_case_name(get_field(invitee_data, f'guest-{i+1}', f'Guest {i+1} Not Provided'))
+        title_case_name(get_field(invitee_data, f'guest-{i+1}', f'Not Provided'))
         for i in range(num_guests)
     ]
 
-    now_pst = datetime.datetime.now(pytz.timezone('US/Pacific'))
-    timestamp = now_pst.strftime("%d/%m/%Y %I:%M:%S %p PST")
-
-    row_invitee_data = [timestamp] + [
-        full_name, email, phone, notes, str(num_guests)
+    row_invitee_data = [
+        timestamp, accepted, full_name, email, phone, notes, wedding_type, str(num_guests)
     ] + [g.strip() for g in name_guests]
 
     write_to_google_sheet(row_invitee_data)
@@ -58,7 +54,7 @@ def rsvp():
 
 def write_to_csv(row_invitee_data):
     csv_path = 'WeddingInvitations/rsvp.csv'
-    full_name = row_invitee_data[1]
+    full_name = row_invitee_data[2]
     rows = []
     found = False
 
@@ -93,7 +89,7 @@ def write_to_google_sheet(row_invitee_data):
     workbook = client.open_by_key(sheet_id)
     sheet = workbook.worksheet('API Calls')
 
-    full_name = row_invitee_data[1]
+    full_name = row_invitee_data[2]
     cell = None
     try:
         cell = next((c for c in sheet.findall(full_name) if c.value.strip().lower() == full_name.strip().lower()), None)
