@@ -4,6 +4,7 @@ import gspread
 from google.oauth2.service_account import Credentials
 import pytz
 import datetime
+import re
 
 
 def get_field(data, key, default):
@@ -25,6 +26,38 @@ def capitalize_email(email):
     return local.strip().capitalize() + '@' + domain.strip()
 
 
+def format_phone_number(phone):
+    if phone is 'Not Provided':
+        return phone
+
+    phone = phone.strip()
+    phone = re.sub(r'[()\-\s]', '', phone)
+    if phone.startswith('+1'):
+        digits = phone[2:]
+        if len(digits) == 10:
+            return f'+1 ({digits[:3]}) {digits[3:6]}-{digits[6:]}'
+        else:
+            return '+1' + digits
+    elif phone.startswith('+84'):
+        digits = phone[3:]
+        if len(digits) == 9:
+            return f'+84 {digits[:3]}-{digits[3:6]}-{digits[6:]}'
+        else:
+            return '+84' + digits
+    elif phone.startswith('0'):
+        digits = phone
+        if len(digits) == 10:
+            return f'{digits[:4]}-{digits[4:7]}-{digits[7:]}'
+        else:
+            return digits
+    elif len(phone) == 10:
+        return f'+1 ({phone[:3]}) {phone[3:6]}-{phone[6:]}'
+    else:
+        # Remove all non-digit characters
+        digits = re.sub(r'\D', '', phone)
+        return digits
+
+
 def rsvp():
     invitee_data = request.form
 
@@ -32,7 +65,7 @@ def rsvp():
     accepted = True if int(get_field(invitee_data, 'accepted', '')) == 1 else False
     full_name = title_case_name(get_field(invitee_data, 'full-name', 'Not Provided'))
     email = capitalize_email(get_field(invitee_data, 'email', 'Not Provided'))
-    phone = str(get_field(invitee_data, 'phone-num', 'Not Provided')).strip()
+    phone = format_phone_number(get_field(invitee_data, 'phone-num', 'Not Provided'))
     notes = str(get_field(invitee_data, 'notes', 'Not Provided')).strip()
     wedding_type = get_field(invitee_data, 'wedding-type', '')
     num_guests = int(get_field(invitee_data, 'num-guests', 0)) if accepted else ''
