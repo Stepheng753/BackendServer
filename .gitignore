@@ -1,7 +1,8 @@
 domainPortSetUp.json
 *.so
-venv
+.venv
 *.pyc
 *.csv
 *.sh
 *credentials.json
+.env

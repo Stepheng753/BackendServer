@@ -27,7 +27,7 @@ def capitalize_email(email):
 
 
 def format_phone_number(phone):
-    if phone is 'Not Provided':
+    if phone == 'Not Provided':
         return phone
 
     phone = phone.strip()
@@ -132,8 +132,8 @@ def write_to_google_sheet(row_invitee_data):
         pass
 
     if cell:
-        # Overwrite the entire row with new data
         row_number = cell.row
-        sheet.update(f'A{row_number}', [row_invitee_data])
+        padded_row = row_invitee_data + [''] * (18 - len(row_invitee_data))
+        sheet.update(f'A{row_number}:R{row_number}', [padded_row[:18]])
     else:
         sheet.append_row(row_invitee_data)
