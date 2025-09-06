@@ -17,18 +17,16 @@ def before_request():
     if request.method.lower() == 'options':
         return jsonify(headers), 200
 
-
 def hello_world():
-    return 'Welcome to my Server!'
+    return "Welcome to Stephen Giang's Server!"
+
+
+
+app.add_url_rule("/", "hello_world", hello_world)
+
+app.add_url_rule("/rsvp", "rsvp", rsvp, methods=["POST"])
 
 @app.route("/scrape-nextdoor", methods=["GET"])
 async def scrape_nextdoor():
     await scrape_nextdoor_posts()
     return jsonify({"status": "success"})
-
-app.add_url_rule("/", "hello_world", hello_world)
-app.add_url_rule("/rsvp", "rsvp", rsvp, methods=["POST"])
-
-
-if __name__ == "__main__":
-    app.run(debug=True)
