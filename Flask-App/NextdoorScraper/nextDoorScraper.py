@@ -1,12 +1,12 @@
+import os
+from dotenv import load_dotenv
+import asyncio
 from playwright.async_api import async_playwright
 import smtplib
 from email.mime.text import MIMEText
-from dotenv import load_dotenv
-import os
-import asyncio
 
-from config import url, selectors
-from helpers import (
+from .config import url, selectors
+from .helpers import (
     click_button,
     fill_text_box,
     get_keywords,
@@ -23,8 +23,8 @@ load_dotenv()
 async def login_to_nextdoor(page, email, password):
     await page.goto(f"{url}/login/")
 
-    await fill_text_box(page, "textBox", "Email", email)
-    await fill_text_box(page, "textBox", "Password", password)
+    await fill_text_box(page, "textbox", "Email", email)
+    await fill_text_box(page, "textbox", "Password", password)
     await click_button(page, "button", "Log in")
 
 
@@ -84,23 +84,28 @@ async def extract_post_data(page):
     return filtered_posts
 
 
+def get_absolute_path(relative_path):
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    return os.path.join(base_dir, relative_path)
+
+
 async def write_files(filtered_posts):
-    old_json = await read_from_file(os.getenv("JSON_FILE_PATH")) or "[]"
-    old_txt = await read_from_file(os.getenv("TXT_FILE_PATH")) or ""
+    old_json = await read_from_file(get_absolute_path(os.getenv("JSON_FILE_PATH"))) or "[]"
+    old_txt = await read_from_file(get_absolute_path(os.getenv("TXT_FILE_PATH"))) or ""
 
     posts_json = convert_array_to_json(filtered_posts)
     posts_txt = convert_json_to_txt(posts_json)
-    await write_to_file(posts_json, os.getenv("JSON_FILE_PATH"))
-    await write_to_file(posts_txt, os.getenv("TXT_FILE_PATH"))
+    await write_to_file(posts_json, get_absolute_path(os.getenv("JSON_FILE_PATH")))
+    await write_to_file(posts_txt, get_absolute_path(os.getenv("TXT_FILE_PATH")))
 
     if old_json:
         diff_posts_json = filter_diff_json(posts_json, old_json)
         diff_posts_txt = convert_json_to_txt(diff_posts_json)
-        await write_to_file(diff_posts_json, os.getenv("DIFF_JSON_FILE_PATH"))
-        await write_to_file(diff_posts_txt, os.getenv("DIFF_TXT_FILE_PATH"))
+        await write_to_file(diff_posts_json, get_absolute_path(os.getenv("DIFF_JSON_FILE_PATH")))
+        await write_to_file(diff_posts_txt, get_absolute_path(os.getenv("DIFF_TXT_FILE_PATH")))
 
-        await write_to_file(old_json, os.getenv("PREV_JSON_FILE_PATH"))
-        await write_to_file(old_txt, os.getenv("PREV_TXT_FILE_PATH"))
+        await write_to_file(old_json, get_absolute_path(os.getenv("PREV_JSON_FILE_PATH")))
+        await write_to_file(old_txt, get_absolute_path(os.getenv("PREV_TXT_FILE_PATH")))
 
         return convert_json_to_txt(diff_posts_json) if len(eval(diff_posts_json)) > 0 else ""
     return posts_txt
@@ -128,30 +133,35 @@ async def send_nextdoor_update_email(text, subject="Nextdoor Posts"):
 
 async def log_run_time():
     log_time = get_timestamp()
-    json_file = await read_from_file(os.getenv("JSON_FILE_PATH"))
+    json_file = await read_from_file(get_absolute_path(os.getenv("JSON_FILE_PATH")))
     num_posts = len(eval(json_file)) if json_file else 0
 
     log_message = f"NextDoor Scraper : {log_time} : {num_posts} Posts\n"
-    await write_to_file(log_message, os.getenv("LOG_FILE_PATH"), append=True)
+    await write_to_file(log_message, get_absolute_path(os.getenv("LOG_FILE_PATH")), append=True)
 
 
-async def srape_nextdoor_posts():
+async def scrape_nextdoor_posts():
     all_filtered_posts = []
 
     try:
         accounts = get_users_pass()
         async with async_playwright() as p:
             for account in accounts:
+                browser = None
                 try:
                     browser = await p.chromium.launch(headless=True)
                     page = await browser.new_page()
+                    try:
+                        await login_to_nextdoor(page, account["email"], account["password"])
+                    except Exception as login_error:
+                        print(f"Login failed for account {account['email']}: {login_error}")
+                        if browser:
+                            await browser.close()
+                        continue
 
-                    await login_to_nextdoor(page, account["email"], account["password"])
                     await scroll_to_load_posts(page, 20)
-
                     filtered_posts = await extract_post_data(page)
                     all_filtered_posts.extend(filtered_posts)
-
                     await page.wait_for_timeout(2000)
                 except Exception as error:
                     print(f"Error processing account {account['email']}:", error)

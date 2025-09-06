@@ -3,7 +3,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from WeddingInvitations.rsvp import rsvp
-from NextdoorScraper.nextDoorScraper import srape_nextdoor_posts
+from NextdoorScraper.nextDoorScraper import scrape_nextdoor_posts
 
 app = Flask(__name__)
 CORS(app)
@@ -21,5 +21,14 @@ def before_request():
 def hello_world():
     return 'Welcome to my Server!'
 
+@app.route("/scrape-nextdoor", methods=["GET"])
+async def scrape_nextdoor():
+    await scrape_nextdoor_posts()
+    return jsonify({"status": "success"})
+
 app.add_url_rule("/", "hello_world", hello_world)
 app.add_url_rule("/rsvp", "rsvp", rsvp, methods=["POST"])
+
+
+if __name__ == "__main__":
+    app.run(debug=True)

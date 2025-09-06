@@ -1,15 +1,16 @@
-from datetime import datetime
+import os
 import json
-from config import line_break
+from datetime import datetime
+from .config import line_break
 
 async def click_button(page, role, name, timeout=30000):
-    button = await page.get_by_role(role, name=name)
+    button = page.get_by_role(role, name=name)
     await button.wait_for(state='visible', timeout=timeout)
     await button.click()
 
 
 async def fill_text_box(page, role, name, fill_text, timeout=30000):
-    text_box = await page.get_by_role(role, name=name)
+    text_box = page.get_by_role(role, name=name)
     await text_box.wait_for(state='visible', timeout=timeout)
     await text_box.fill(fill_text)
 
@@ -19,7 +20,9 @@ def get_timestamp():
 
 
 def get_keywords(text):
-    with open('keywords.json', 'r') as f:
+    keywords_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'keywords.json')
+
+    with open(keywords_path, 'r') as f:
         keywords_json = json.load(f)
 
     keywords = keywords_json.get('keywords', [])

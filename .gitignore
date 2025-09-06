@@ -6,3 +6,14 @@ domainPortSetUp.json
 *.sh
 *credentials.json
 .env
+Flask-App/NextdoorScraper/data/curr/*
+!Flask-App/NextdoorScraper/data/curr/.gitkeep
+Flask-App/NextdoorScraper/data/diff/*
+!Flask-App/NextdoorScraper/data/diff/.gitkeep
+Flask-App/NextdoorScraper/data/prev/*
+!Flask-App/NextdoorScraper/data/prev/.gitkeep
+Flask-App/NextdoorScraper/data/logs/*
+!Flask-App/NextdoorScraper/data/logs/.gitkeep
+
+/data/*
+!/data/.gitkeep
