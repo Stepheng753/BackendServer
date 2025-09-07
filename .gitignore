@@ -17,3 +17,6 @@ Flask-App/NextdoorScraper/data/logs/*
 
 /data/*
 !/data/.gitkeep
+
+Flask-App/TutoringCalc/keys/*
+!/Flask-App/TutoringCalc/keys/.gitkeep

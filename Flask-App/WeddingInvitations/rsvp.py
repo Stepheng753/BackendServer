@@ -58,35 +58,6 @@ def format_phone_number(phone):
         return digits
 
 
-def rsvp():
-    invitee_data = request.form
-
-    timestamp = datetime.datetime.now(pytz.timezone('US/Pacific')).strftime("%d/%m/%Y %I:%M:%S %p PST")
-    accepted = True if int(get_field(invitee_data, 'accepted', '')) == 1 else False
-    full_name = title_case_name(get_field(invitee_data, 'full-name', 'Not Provided'))
-    email = capitalize_email(get_field(invitee_data, 'email', 'Not Provided'))
-    phone = format_phone_number(get_field(invitee_data, 'phone-num', 'Not Provided'))
-    notes = str(get_field(invitee_data, 'notes', 'Not Provided')).strip()
-    wedding_type = get_field(invitee_data, 'wedding-type', '')
-    num_guests = int(get_field(invitee_data, 'num-guests', 0)) if accepted else ''
-
-    name_guests = []
-    if type(num_guests) is int and num_guests >= 0:
-        name_guests = [
-            title_case_name(get_field(invitee_data, f'guest-{i+1}', f'Not Provided'))
-            for i in range(num_guests)
-        ]
-
-    row_invitee_data = [
-        timestamp, accepted, full_name, email, phone, notes, wedding_type, str(num_guests)
-    ] + [g.strip() for g in name_guests]
-
-    write_to_google_sheet(row_invitee_data)
-    write_to_csv(row_invitee_data)
-
-    return jsonify({'status': 'SUCCESS', 'message': 'RSVP received'})
-
-
 def write_to_csv(row_invitee_data):
     csv_path = 'WeddingInvitations/rsvp.csv'
     full_name = row_invitee_data[2]
@@ -137,3 +108,32 @@ def write_to_google_sheet(row_invitee_data):
         sheet.update(f'A{row_number}:R{row_number}', [padded_row[:18]])
     else:
         sheet.append_row(row_invitee_data)
+
+
+def rsvp_endpoint():
+    invitee_data = request.form
+
+    timestamp = datetime.datetime.now(pytz.timezone('US/Pacific')).strftime("%d/%m/%Y %I:%M:%S %p PST")
+    accepted = True if int(get_field(invitee_data, 'accepted', '')) == 1 else False
+    full_name = title_case_name(get_field(invitee_data, 'full-name', 'Not Provided'))
+    email = capitalize_email(get_field(invitee_data, 'email', 'Not Provided'))
+    phone = format_phone_number(get_field(invitee_data, 'phone-num', 'Not Provided'))
+    notes = str(get_field(invitee_data, 'notes', 'Not Provided')).strip()
+    wedding_type = get_field(invitee_data, 'wedding-type', '')
+    num_guests = int(get_field(invitee_data, 'num-guests', 0)) if accepted else ''
+
+    name_guests = []
+    if type(num_guests) is int and num_guests >= 0:
+        name_guests = [
+            title_case_name(get_field(invitee_data, f'guest-{i+1}', f'Not Provided'))
+            for i in range(num_guests)
+        ]
+
+    row_invitee_data = [
+        timestamp, accepted, full_name, email, phone, notes, wedding_type, str(num_guests)
+    ] + [g.strip() for g in name_guests]
+
+    write_to_google_sheet(row_invitee_data)
+    write_to_csv(row_invitee_data)
+
+    return jsonify({'status': 'SUCCESS', 'message': 'RSVP received'})

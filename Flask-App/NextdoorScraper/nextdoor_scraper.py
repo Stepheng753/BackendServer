@@ -1,5 +1,6 @@
 import os
 from dotenv import load_dotenv
+from flask import jsonify
 import asyncio
 from playwright.async_api import async_playwright
 import smtplib
@@ -174,3 +175,11 @@ async def scrape_nextdoor_posts():
         await log_run_time()
     except Exception as error:
         await send_nextdoor_update_email(str(error), "Nextdoor Scraper Error")
+
+
+async def scrape_nextdoor_posts_endpoint():
+    try:
+        await scrape_nextdoor_posts()
+        return jsonify({"status": "success"})
+    except Exception as error:
+        return jsonify({"status": "error", "message": str(error)}), 500
