@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>{{ title }}</title>
+		<link rel="icon" href="{{ favicon_url }}" type="image/png" />
+		<link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}" />
+	</head>
+	<body>
+		<div class="container">
+			<h1>{{ title }}</h1>
+			<img src="{{ image_url }}" alt="Flash Logo" class="logo" />
+			<h2>Available Endpoints</h2>
+			<ul>
+				{% for endpoint in endpoints %}
+				<li>
+					<a href="{{ endpoint.url }}">{{ endpoint.rule }}</a>
+					<span class="methods">{{ endpoint.methods }}</span>
+				</li>
+				{% endfor %}
+			</ul>
+		</div>
+	</body>
+</html>

@@ -41,6 +41,6 @@ def calc_tutoring_pay_endpoint():
     search_date = request.args.get('search_date')
     try:
         calc_tutoring_pay(search_date)
-        return jsonify({"status": "success", "message": "Tutoring pay calculated successfully."})
+        return jsonify({"status": "success", "message": "Tutoring pay calculated successfully."}), 200
     except ValueError as e:
         return jsonify({"status": "error", "message": str(e)}), 500

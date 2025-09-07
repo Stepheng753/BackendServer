@@ -2,17 +2,17 @@
 
 from flask import Flask
 from flask_cors import CORS
+from index.index import render_endpoints
 from WeddingInvitations.rsvp import rsvp_endpoint
 from NextdoorScraper.nextdoor_scraper import scrape_nextdoor_posts_endpoint
 from TutoringCalc.calc_pay import calc_tutoring_pay_endpoint
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='index', static_folder='static')
 CORS(app)
 
-def hello_world():
-    return "Welcome to Stephen Giang's Server!"
-
-app.add_url_rule("/", "hello_world", hello_world)
+@app.route("/")
+def index():
+    return render_endpoints(app)
 
 app.add_url_rule("/rsvp", "rsvp", rsvp_endpoint, methods=["POST"])
 
