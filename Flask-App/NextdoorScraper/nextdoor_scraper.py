@@ -90,6 +90,17 @@ def get_absolute_path(relative_path):
     return os.path.join(base_dir, relative_path)
 
 
+def removeDuplicates(filtered_posts):
+    seen = set()
+    unique_posts = []
+    for post in filtered_posts:
+        identifier = (post['name'], post['text'], post['href'])
+        if identifier not in seen:
+            seen.add(identifier)
+            unique_posts.append(post)
+    return unique_posts
+
+
 async def write_files(filtered_posts):
     old_json = await read_from_file(get_absolute_path(os.getenv("JSON_FILE_PATH"))) or "[]"
     old_txt = await read_from_file(get_absolute_path(os.getenv("TXT_FILE_PATH"))) or ""
@@ -170,6 +181,7 @@ async def scrape_nextdoor_posts():
                     if browser:
                         await browser.close()
 
+        all_filtered_posts = removeDuplicates(all_filtered_posts)
         email_txt = await write_files(all_filtered_posts)
         await send_nextdoor_update_email(email_txt, "Nextdoor Posts - Multiple Accounts")
         await log_run_time()
