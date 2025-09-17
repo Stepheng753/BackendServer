@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from flask import jsonify
+from flask import jsonify, send_file
 import asyncio
 from playwright.async_api import async_playwright
 import smtplib
@@ -187,6 +187,16 @@ async def scrape_nextdoor_posts():
         await log_run_time()
     except Exception as error:
         await send_nextdoor_update_email(str(error), "Nextdoor Scraper Error")
+
+
+def get_log_file():
+    try:
+        log_path = get_absolute_path(os.getenv("LOG_FILE_PATH"))
+        return send_file(log_path, mimetype='text/plain')
+    except FileNotFoundError:
+        return jsonify({"status": "error", "message": "Log file not found."}), 404
+    except Exception as error:
+        return jsonify({"status": "error", "message": str(error)}), 500
 
 
 async def scrape_nextdoor_posts_endpoint():
