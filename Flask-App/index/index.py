@@ -14,7 +14,7 @@ def render_endpoints(app):
     # Iterate over all registered URL rules in the application
     for rule in sorted(app.url_map.iter_rules(), key=lambda r: r.rule):
         # We don't need to show the static endpoint
-        if rule.endpoint != 'static':
+        if rule.endpoint != 'static' and rule.endpoint != 'index':
             # Get the HTTP methods allowed for the endpoint, excluding HEAD and OPTIONS for brevity
             methods = sorted(rule.methods - {'HEAD', 'OPTIONS'})
 
