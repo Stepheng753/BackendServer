@@ -16,7 +16,11 @@
 				{% for endpoint in endpoints %}
 				<li>
 					<a href="{{ endpoint.url }}">{{ endpoint.rule }}</a>
-					<span class="methods">{{ endpoint.methods }}</span>
+					<div>
+						{% for method in endpoint.methods %}
+							<span class="methods {{ method.lower() }}">{{ method }}</span>
+						{% endfor %}
+					</div>
 				</li>
 				{% endfor %}
 			</ul>
