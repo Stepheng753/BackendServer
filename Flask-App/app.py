@@ -21,7 +21,7 @@ def index():
 
 @app.route("/test")
 def test():
-    return {"status": "ok", "message": "Hello, World!"}
+    return {"status": "success", "message": "Hello, World!"}
 
 app.add_url_rule("/rsvp", "rsvp", rsvp_endpoint, methods=["POST"])
 
