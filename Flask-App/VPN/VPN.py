@@ -6,6 +6,12 @@ import signal
 
 load_dotenv()
 
+# app.add_url_rule("/turn-on-vpn", "vpn_on", vpn_on, methods=["GET"])
+
+# app.add_url_rule("/turn-off-vpn", "vpn_off", vpn_off, methods=["GET"])
+
+# app.add_url_rule("/vpn-status", "vpn_status", vpn_status, methods=["GET"])
+
 def vpn_on():
     """Starts the OpenVPN process."""
     if os.path.exists(os.getenv("PID_FILE")):
@@ -13,7 +19,7 @@ def vpn_on():
 
     try:
         command = [
-            'sudo', 'openvpn', '--config', os.getenv("VPN_CONFIG_PATH"),
+            '/usr/bin/sudo', 'openvpn', '--config', os.getenv("VPN_CONFIG_PATH"),
             '--daemon', '--writepid', os.getenv("PID_FILE")
         ]
         process = subprocess.Popen(command)
@@ -31,8 +37,8 @@ def vpn_off():
         with open(os.getenv("PID_FILE"), 'r') as f:
             pid = f.read().strip()
 
-        subprocess.run(['sudo', 'kill', pid], check=True)
-        subprocess.run(['sudo', 'rm', os.getenv("PID_FILE")])
+        subprocess.run(['/usr/bin/sudo', 'kill', pid], check=True)
+        subprocess.run(['/usr/bin/sudo', 'rm', os.getenv("PID_FILE")])
 
         return jsonify({"status": "VPN Stopped"}), 200
     except subprocess.CalledProcessError as e:
@@ -45,12 +51,12 @@ def vpn_status():
     """Checks the status of the VPN."""
     vpn_is_on = False
     vpn_ip = None
-    ip_result = subprocess.run(['curl', 'ifconfig.me'], capture_output=True, text=True)
+    ip_result = subprocess.run(['/usr/bin/curl', 'ifconfig.me'], capture_output=True, text=True)
     vpn_ip = ip_result.stdout.strip()
 
     if os.path.exists(os.getenv("PID_FILE")):
         try:
-            result = subprocess.run(['ip', 'addr', 'show', 'tun0'], capture_output=True, text=True)
+            result = subprocess.run(['/usr/sbin/ip', 'addr', 'show', 'tun0'], capture_output=True, text=True)
             if "tun0" in result.stdout:
                 vpn_is_on = True
 
