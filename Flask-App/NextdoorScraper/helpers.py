@@ -3,8 +3,7 @@ import json
 from datetime import datetime
 from .config import line_break
 
-async def click_button(page, role, name, timeout=30000):
-    button = page.get_by_role(role, name=name)
+async def click_button(button, timeout=30000):
     await button.wait_for(state='visible', timeout=timeout)
     await button.click()
 

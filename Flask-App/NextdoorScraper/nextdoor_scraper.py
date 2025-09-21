@@ -26,7 +26,8 @@ async def login_to_nextdoor(page, email, password):
 
     await fill_text_box(page, "textbox", "Email", email)
     await fill_text_box(page, "textbox", "Password", password)
-    await click_button(page, "button", "Log in")
+    login_button = page.get_by_role("button", name="Log in")
+    await click_button(login_button)
 
 
 def get_users_pass():
@@ -43,8 +44,8 @@ def get_users_pass():
 
 
 async def scroll_to_load_posts(page, duration_sec=30):
-    await click_button(page, "button", "Filter")
-    await click_button(page, "menuitem", "Recent")
+    recent = page.locator('label:has-text("Recent")')
+    await click_button(recent)
 
     await page.wait_for_selector(selectors["post"], timeout=30000)
 
