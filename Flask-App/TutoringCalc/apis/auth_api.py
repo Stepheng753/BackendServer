@@ -1,5 +1,5 @@
 from flask import request, redirect, url_for
-from google_auth_oauthlib.flow import InstalledAppFlow
+from google_auth_oauthlib.flow import Flow
 from google.auth.transport.requests import Request
 from google.auth.exceptions import RefreshError
 import os
@@ -37,9 +37,13 @@ def initiate_oauth_flow(redirect_uri, final_redirect=None):
     Generates the authorization URL for the OAuth flow.
     The user's browser should be redirected to this URL.
     """
-    flow = InstalledAppFlow.from_client_secrets_file(OAUTH_FILE, SCOPES)
-    flow.redirect_uri = redirect_uri
-    authorization_url, _ = flow.authorization_url(prompt='consent', state=final_redirect)
+    flow = Flow.from_client_secrets_file(OAUTH_FILE, scopes=SCOPES, redirect_uri=redirect_uri)
+    authorization_url, _ = flow.authorization_url(
+        access_type='offline',
+        include_granted_scopes='true',
+        prompt='consent',
+        state=final_redirect,
+    )
     return authorization_url
 
 
@@ -47,9 +51,8 @@ def process_oauth_callback(redirect_uri, authorization_response):
     """
     Processes the callback from Google, fetches the token, and saves it.
     """
-    flow = InstalledAppFlow.from_client_secrets_file(OAUTH_FILE, SCOPES)
-    flow.redirect_uri = redirect_uri
-
+    # Create the same Flow with the same redirect_uri and exchange the code
+    flow = Flow.from_client_secrets_file(OAUTH_FILE, scopes=SCOPES, redirect_uri=redirect_uri)
     flow.fetch_token(authorization_response=authorization_response)
     creds = flow.credentials
 
