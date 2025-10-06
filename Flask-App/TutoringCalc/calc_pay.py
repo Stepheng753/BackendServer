@@ -38,9 +38,13 @@ def calc_tutoring_pay(search_date=None):
 
 
 def calc_tutoring_pay_endpoint():
+    creds = get_credentials()
+    if not creds:
+        return login_oauth('calc_tutoring_pay')
+
     search_date = request.args.get('search_date')
     try:
         calc_tutoring_pay(search_date)
         return jsonify({"status": "success", "message": "Tutoring pay calculated successfully."}), 200
-    except ValueError as e:
+    except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500

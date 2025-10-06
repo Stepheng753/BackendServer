@@ -11,10 +11,11 @@ def render_endpoints(app):
     Renders a welcome page with a list of all available endpoints.
     """
     endpoints_data = []
+    exclude_endpoints = {'static', 'index', 'login_oauth'}
     # Iterate over all registered URL rules in the application
     for rule in sorted(app.url_map.iter_rules(), key=lambda r: r.rule):
         # We don't need to show the static endpoint
-        if rule.endpoint != 'static' and rule.endpoint != 'index':
+        if rule.endpoint not in exclude_endpoints:
             # Get the HTTP methods allowed for the endpoint, excluding HEAD and OPTIONS for brevity
             methods = sorted(rule.methods - {'HEAD', 'OPTIONS'})
 
