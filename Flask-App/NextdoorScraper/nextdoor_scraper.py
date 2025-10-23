@@ -81,7 +81,7 @@ async def extract_post_data(page):
                     "keywords": keywords
                 })
         except Exception as e:
-            print(f"Error extracting post data: {e}")
+            await send_nextdoor_update_email(str(e), "Nextdoor Scraper Error")
 
     return filtered_posts
 
@@ -167,7 +167,7 @@ async def scrape_nextdoor_posts():
                     try:
                         await login_to_nextdoor(page, account["email"], account["password"])
                     except Exception as login_error:
-                        print(f"Login failed for account {account['email']}: {login_error}")
+                        await send_nextdoor_update_email(str(login_error), "Nextdoor Scraper Error")
                         if browser:
                             await browser.close()
                         continue
@@ -177,7 +177,8 @@ async def scrape_nextdoor_posts():
                     all_filtered_posts.extend(filtered_posts)
                     await page.wait_for_timeout(2000)
                 except Exception as error:
-                    print(f"Error processing account {account['email']}:", error)
+                    await send_nextdoor_update_email(str(error), "Nextdoor Scraper Error")
+
                 finally:
                     if browser:
                         await browser.close()
