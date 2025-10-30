@@ -44,8 +44,37 @@ def get_users_pass():
 
 
 async def scroll_to_load_posts(page, duration_sec=30):
-    recent = page.locator('label:has-text("Recent")')
-    await click_button(recent)
+    try:
+        filter_btn = page.locator("role=button[name='Filter by']")
+        await click_button(filter_btn)
+    except Exception:
+        try:
+            filter_btn = page.locator('button:has-text("Filter by")')
+            await click_button(filter_btn)
+        except Exception as e:
+            print("Could not open 'Filter by' menu:", e)
+
+    recent_selectors = [
+        "role=menuitem[name='Recent']",
+        'label:has-text("Recent")',
+        'button:has-text("Recent")',
+        'text=Recent'
+    ]
+
+    recent_clicked = False
+    for sel in recent_selectors:
+        try:
+            print(sel)
+            recent = page.locator(sel)
+            await click_button(recent)
+            recent_clicked = True
+            break
+        except Exception:
+            continue
+
+    if not recent_clicked:
+        error = "Warning: Could not click 'Recent' option — continuing without applying Recent filter"
+        await send_nextdoor_update_email(str(error), "Nextdoor Scraper Error")
 
     await page.wait_for_selector(selectors["post"], timeout=30000)
 
