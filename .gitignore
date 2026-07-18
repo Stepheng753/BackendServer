@@ -20,3 +20,5 @@ Flask-App/NextdoorScraper/data/logs/*
 
 Flask-App/TutoringCalc/keys/*
 !/Flask-App/TutoringCalc/keys/.gitkeep
+
+Setup/setup.conf

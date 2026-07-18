@@ -1,26 +1,24 @@
 # Backend Server
 
-This directory contains resources for deploying and managing a general-purpose Flask backend server.
+This directory contains resources for deploying and managing a general-purpose backend server.
 
-## `BackendServerSetUp.md`
+## Setup Guides
 
-The `BackendServerSetUp.md` file provides a comprehensive, step-by-step guide for configuring a secure and production-ready backend server environment. It covers:
+Deployment instructions are split into two documents:
 
-- Setting up Nginx as a reverse proxy and SSL terminator
-- Deploying Flask applications with Gunicorn as the WSGI server
-- Configuring Dynamic DNS (DDNS) for reliable remote access
-- Obtaining and renewing SSL certificates with Let's Encrypt and Certbot
-- Testing and troubleshooting the deployment
+1. **[ServerSetUp.md](./Setup/ServerSetUp.md)**: Details the network/server-level infrastructure including TP-Link Deco DDNS, port forwarding, Hostinger DNS/subdomain setup, and Let's Encrypt manual DNS challenge.
+2. **[BackendSetUp.md](./Setup/BackendSetUp.md)**: Details backend application deployment using Gunicorn and Nginx reverse proxying to a local Unix socket.
 
-This guide is designed to help set up a robust backend server suitable for a variety of Flask-based projects.
+### Supplemental Configuration & Assets
 
-## `Flask-App`
+- **[setup.conf](./Setup/setup.conf)**: Local configuration values (server IPs, ports, DDNS hostname, active subdomains). *Note: This file is ignored by Git to prevent leak of internal configurations.*
+- **[nginx.conf.template](./Setup/nginx.conf.template)**: Configuration blueprints for reverse-proxying with Nginx (Unix sockets, TCP ports, and static frontend assets).
+- **[nginx_setup Skill](./.agents/skills/nginx_setup/SKILL.md)**: Agent-facing workspace skill specifying systemd, certbot, and Nginx validation procedures.
 
-The `Flask-App` directory serves as an all-in-one backend server, providing a general Flask application that can be used to run computations or handle backend logic for any web project.
-This setup allows multiple web projects to leverage a single, centralized Flask backend for processing and API needs.
+## Flask-App
 
-You can place your Flask project code inside this directory and follow the setup instructions in `BackendServerSetUp.md` to deploy it as needed.
+The **[Flask-App](./Flask-App/)** directory serves as the centralized backend codebase. It implements a general Flask application structure that can be run with Gunicorn in production mode.
 
 ---
 
-For detailed setup and deployment instructions, refer to [BackendServerSetUp.md](./Setup/BackendServerSetUp.md).
+For detailed instructions, refer to **[ServerSetUp.md](./Setup/ServerSetUp.md)** for network mapping and **[BackendSetUp.md](./Setup/BackendSetUp.md)** for application installation.

@@ -1,0 +1,191 @@
+# ==============================================================================
+# Generic NGINX Configuration Templates for Subdomains
+# ==============================================================================
+# This template demonstrates the 3 common configurations used for subdomains:
+# 1. Reverse Proxy to Unix Socket (e.g., Python Flask/Gunicorn)
+# 2. Serve Static Frontend + Proxy API & WebSockets (e.g., Node/React + Express)
+# 3. Reverse Proxy to Local TCP Port (e.g., Docker containers or local apps)
+#
+# Before deploying, replace placeholders in brackets (e.g., <domain_name>)
+# with your actual values (defined in your local setup.conf).
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# TEMPLATE 1: Unix Socket Reverse Proxy (WSGI / Gunicorn)
+# ------------------------------------------------------------------------------
+
+# HTTP Redirect to HTTPS (Uses custom port if standard port 80 is blocked by ISP)
+server {
+    listen <http_redirect_port>; # e.g., 80, or a custom port like 8463
+    server_name <subdomain>.<domain_name>;
+
+    # Redirect all HTTP traffic on this port to HTTPS on default port 443
+    return 301 https://$host$request_uri;
+}
+
+# HTTPS Server Block
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    server_name <subdomain>.<domain_name>;
+
+    # SSL Certificates (managed and automatically inserted by Certbot)
+    ssl_certificate /etc/letsencrypt/live/<subdomain>.<domain_name>/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/<subdomain>.<domain_name>/privkey.pem;
+
+    # Recommended SSL settings for security and performance
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 10m;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers 'TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384';
+    ssl_prefer_server_ciphers on;
+
+    # Timeouts & size limits
+    client_max_body_size 10M;
+    proxy_connect_timeout 300s;
+    proxy_send_timeout 300s;
+    proxy_read_timeout 300s;
+    send_timeout 300s;
+
+    # Proxy traffic to Gunicorn Unix Socket
+    location / {
+        proxy_pass http://unix:<socket_path>; # e.g., /tmp/flask_api.sock
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+
+        # Forward original request headers so the backend knows the real client IP
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+
+
+# ------------------------------------------------------------------------------
+# TEMPLATE 2: Static Frontend + API & WebSocket Proxy
+# ------------------------------------------------------------------------------
+
+# HTTP Redirect to HTTPS
+server {
+    listen 80;
+    listen [::]:80;
+    server_name <subdomain>.<domain_name>;
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+# HTTPS Server Block
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    server_name <subdomain>.<domain_name>;
+
+    ssl_certificate /etc/letsencrypt/live/<subdomain>.<domain_name>/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/<subdomain>.<domain_name>/privkey.pem;
+
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 10m;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers 'TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384';
+    ssl_prefer_server_ciphers on;
+
+    client_max_body_size 10M;
+    proxy_connect_timeout 300s;
+    proxy_send_timeout 300s;
+    proxy_read_timeout 300s;
+    send_timeout 300s;
+
+    # 1. FRONTEND: Serve Built Static Files
+    location / {
+        root /var/www/<project_dir>/dist;
+        index index.html;
+        try_files $uri $uri/ /index.html;
+
+        # Basic security headers for static site
+        add_header X-Frame-Options "SAMEORIGIN";
+        add_header X-XSS-Protection "1; mode=block";
+        add_header X-Content-Type-Options "nosniff";
+    }
+
+    # 2. BACKEND: REST API Reverse Proxy
+    location /api {
+        proxy_pass http://127.0.0.1:<api_port>; # e.g., http://127.0.0.1:3000
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # 3. BACKEND: WebSockets Proxy (e.g. chat/real-time)
+    location /ws {
+        proxy_pass http://127.0.0.1:<api_port>; # e.g., http://127.0.0.1:3000
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+        proxy_read_timeout 3600s;
+        proxy_send_timeout 3600s;
+    }
+}
+
+
+# ------------------------------------------------------------------------------
+# TEMPLATE 3: Local Port Reverse Proxy (e.g., Docker Apps)
+# ------------------------------------------------------------------------------
+
+# HTTP Redirect to HTTPS
+server {
+    listen 80;
+    listen [::]:80;
+    server_name <subdomain>.<domain_name>;
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+# HTTPS Server Block
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    server_name <subdomain>.<domain_name>;
+
+    ssl_certificate /etc/letsencrypt/live/<subdomain>.<domain_name>/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/<subdomain>.<domain_name>/privkey.pem;
+
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 10m;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers 'TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384';
+    ssl_prefer_server_ciphers on;
+
+    # Large uploads timeout support (photos, videos, etc.)
+    client_max_body_size 0; # Disable body size limit
+    proxy_connect_timeout 300s;
+    proxy_send_timeout 300s;
+    proxy_read_timeout 300s;
+    send_timeout 300s;
+
+    location / {
+        proxy_pass http://localhost:<local_port>; # e.g. 5678, 2283, 8096
+        
+        # Standard proxy headers
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # WebSocket support
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}
