@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Cron Script 2: Run every Monday at 10:00 AM
+Cron Script 2: Run every Monday at 12:00 PM (Noon)
 Flow:
 1. Determines target week dates (or accepts sheet_id from arguments).
 2. Checks if sheet title contains CALCULATED. If so, stops (sheet pending approval).

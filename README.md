@@ -167,8 +167,8 @@ Cron tasks on the production server can be scheduled via `crontab -e`:
 # 1. Weekly Pay Calculation & Email Notice (Mondays at 4:00 AM)
 0 4 * * 1 cd /home/flash-server/Development/BackendServer && /home/flash-server/Development/BackendServer/.venv/bin/python3 TutoringCalculator/scripts/run_calc.py >> /home/flash-server/.logs/cron_calc.log 2>&1
 
-# 2. Weekly Text Dispatch Guarded by Approval (Mondays at 10:00 AM)
-0 10 * * 1 cd /home/flash-server/Development/BackendServer && /home/flash-server/Development/BackendServer/.venv/bin/python3 TutoringCalculator/scripts/run_send_texts.py >> /home/flash-server/.logs/cron_texts.log 2>&1
+# 2. Weekly Text Dispatch Guarded by Approval (Mondays at 12:00 PM / Noon)
+0 12 * * 1 cd /home/flash-server/Development/BackendServer && /home/flash-server/Development/BackendServer/.venv/bin/python3 TutoringCalculator/scripts/run_send_texts.py >> /home/flash-server/.logs/cron_texts.log 2>&1
 ```
 
 ---
