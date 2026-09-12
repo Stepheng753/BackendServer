@@ -1,0 +1,12 @@
+{
+  "GOOGLE_CALENDAR_ID": "your_calendar_id@group.calendar.google.com",
+  "PAY_PARENT_FOLDER_ID": "your_parent_drive_folder_id",
+  "TEMPLATE_SHEET_ID": "your_master_template_sheet_id",
+  "TWILIO_ACCOUNT_SID": "your_twilio_account_sid",
+  "TWILIO_API_KEY_SID": "your_twilio_api_key_sid",
+  "TWILIO_FROM_NUMBER": "+10000000000",
+  "NOTIFICATION_EMAIL": "your_email@example.com",
+  "APP_HOST": "https://dev.example.com",
+  "USERNAME": "StephenG753",
+  "OAUTH_FILE": "StephenG753-OAuth.json"
+}

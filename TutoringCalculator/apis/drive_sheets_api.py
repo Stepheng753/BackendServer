@@ -1,0 +1,397 @@
+import datetime
+import re
+from googleapiclient.discovery import build
+from .. import config
+from .calendar_api import parse_date_string
+
+
+def get_drive_service(creds):
+    return build('drive', 'v3', credentials=creds)
+
+
+def get_sheets_service(creds):
+    return build('sheets', 'v4', credentials=creds)
+
+
+def parse_currency(val):
+    """Parses a currency or numeric string like '$ 180.00' into a float."""
+    if val is None:
+        return 0.0
+    if isinstance(val, (int, float)):
+        return float(val)
+    cleaned = re.sub(r'[^\d.-]', '', str(val).strip())
+    try:
+        return float(cleaned) if cleaned else 0.0
+    except ValueError:
+        return 0.0
+
+
+def is_valid_student_name(val):
+    """
+    Validates if a cell in Column C represents an active student name.
+    Stops processing when Column C no longer has text, is numeric (e.g. subtotal counts),
+    or does not contain more than 5 characters.
+    """
+    if val is None:
+        return False
+    val_str = str(val).strip()
+    if not val_str:
+        return False
+    # Must have more than 5 characters (first + last name)
+    if len(val_str) <= 5:
+        return False
+    # Must contain alphabetic characters (exclude numeric counts like '6')
+    if not any(c.isalpha() for c in val_str):
+        return False
+    # Exclude common total/summary labels
+    if val_str.lower() in ['total', 'totals', 'subtotal', 'subtotals']:
+        return False
+    return True
+
+
+def get_or_create_year_folder(drive_service, year_str):
+    """Finds or creates the year folder inside PAY_PARENT_FOLDER_ID."""
+    parent_folder = config.PAY_PARENT_FOLDER_ID
+    query = (
+        f"name='{year_str}' and "
+        f"mimeType='application/vnd.google-apps.folder' and "
+        f"trashed=false and "
+        f"'{parent_folder}' in parents"
+    )
+    res = drive_service.files().list(q=query, spaces='drive', fields='files(id, name)').execute()
+    files = res.get('files', [])
+    if files:
+        return files[0]['id']
+
+    # Create folder if it doesn't exist
+    meta = {
+        'name': year_str,
+        'mimeType': 'application/vnd.google-apps.folder',
+        'parents': [parent_folder]
+    }
+    folder = drive_service.files().create(body=meta, fields='id').execute()
+    return folder['id']
+
+
+def find_file_in_folder(drive_service, file_name, folder_id):
+    """Finds a file by exact name inside a specific parent folder."""
+    query = f"name='{file_name}' and trashed=false and '{folder_id}' in parents"
+    res = drive_service.files().list(q=query, spaces='drive', fields='files(id, name)').execute()
+    files = res.get('files', [])
+    return files[0] if files else None
+
+
+def copy_template_sheet(creds, start_date_str, end_date_str):
+    """
+    Copies the Student Pay template into the year folder, renames it with 'CALCULATED',
+    and updates cells C1 and D1 with start_date and end_date.
+    """
+    drive_service = get_drive_service(creds)
+    sheets_service = get_sheets_service(creds)
+
+    start_date = parse_date_string(start_date_str)
+    end_date = parse_date_string(end_date_str)
+    year_str = str(start_date.year)
+
+    start_fmt = start_date.strftime("%m.%d.%y")
+    end_fmt = end_date.strftime("%m.%d.%y")
+
+    new_file_name = f"{start_fmt} - {end_fmt} CALCULATED"
+    year_folder_id = get_or_create_year_folder(drive_service, year_str)
+
+    # If an existing file with the same name exists, delete it first to avoid duplicates
+    existing = find_file_in_folder(drive_service, new_file_name, year_folder_id)
+    if existing:
+        try:
+            drive_service.files().delete(fileId=existing['id']).execute()
+        except Exception as e:
+            print(f"Could not remove existing file: {e}")
+
+    # Copy template into the year folder
+    copy_meta = {
+        'name': new_file_name,
+        'parents': [year_folder_id]
+    }
+    copied_file = drive_service.files().copy(
+        fileId=config.TEMPLATE_SHEET_ID,
+        body=copy_meta,
+        fields='id, name'
+    ).execute()
+    sheet_id = copied_file['id']
+
+    # Update C1 with start_fmt and D1 with end_fmt
+    sheets_service.spreadsheets().values().update(
+        spreadsheetId=sheet_id,
+        range='C1:D1',
+        valueInputOption='USER_ENTERED',
+        body={'values': [[start_fmt, end_fmt]]}
+    ).execute()
+
+    return {
+        "status": "success",
+        "sheet_id": sheet_id,
+        "sheet_url": f"https://docs.google.com/spreadsheets/d/{sheet_id}/edit",
+        "title": new_file_name,
+        "year_folder_id": year_folder_id
+    }
+
+
+def get_previous_week_dates(start_date_str):
+    start_date = parse_date_string(start_date_str)
+    prev_start = start_date - datetime.timedelta(days=7)
+    prev_end = prev_start + datetime.timedelta(days=6)
+    return prev_start.strftime("%m.%d.%y"), prev_end.strftime("%m.%d.%y"), str(prev_start.year)
+
+
+def get_previous_balances(creds, current_start_str, current_end_str):
+    """
+    Finds previous week's sheet and returns student first names with remaining unpaid balances.
+    """
+    drive_service = get_drive_service(creds)
+    sheets_service = get_sheets_service(creds)
+
+    prev_start_fmt, prev_end_fmt, prev_year_str = get_previous_week_dates(current_start_str)
+
+    year_folder_id = get_or_create_year_folder(drive_service, prev_year_str)
+
+    query = (
+        f"name contains '{prev_start_fmt}' and "
+        f"name contains '{prev_end_fmt}' and "
+        f"mimeType='application/vnd.google-apps.spreadsheet' and "
+        f"trashed=false and "
+        f"'{year_folder_id}' in parents"
+    )
+    res = drive_service.files().list(q=query, spaces='drive', fields='files(id, name)').execute()
+    files = res.get('files', [])
+
+    if not files:
+        return {}
+
+    prev_sheet_id = files[0]['id']
+
+    # Read rows from row 5 down (columns B to H)
+    result = sheets_service.spreadsheets().values().get(
+        spreadsheetId=prev_sheet_id,
+        range='B5:H'
+    ).execute()
+    rows = result.get('values', [])
+
+    balances = {}
+    for row in rows:
+        if len(row) < 2:
+            break
+        status = row[0].strip() if len(row) > 0 else ''
+        student_name = row[1].strip() if len(row) > 1 else ''
+        if not is_valid_student_name(student_name):
+            break
+
+        total_balance_raw = row[6] if len(row) > 6 else 0
+
+        if status.lower() == 'need to pay' and student_name:
+            first_name = student_name.split()[0].capitalize()
+            balances[first_name] = parse_currency(total_balance_raw)
+
+    return balances
+
+
+def update_sheet_hours_and_balances(creds, sheet_id, hours_by_student, previous_balances):
+    """
+    Updates Column D (# Hours) matching student first names,
+    and updates Column G (Remaining Balance) with prior balances.
+    Stops processing when Column C no longer has text or is not more than 5 characters,
+    preventing overwriting of subtotal / formula rows.
+    """
+    sheets_service = get_sheets_service(creds)
+
+    result = sheets_service.spreadsheets().values().get(
+        spreadsheetId=sheet_id,
+        range='C5:C'
+    ).execute()
+    student_rows = result.get('values', [])
+
+    hours_data = []
+    balance_data = []
+    updated_students = []
+
+    for idx, row in enumerate(student_rows, start=5):
+        if not row or not row[0].strip():
+            break
+
+        full_name = row[0].strip()
+        if not is_valid_student_name(full_name):
+            break
+
+        first_name = full_name.split()[0].capitalize()
+
+        hrs = hours_by_student.get(first_name, 0.0)
+        rem_balance = previous_balances.get(first_name, 0.0)
+
+        hours_data.append([hrs])
+        balance_data.append([rem_balance])
+        updated_students.append({
+            "name": full_name,
+            "first_name": first_name,
+            "hours": hrs,
+            "remaining_balance": rem_balance
+        })
+
+    total_rows = len(updated_students)
+    if total_rows > 0:
+        batch_body = {
+            "valueInputOption": "USER_ENTERED",
+            "data": [
+                {
+                    "range": f"D5:D{4 + total_rows}",
+                    "values": hours_data
+                },
+                {
+                    "range": f"G5:G{4 + total_rows}",
+                    "values": balance_data
+                }
+            ]
+        }
+        sheets_service.spreadsheets().values().batchUpdate(
+            spreadsheetId=sheet_id,
+            body=batch_body
+        ).execute()
+
+    # Fetch total balance from the summary row (last row of Column H)
+    total_balance_str = ""
+    summary_row = 4 + total_rows + 1
+    try:
+        h_res = sheets_service.spreadsheets().values().get(
+            spreadsheetId=sheet_id,
+            range=f"H{summary_row}"
+        ).execute()
+        vals = h_res.get('values', [])
+        if vals and vals[0] and vals[0][0] is not None:
+            total_balance_str = str(vals[0][0]).strip()
+    except Exception as e:
+        print(f"Error fetching Column H summary: {e}")
+
+    # Fallback to last non-empty row in H5:H if needed
+    if not total_balance_str:
+        try:
+            h_all = sheets_service.spreadsheets().values().get(
+                spreadsheetId=sheet_id,
+                range="H5:H"
+            ).execute().get('values', [])
+            if h_all and h_all[-1] and h_all[-1][0] is not None:
+                total_balance_str = str(h_all[-1][0]).strip()
+        except Exception:
+            pass
+
+    return {
+        "status": "success",
+        "sheet_id": sheet_id,
+        "sheet_url": f"https://docs.google.com/spreadsheets/d/{sheet_id}/edit",
+        "updated_students": updated_students,
+        "total_balance": total_balance_str
+    }
+
+
+def update_sheet_pay_status(creds, sheet_id):
+    """Converts blank student statuses in Column B to 'Need to Pay' for active students."""
+    sheets_service = get_sheets_service(creds)
+
+    result = sheets_service.spreadsheets().values().get(
+        spreadsheetId=sheet_id,
+        range='B5:C'
+    ).execute()
+    rows = result.get('values', [])
+
+    status_updates = []
+    updated_count = 0
+
+    for idx, row in enumerate(rows, start=5):
+        status = row[0].strip() if len(row) > 0 else ''
+        student_name = row[1].strip() if len(row) > 1 else ''
+
+        if not is_valid_student_name(student_name):
+            break
+
+        if student_name and not status:
+            status_updates.append({"range": f"B{idx}", "values": [["Need to Pay"]]})
+            updated_count += 1
+
+    if status_updates:
+        batch_body = {
+            "valueInputOption": "USER_ENTERED",
+            "data": status_updates
+        }
+        sheets_service.spreadsheets().values().batchUpdate(
+            spreadsheetId=sheet_id,
+            body=batch_body
+        ).execute()
+
+    return {
+        "status": "success",
+        "sheet_id": sheet_id,
+        "sheet_url": f"https://docs.google.com/spreadsheets/d/{sheet_id}/edit",
+        "updated_count": updated_count
+    }
+
+
+def get_sheet_details(creds, sheet_id):
+    """Fetches sheet title and metadata."""
+    drive_service = get_drive_service(creds)
+    meta = drive_service.files().get(fileId=sheet_id, fields='id, name, parents').execute()
+    return meta
+
+
+def get_pending_text_recipients(creds, sheet_id):
+    """
+    Checks sheet title for CALCULATED.
+    If CALCULATED is present, returns pending approval status.
+    If approved (no CALCULATED), returns list of students with Total Balance > 0 and blank status.
+    """
+    meta = get_sheet_details(creds, sheet_id)
+    title = meta.get('name', '')
+
+    if 'CALCULATED' in title.upper():
+        return {
+            "is_pending_review": True,
+            "title": title,
+            "message": f"Sheet '{title}' still contains CALCULATED in the title. Remove CALCULATED to approve before sending texts.",
+            "recipients": []
+        }
+
+    sheets_service = get_sheets_service(creds)
+    result = sheets_service.spreadsheets().values().get(
+        spreadsheetId=sheet_id,
+        range='B5:L'
+    ).execute()
+    rows = result.get('values', [])
+
+    recipients = []
+    for idx, row in enumerate(rows, start=5):
+        if len(row) < 2:
+            break
+
+        status = row[0].strip() if len(row) > 0 else ''
+        student = row[1].strip() if len(row) > 1 else ''
+
+        if not is_valid_student_name(student):
+            break
+
+        total_balance_raw = row[6] if len(row) > 6 else 0
+        phone = row[9].strip() if len(row) > 9 else ''
+        text_msg = row[10].strip() if len(row) > 10 else ''
+
+        total_balance = parse_currency(total_balance_raw)
+
+        # Condition: Total balance > 0 and Status is blank
+        if student and not status and total_balance > 0 and phone and text_msg:
+            recipients.append({
+                "row_num": idx,
+                "student": student,
+                "total_balance": total_balance,
+                "phone": phone,
+                "text": text_msg
+            })
+
+    return {
+        "is_pending_review": False,
+        "title": title,
+        "recipients": recipients
+    }

@@ -1,24 +1,33 @@
-domainPortSetUp.json
+# Local environment and secrets
+.env
+*.env
+secrets.json
+**/secrets.json
+config.json
+**/config.json
+!config/config.template.json
+!config/.gitkeep
+*credentials.json
+StephenG753-OAuth.json
+**/StephenG753-OAuth.json
+*.pickle
+*.token
+
+# Python & Virtual Environments
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
 *.so
-.venv
-*.pyc
+
+# System & Config
+domainPortSetUp.json
+docs/setup/setup.conf
 *.csv
 *.sh
-*credentials.json
-.env
-Flask-App/NextdoorScraper/data/curr/*
-!Flask-App/NextdoorScraper/data/curr/.gitkeep
-Flask-App/NextdoorScraper/data/diff/*
-!Flask-App/NextdoorScraper/data/diff/.gitkeep
-Flask-App/NextdoorScraper/data/prev/*
-!Flask-App/NextdoorScraper/data/prev/.gitkeep
-Flask-App/NextdoorScraper/data/logs/*
-!Flask-App/NextdoorScraper/data/logs/.gitkeep
 
-/data/*
-!/data/.gitkeep
-
-Flask-App/TutoringCalc/keys/*
-!/Flask-App/TutoringCalc/keys/.gitkeep
-
-Setup/setup.conf
+# Application Keys and Logs
+TutoringCalculator/keys/*
+!TutoringCalculator/keys/.gitkeep
+TutoringCalculator/logs/*
+!TutoringCalculator/logs/.gitkeep

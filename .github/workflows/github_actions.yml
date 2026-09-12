@@ -26,6 +26,35 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd Development/BackendServer/
-            git pull
+            echo "Pulling latest code..."
+            git pull origin main
+
+            echo "Locating virtual environment pip..."
+            if [ -x "/home/flash-server/Development/BackendServer/.venv/bin/pip" ]; then
+              PIP_CMD="/home/flash-server/Development/BackendServer/.venv/bin/pip"
+            elif [ -x "/home/flash-server/Development/BackendServer/Flask-App/.venv/bin/pip" ]; then
+              PIP_CMD="/home/flash-server/Development/BackendServer/Flask-App/.venv/bin/pip"
+            else
+              echo "ERROR: Virtual environment pip binary not found!" >&2
+              exit 1
+            fi
+
+            echo "Installing Python dependencies with $PIP_CMD..."
+            $PIP_CMD install --upgrade pip
+            $PIP_CMD install -r requirements.txt
+
+            echo "Reloading systemd daemon..."
             /home/flash-server/Services/restart_daemon.sh
+
+            echo "Restarting Gunicorn service..."
             /home/flash-server/Services/Gunicorn/restart_gunicorn_service.sh
+
+            echo "Verifying backend service health..."
+            sleep 3
+            if systemctl is-active --quiet dev_stepheng753_com_api.service; then
+              echo "SUCCESS: dev_stepheng753_com_api.service is active and healthy."
+            else
+              echo "ERROR: dev_stepheng753_com_api.service failed to restart!" >&2
+              systemctl status dev_stepheng753_com_api.service --no-pager
+              exit 1
+            fi

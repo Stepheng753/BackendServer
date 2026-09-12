@@ -9,8 +9,8 @@ This guide explains how to deploy your Flask backend application under a product
 The examples throughout this guide assume the following configuration:
 - **Example Domain**: `dev.example.com`
 - **Example Server Username**: `example-user`
-- **Example Project Directory**: `/home/example-user/BackendServer/Flask-App`
-- **Example Virtual Environment**: `/home/example-user/BackendServer/Flask-App/.venv`
+- **Example Project Directory**: `/home/example-user/BackendServer`
+- **Example Virtual Environment**: `/home/example-user/BackendServer/.venv`
 - **Example Unix Socket**: `unix:/tmp/flask_api.sock`
 - **Example Systemd Service**: `my_flask_api.service`
 
@@ -21,7 +21,7 @@ The examples throughout this guide assume the following configuration:
 During local development, you might run Flask using `app.run()`. In a production environment, this server is inefficient and insecure. Instead, we use Gunicorn to run the application instance directly.
 
 ### 1.1. Application Code Adaptation
-Ensure that your main application file (e.g., [app.py](../Flask-App/app.py)) exports the Flask `app` object without calling blocking servers inside `__main__`:
+Ensure that your main application file (e.g., [app.py](../../app.py)) exports the Flask `app` object without calling blocking servers inside `__main__`:
 
 ```python
 # app.py
@@ -48,7 +48,7 @@ Gunicorn will start multiple worker processes to handle incoming requests concur
 ### 2.1. Install Gunicorn
 First, install Gunicorn in your python virtual environment:
 ```bash
-cd /home/example-user/BackendServer/Flask-App
+cd /home/example-user/BackendServer
 source .venv/bin/activate
 pip install gunicorn
 ```
@@ -70,9 +70,9 @@ After=network.target
 [Service]
 User=example-user
 Group=www-data
-WorkingDirectory=/home/example-user/BackendServer/Flask-App
-Environment="PATH=/home/example-user/BackendServer/Flask-App/.venv/bin"
-ExecStart=/home/example-user/BackendServer/Flask-App/.venv/bin/gunicorn \
+WorkingDirectory=/home/example-user/BackendServer
+Environment="PATH=/home/example-user/BackendServer/.venv/bin"
+ExecStart=/home/example-user/BackendServer/.venv/bin/gunicorn \
           --workers 3 \
           --bind unix:/tmp/flask_api.sock \
           -m 007 \
@@ -173,4 +173,4 @@ If successful, reload Nginx:
 ```bash
 sudo systemctl reload nginx
 ```
-*(You can also use the workspace skill cheat sheet for helper commands: [nginx_setup Skill](../.agents/skills/nginx_setup/SKILL.md)).*
+*(For complete Nginx management, symlink linking, and troubleshooting, see [ServerSetUp.md](./ServerSetUp.md)).*

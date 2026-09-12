@@ -1,6 +1,6 @@
 # Server and Network Configuration Guide
 
-This guide explains how to configure the server network environment, router settings, domain mapping, and Nginx reverse proxy. 
+This guide explains how to configure the server network environment, router settings, domain mapping, and Nginx reverse proxy. It incorporates comprehensive Nginx operational procedures, zero-downtime reloads, symlink configuration, Certbot SSL automation, and troubleshooting.
 
 > [!IMPORTANT]
 > This guide uses placeholder example values. Your specific server configuration (actual IPs, ports, domains, and subdomains) must only be defined in your local, git-ignored [setup.conf](./setup.conf).
@@ -115,7 +115,7 @@ You must configure DNS records to route your custom domain and subdomains to you
 
 ---
 
-## 4. Nginx Server Configuration
+## 4. Nginx Server Configuration & Operational Management
 
 Nginx receives incoming HTTP/HTTPS traffic on the server, matches the domain header, and proxies the request to the right service.
 
@@ -127,22 +127,77 @@ sudo apt install nginx -y
 sudo systemctl start nginx
 ```
 
-### 4.2. Configurations Template
-Configurations are managed under `/etc/nginx/sites-available/` and symlinked to `/etc/nginx/sites-enabled/`. Refer to [nginx.conf.template](./nginx.conf.template) for exact structural blocks.
+### 4.2. Core Operations & Commands
+
+#### 1. Syntax Verification
+Before applying changes, always run a dry run test to prevent crashing active server block routing:
+```bash
+sudo nginx -t
+```
+
+#### 2. Zero-Downtime Reloading
+Use reload to apply new configurations without interrupting current active client connections:
+```bash
+sudo systemctl reload nginx
+```
+
+#### 3. Service Inspection
+Check if Nginx is active, enabled, and running without errors:
+```bash
+sudo systemctl status nginx
+```
+
+### 4.3. Directory Structure and Symlink Management
+
+Nginx configurations are stored in `sites-available` and symlinked to `sites-enabled` to activate:
+- **Available Site Configs**: `/etc/nginx/sites-available/`
+- **Active Site Configs**: `/etc/nginx/sites-enabled/`
+
+#### Activating a Site Configuration
+To enable a configuration file (e.g., `dev.example.com`):
+```bash
+sudo ln -sf /etc/nginx/sites-available/dev.example.com /etc/nginx/sites-enabled/
+```
+Always verify syntax and reload immediately after linking:
+```bash
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+#### Disabling a Site Configuration
+To disable a site without deleting the configuration file:
+```bash
+sudo rm /etc/nginx/sites-enabled/dev.example.com
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+### 4.4. Deploying Subdomains from Template
+
+To create a new subdomain configuration from the template:
+1. Refer to the configuration blueprints in [nginx.conf.template](./nginx.conf.template).
+2. Choose the appropriate pattern (Unix socket, Static + API, or Local Port).
+3. Copy the configuration block to `/etc/nginx/sites-available/<subdomain>.<domain_name>`, replacing placeholders with values from your local [setup.conf](./setup.conf).
+4. Symlink to `sites-enabled/`:
+   ```bash
+   sudo ln -sf /etc/nginx/sites-available/<subdomain>.<domain_name> /etc/nginx/sites-enabled/
+   ```
+5. Test and reload:
+   ```bash
+   sudo nginx -t && sudo systemctl reload nginx
+   ```
 
 ---
 
-## 5. SSL Certificates (Let's Encrypt manual DNS challenge)
+## 5. SSL Certificates (Let's Encrypt Certbot)
 
 Since your home server is behind a router, using Let's Encrypt's DNS challenge is the most robust way to secure your subdomains.
 
-### 5.1. Run Certbot Manual Challenge
+### 5.1. Certbot Manual DNS Challenge
 Execute the command for your subdomain:
 ```bash
 sudo certbot certonly --manual --preferred-challenges dns -d dev.example.com
 ```
 
-### 5.2. Deploy the DNS TXT Record
+#### Deploy the DNS TXT Record
 Certbot will pause and provide a challenge:
 - **Record Name**: `_acme-challenge.dev.example.com`
 - **Record Type**: `TXT`
@@ -153,8 +208,50 @@ Certbot will pause and provide a challenge:
 3. Wait 1–2 minutes, then hit **Enter** in your terminal to complete verification.
 4. Certbot outputs certificates to `/etc/letsencrypt/live/dev.example.com/`.
 
+### 5.2. Automatic Certbot Nginx Insertion
+Alternatively, running Certbot with the `--nginx` plugin will automatically configure the SSL certificates and update the Nginx server block:
+```bash
+sudo certbot --nginx -d dev.example.com
+```
+Certbot will automatically edit the Nginx configuration file to insert the SSL directives:
+```nginx
+ssl_certificate /etc/letsencrypt/live/dev.example.com/fullchain.pem;
+ssl_certificate_key /etc/letsencrypt/live/dev.example.com/privkey.pem;
+include /etc/letsencrypt/options-ssl-nginx.conf;
+ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+```
+
 ---
 
-## 6. Nginx Workspace Skill
-For troubleshooting, syntax validation, and reloading Nginx without service disruption, consult the custom agent workspace skill:
-- [nginx_setup Skill Instructions](../.agents/skills/nginx_setup/SKILL.md)
+## 6. Troubleshooting Common Errors
+
+### 6.1. Nginx Port Conflict ("Address already in use")
+If `sudo nginx -t` or `sudo systemctl start nginx` fails reporting that port 80 or 443 is already in use by another process:
+```bash
+# Identify which process is bound to port 80 or 443
+sudo netstat -tulpn | grep :80
+sudo netstat -tulpn | grep :443
+
+# Or using lsof:
+sudo lsof -i :80
+sudo lsof -i :443
+```
+Terminate the conflicting process or reassign its port before restarting Nginx.
+
+### 6.2. Permission Denied on Unix Sockets (502 Bad Gateway)
+If Nginx returns `502 Bad Gateway` when trying to proxy requests to Gunicorn:
+1. **Verify Unix Socket Exists**: Check that the socket file (e.g., `/tmp/dev_stepheng753_com_api.sock`) actually exists.
+2. **Check Permissions**: Gunicorn must be started with the `-m 007` flag.
+3. **Verify Group Ownership**: Both Nginx and Gunicorn must share access permissions. Ensure Gunicorn runs under `Group=www-data` in its systemd service file so Nginx has read/write permissions to the socket.
+4. **Inspect Gunicorn Service**:
+   ```bash
+   sudo systemctl status dev_stepheng753_com_api.service
+   sudo journalctl -u dev_stepheng753_com_api.service -n 50 --no-pager
+   ```
+
+### 6.3. Inspect Nginx Error Logs
+For general connection drops or misrouted requests:
+```bash
+sudo tail -n 50 /var/log/nginx/error.log
+sudo tail -n 50 /var/log/nginx/access.log
+```
