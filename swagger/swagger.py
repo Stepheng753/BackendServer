@@ -399,6 +399,7 @@ SWAGGER_HTML_TEMPLATE = """<!DOCTYPE html>
         dom_id: '#swagger-ui',
         deepLinking: true,
         persistAuthorization: true,
+        validatorUrl: null,
         presets: [
           SwaggerUIBundle.presets.apis,
           SwaggerUIStandalonePreset
