@@ -29,19 +29,9 @@ jobs:
             echo "Pulling latest code..."
             git pull origin main
 
-            echo "Locating virtual environment pip..."
-            if [ -x "/home/flash-server/Development/BackendServer/.venv/bin/pip" ]; then
-              PIP_CMD="/home/flash-server/Development/BackendServer/.venv/bin/pip"
-            elif [ -x "/home/flash-server/Development/BackendServer/Flask-App/.venv/bin/pip" ]; then
-              PIP_CMD="/home/flash-server/Development/BackendServer/Flask-App/.venv/bin/pip"
-            else
-              echo "ERROR: Virtual environment pip binary not found!" >&2
-              exit 1
-            fi
-
-            echo "Installing Python dependencies with $PIP_CMD..."
-            $PIP_CMD install --upgrade pip
-            $PIP_CMD install -r requirements.txt
+            echo "Installing Python dependencies in virtualenv..."
+            /home/flash-server/Development/BackendServer/.venv/bin/pip install --upgrade pip
+            /home/flash-server/Development/BackendServer/.venv/bin/pip install -r requirements.txt
 
             echo "Reloading systemd daemon..."
             /home/flash-server/Services/restart_daemon.sh

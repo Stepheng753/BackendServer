@@ -145,8 +145,7 @@ Deployments are automated through **[GitHub Actions](./.github/workflows/github_
 [SSH into flash-server (100.66.69.41)]
        │
        ├─► git pull origin main
-       ├─► Locate .venv/bin/pip (root or Flask-App fallback)
-       ├─► $PIP_CMD install -r requirements.txt
+       ├─► .venv/bin/pip install -r requirements.txt
        ├─► /home/flash-server/Services/restart_daemon.sh
        ├─► /home/flash-server/Services/Gunicorn/restart_gunicorn_service.sh
        └─► Health check: systemctl is-active dev_stepheng753_com_api.service
