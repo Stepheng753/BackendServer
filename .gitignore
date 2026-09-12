@@ -3,6 +3,7 @@
 *.env
 secrets.json
 **/secrets.json
+!config/secrets.template.json
 config.json
 **/config.json
 !config/config.template.json

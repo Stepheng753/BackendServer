@@ -63,7 +63,14 @@ def check_auth():
         return make_response('Invalid authorization header.', 401, {'WWW-Authenticate': 'Basic realm="Login Required"'})
 
     valid_user, valid_pass = get_auth_credentials()
-    if username.lower() != valid_user.lower() or password != valid_pass:
+    if not valid_user or not valid_pass:
+        return make_response(
+            "Authentication credentials not configured on server (secrets.json / config.json missing).",
+            500,
+            {'Content-Type': 'text/plain'}
+        )
+
+    if not username or username.lower() != valid_user.lower() or password != valid_pass:
         return make_response('Could not verify!', 401, {'WWW-Authenticate': 'Basic realm="Login Required"'})
 
     return None
