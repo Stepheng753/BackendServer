@@ -44,9 +44,9 @@ Monday 12:00 PM PST ───> curl -u "$USER:$PASS" -X POST /tutoring/run-send-
 
 ---
 
-### 1.2. Crontab Configuration on Production Server
+### 1.2. Crontab Configuration on Production Server (`flash-server`)
 
-Edit your server user's crontab:
+Edit your server user's crontab on `flash-server`:
 ```bash
 crontab -e
 ```
@@ -58,11 +58,17 @@ Add the following entries (using authenticated `curl` with your basic auth crede
 # Crossroads Tutoring Weekly Automation Pipeline (Endpoint-Driven)
 # -----------------------------------------------------------------------------
 # 1. Weekly Pay Calculation: Monday 4:00 AM PST (12:00 UTC)
-0 12 * * 1 curl -s -u "$USERNAME:$PASSWORD" -X POST http://localhost:5000/tutoring/run-calc >> /home/stepheng753/Development/BackendServer/TutoringCalculator/logs/cron.log 2>&1
+0 12 * * 1 curl -sS -u "$USERNAME:$PASSWORD" -X POST https://dev.stepheng753.com/tutoring/run-calc >> /home/flash-server/Development/BackendServer/TutoringCalculator/logs/cron.log 2>&1
 
 # 2. Text Message Dispatch Guarded by Approval: Monday 12:00 PM PST (20:00 UTC)
-0 20 * * 1 curl -s -u "$USERNAME:$PASSWORD" -X POST http://localhost:5000/tutoring/run-send-texts >> /home/stepheng753/Development/BackendServer/TutoringCalculator/logs/cron.log 2>&1
+0 20 * * 1 curl -sS -u "$USERNAME:$PASSWORD" -X POST https://dev.stepheng753.com/tutoring/run-send-texts >> /home/flash-server/Development/BackendServer/TutoringCalculator/logs/cron.log 2>&1
 ```
+
+> [!TIP]
+> **Production Socket Alternative**: If you prefer triggering directly via the local Gunicorn socket without DNS/HTTPS routing:
+> ```bash
+> 0 12 * * 1 curl -sS -u "$USERNAME:$PASSWORD" --unix-socket /tmp/dev_stepheng753_com_api.sock -X POST http://localhost/tutoring/run-calc >> /home/flash-server/Development/BackendServer/TutoringCalculator/logs/cron.log 2>&1
+> ```
 
 > [!NOTE]
 > Adjust UTC hours if your server timezone is set to `America/Los_Angeles` rather than `UTC`. If `date` returns PST/PDT:
