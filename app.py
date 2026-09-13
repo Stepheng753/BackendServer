@@ -8,12 +8,16 @@ from flask_cors import CORS
 from index.index import check_auth
 from swagger.swagger import swagger_bp
 from TutoringCalculator.routes import tutoring_bp
+from Monitoring.routes import monitoring_bp
 
 app = Flask(__name__)
 CORS(app)
 
 # Register Swagger documentation UI & OpenAPI spec
 app.register_blueprint(swagger_bp)
+
+# Register Monitoring dashboard & endpoints
+app.register_blueprint(monitoring_bp)
 
 # Register Tutoring Calculator endpoints (both top-level and with /TutoringCalculator prefix)
 app.register_blueprint(tutoring_bp)

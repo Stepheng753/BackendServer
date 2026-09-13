@@ -38,6 +38,10 @@ OPENAPI_SPEC = {
         {
             "name": "Tutoring Calculator",
             "description": "Crossroads Tutoring weekly billing, calendar event parsing, sheet management, Twilio reminders, and OAuth."
+        },
+        {
+            "name": "Monitoring",
+            "description": "Flash Server hardware telemetry, disk storage monitoring, service health matrix, and diagnostic test suite."
         }
     ],
     "components": {
@@ -306,6 +310,94 @@ OPENAPI_SPEC = {
                     }
                 }
             }
+        },
+        "/monitoring": {
+            "get": {
+                "tags": ["Monitoring"],
+                "summary": "System Health & Telemetry Web Dashboard",
+                "description": "Renders the interactive dashboard UI displaying hardware telemetry, storage shares, top processes, and service status.",
+                "responses": {
+                    "200": {
+                        "description": "HTML Dashboard rendered."
+                    }
+                }
+            }
+        },
+        "/api/monitoring/system": {
+            "get": {
+                "tags": ["Monitoring"],
+                "summary": "System & Hardware Telemetry",
+                "description": "Returns CPU load %, core count, load averages, temperature, RAM/Swap metrics, and host/kernel specs.",
+                "responses": {
+                    "200": {
+                        "description": "JSON hardware and host specifications."
+                    }
+                }
+            }
+        },
+        "/api/monitoring/processes": {
+            "get": {
+                "tags": ["Monitoring"],
+                "summary": "Top Processes by RAM or CPU",
+                "description": "Returns list of top running processes sorted by RAM (RSS) or CPU utilization.",
+                "parameters": [
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "required": False,
+                        "description": "Sort metric: 'ram' (default) or 'cpu'.",
+                        "schema": {"type": "string", "enum": ["ram", "cpu"], "default": "ram"}
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": False,
+                        "description": "Number of processes to return (default 10).",
+                        "schema": {"type": "integer", "default": 10}
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "JSON list of top processes."
+                    }
+                }
+            }
+        },
+        "/api/monitoring/storage": {
+            "get": {
+                "tags": ["Monitoring"],
+                "summary": "Storage Devices & Mounts",
+                "description": "Returns capacity, usage, and alert status for all mounted disks and flash-server network shares.",
+                "responses": {
+                    "200": {
+                        "description": "JSON array of storage partitions."
+                    }
+                }
+            }
+        },
+        "/api/monitoring/services": {
+            "get": {
+                "tags": ["Monitoring"],
+                "summary": "Services & Docker Health Matrix",
+                "description": "Probes all configured flash-server services (Immich, Jellyfin, qBittorrent, n8n, Postgres, AIU, etc.) and returns real-time status and latencies.",
+                "responses": {
+                    "200": {
+                        "description": "JSON array of service statuses."
+                    }
+                }
+            }
+        },
+        "/api/monitoring/diagnostics": {
+            "get": {
+                "tags": ["Monitoring"],
+                "summary": "Diagnostic Test Suite Audit",
+                "description": "Runs comprehensive health checks across disks, RAM, thermals, services, and cron jobs, returning an overall audit result.",
+                "responses": {
+                    "200": {
+                        "description": "JSON diagnostic audit report."
+                    }
+                }
+            }
         }
     }
 }
@@ -390,6 +482,12 @@ SWAGGER_HTML_TEMPLATE = """<!DOCTYPE html>
         banner.title = 'Flash Server';
         banner.innerHTML = '<img src="/static/flash.gif" alt="Flash Animation" />';
         info.appendChild(banner);
+
+        const linkContainer = document.createElement('div');
+        linkContainer.id = 'swagger-monitor-link';
+        linkContainer.style = 'margin-top: 14px;';
+        linkContainer.innerHTML = '<a href="/monitoring" style="display:inline-flex; align-items:center; gap:6px; background:#1a73e8; color:#ffffff; font-weight:600; font-size:13px; padding:7px 14px; border-radius:8px; text-decoration:none; box-shadow:0 1px 3px rgba(0,0,0,0.12); transition:background 0.2s;">🖥️ Open System Telemetry & Monitor (/monitoring) ↗</a>';
+        info.appendChild(linkContainer);
       }
     }
 
