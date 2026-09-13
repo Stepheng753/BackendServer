@@ -9,19 +9,58 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/shared.css" />
   <style>
     :root {
-      --bg-page: #fafafa;
-      --card-bg: #ffffff;
-      --card-border: #e8eaed;
-      --card-shadow: 0 1px 3px rgba(60, 64, 67, 0.08), 0 2px 8px rgba(60, 64, 67, 0.04);
-      --card-hover-shadow: 0 4px 14px rgba(60, 64, 67, 0.12);
-      --text-main: #202124;
-      --text-muted: #5f6368;
-      --text-secondary: #80868b;
-      --primary-blue: #1a73e8;
-      --primary-blue-hover: #1557b0;
-      --blue-subtle: #e8f0fe;
+      --card: #ffffff;
+      --ring: #3b82f6;
+      --input: #e5e7eb;
+      --muted: #f9fafb;
+      --accent: #e0f2fe;
+      --border: #e5e7eb;
+      --radius: 0.375rem;
+      --chart-1: #3b82f6;
+      --chart-2: #2563eb;
+      --chart-3: #1d4ed8;
+      --chart-4: #1e40af;
+      --chart-5: #1e3a8a;
+      --popover: #ffffff;
+      --primary: #3b82f6;
+      --sidebar: #f9fafb;
+      --font-mono: 'JetBrains Mono', monospace;
+      --font-sans: 'Inter', sans-serif;
+      --secondary: #f3f4f6;
+      --background: #ffffff;
+      --font-serif: 'Source Serif 4', serif;
+      --foreground: #111827;
+      --destructive: #ef4444;
+      --sidebar-ring: #3b82f6;
+      --sidebar-accent: #e0f2fe;
+      --sidebar-border: #e5e7eb;
+      --card-foreground: #111827;
+      --sidebar-primary: #3b82f6;
+      --muted-foreground: #4b5563;
+      --accent-foreground: #1e3a8a;
+      --popover-foreground: #111827;
+      --primary-foreground: #ffffff;
+      --sidebar-foreground: #111827;
+      --secondary-foreground: #374151;
+      --destructive-foreground: #ffffff;
+      --sidebar-accent-foreground: #1e3a8a;
+      --sidebar-primary-foreground: #ffffff;
+
+      /* Semantic Mappings */
+      --bg-page: var(--background);
+      --card-bg: var(--card);
+      --card-border: var(--border);
+      --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 2px 6px rgba(0, 0, 0, 0.03);
+      --card-hover-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+      --text-main: var(--foreground);
+      --text-muted: var(--muted-foreground);
+      --text-secondary: var(--secondary-foreground);
+      --primary-blue: var(--primary);
+      --primary-blue-hover: var(--chart-2);
+      --blue-subtle: var(--accent);
       
       /* Status Colors */
       --green-bg: #e6f4ea;
@@ -35,17 +74,128 @@
       --yellow-bar: #fbbc04;
 
       --red-bg: #fce8e6;
-      --red-text: #c5221f;
+      --red-text: var(--destructive);
       --red-border: #fad2cf;
-      --red-bar: #ea4335;
+      --red-bar: var(--destructive);
 
-      --gray-bg: #f1f3f4;
-      --gray-text: #5f6368;
-      --gray-border: #dadce0;
+      --gray-bg: var(--secondary);
+      --gray-text: var(--muted-foreground);
+      --gray-border: var(--border);
 
       --orange-bg: #fff1e5;
       --orange-text: #c2410c;
       --orange-border: #ffddc2;
+    }
+
+    .dark, [data-theme="dark"] {
+      --card: #262626;
+      --ring: #3b82f6;
+      --input: #404040;
+      --muted: #262626;
+      --accent: #1e3a8a;
+      --border: #404040;
+      --radius: 0.375rem;
+      --chart-1: #60a5fa;
+      --chart-2: #3b82f6;
+      --chart-3: #2563eb;
+      --chart-4: #1d4ed8;
+      --chart-5: #1e40af;
+      --popover: #262626;
+      --primary: #3b82f6;
+      --sidebar: #171717;
+      --secondary: #262626;
+      --background: #171717;
+      --foreground: #ffffff; /* Crisp pure white text */
+      --destructive: #ef4444;
+      --sidebar-ring: #3b82f6;
+      --sidebar-accent: #1e3a8a;
+      --sidebar-border: #404040;
+      --card-foreground: #ffffff;
+      --sidebar-primary: #3b82f6;
+      --muted-foreground: #ffffff; /* Pure white text */
+      --accent-foreground: #ffffff;
+      --popover-foreground: #ffffff;
+      --primary-foreground: #ffffff;
+      --sidebar-foreground: #ffffff;
+      --secondary-foreground: #ffffff;
+      --destructive-foreground: #ffffff;
+      --sidebar-accent-foreground: #ffffff;
+      --sidebar-primary-foreground: #ffffff;
+
+      /* Semantic Mappings */
+      --bg-page: var(--background);
+      --card-bg: var(--card);
+      --card-border: var(--border);
+      --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.3);
+      --card-hover-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+      --text-main: #ffffff;
+      --text-muted: #ffffff;
+      --text-secondary: #ffffff;
+      --primary-blue: var(--primary);
+      --primary-blue-hover: var(--chart-1);
+      --blue-subtle: rgba(59, 130, 246, 0.16);
+
+      --green-bg: #132d1d;
+      --green-text: #81c995;
+      --green-border: #1e462b;
+      --green-bar: #34a853;
+
+      --yellow-bg: #302611;
+      --yellow-text: #fdd663;
+      --yellow-border: #4d3e1b;
+      --yellow-bar: #fbbc04;
+
+      --red-bg: #371816;
+      --red-text: #f28b82;
+      --red-border: #562522;
+      --red-bar: var(--destructive);
+
+      --gray-bg: var(--secondary);
+      --gray-text: var(--muted-foreground);
+      --gray-border: var(--border);
+
+      --orange-bg: #381f15;
+      --orange-text: #fb923c;
+      --orange-border: #5a2e1d;
+    }
+
+    @theme inline {
+      --color-card: var(--card);
+      --color-ring: var(--ring);
+      --color-input: var(--input);
+      --color-muted: var(--muted);
+      --color-accent: var(--accent);
+      --color-border: var(--border);
+      --color-radius: var(--radius);
+      --color-chart-1: var(--chart-1);
+      --color-chart-2: var(--chart-2);
+      --color-chart-3: var(--chart-3);
+      --color-chart-4: var(--chart-4);
+      --color-chart-5: var(--chart-5);
+      --color-popover: var(--popover);
+      --color-primary: var(--primary);
+      --color-sidebar: var(--sidebar);
+      --color-font-mono: var(--font-mono);
+      --color-font-sans: var(--font-sans);
+      --color-secondary: var(--secondary);
+      --color-background: var(--background);
+      --color-font-serif: var(--font-serif);
+      --color-foreground: var(--foreground);
+      --color-destructive: var(--destructive);
+      --color-sidebar-ring: var(--sidebar-ring);
+      --color-sidebar-accent: var(--sidebar-accent);
+      --color-sidebar-border: var(--sidebar-border);
+      --color-card-foreground: var(--card-foreground);
+      --color-sidebar-primary: var(--sidebar-primary);
+      --color-muted-foreground: var(--muted-foreground);
+      --color-accent-foreground: var(--accent-foreground);
+      --color-popover-foreground: var(--popover-foreground);
+      --color-primary-foreground: var(--primary-foreground);
+      --color-sidebar-foreground: var(--sidebar-foreground);
+      --color-secondary-foreground: var(--secondary-foreground);
+      --color-destructive-foreground: var(--destructive-foreground);
+      --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+      --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
     }
 
     * {
@@ -129,8 +279,8 @@
 
     /* HEADER BANNER CARD */
     .header-card {
-      background: #fffdfa;
-      border: 1px solid #f0e6dd;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
       border-radius: 14px;
       padding: 24px 28px;
       display: flex;
@@ -159,12 +309,12 @@
       width: 48px;
       height: 48px;
       border-radius: 12px;
-      background: #fff2ea;
-      border: 1px solid #fed7aa;
+      background: var(--orange-bg);
+      border: 1px solid var(--orange-border);
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #ea580c;
+      color: var(--orange-text);
       flex-shrink: 0;
     }
     .header-headings {
@@ -182,11 +332,11 @@
       font-size: 1.45rem;
       font-weight: 700;
       letter-spacing: -0.01em;
-      color: #1f2937;
+      color: var(--text-main);
     }
     .header-description {
       font-size: 0.88rem;
-      color: #4b5563;
+      color: var(--text-muted);
       max-width: 780px;
     }
     .header-right {
@@ -197,7 +347,7 @@
     }
     .audit-time {
       font-size: 0.82rem;
-      color: #6b7280;
+      color: var(--text-muted);
       font-weight: 500;
     }
     .header-buttons {
@@ -277,7 +427,7 @@
       background: #700f2e;
     }
     .btn-secondary {
-      background: #ffffff;
+      background: var(--card-bg);
       color: var(--text-main);
       border-color: var(--card-border);
     }
@@ -300,7 +450,7 @@
     .section-title {
       font-size: 0.88rem;
       font-weight: 700;
-      color: #4b5563;
+      color: var(--text-secondary);
       letter-spacing: 0.06em;
       display: flex;
       align-items: center;
@@ -427,7 +577,7 @@
     .table-title-group h2 {
       font-size: 0.95rem;
       font-weight: 700;
-      color: #374151;
+      color: var(--text-main);
       letter-spacing: 0.03em;
       display: flex;
       align-items: center;
@@ -462,9 +612,9 @@
       transition: all 0.15s;
     }
     .toggle-btn.active {
-      background: #ffffff;
+      background: var(--card-bg);
       color: var(--primary-blue);
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      box-shadow: var(--card-shadow);
     }
 
     /* RESPONSIVE DATA TABLES */
@@ -485,25 +635,25 @@
       color: var(--text-secondary);
       letter-spacing: 0.05em;
       border-bottom: 1px solid var(--card-border);
-      background: #fafbfc;
+      background: var(--gray-bg);
       white-space: nowrap;
     }
     table.data-table td {
       padding: 12px 14px;
-      border-bottom: 1px solid #f1f3f4;
+      border-bottom: 1px solid var(--card-border);
       color: var(--text-main);
       vertical-align: middle;
       white-space: nowrap;
     }
     table.data-table tr:hover td {
-      background: #fcfdfe;
+      background: var(--blue-subtle);
     }
 
     /* PILLS & MONOSPACE */
     .user-pill {
-      background: #fef3c7;
-      color: #92400e;
-      border: 1px solid #fde68a;
+      background: var(--yellow-bg);
+      color: var(--yellow-text);
+      border: 1px solid var(--yellow-border);
       font-size: 0.72rem;
       font-weight: 600;
       padding: 2px 7px;
@@ -511,14 +661,14 @@
       font-family: 'JetBrains Mono', monospace;
     }
     .user-pill.root {
-      background: #fee2e2;
-      color: #991b1b;
-      border-color: #fecaca;
+      background: var(--red-bg);
+      color: var(--red-text);
+      border-color: var(--red-border);
     }
     .user-pill.flash {
-      background: #e0f2fe;
-      color: #0369a1;
-      border-color: #bae6fd;
+      background: var(--blue-subtle);
+      color: var(--primary-blue);
+      border-color: rgba(59, 130, 246, 0.3);
     }
     .mono-pid {
       font-family: 'JetBrains Mono', monospace;
@@ -527,11 +677,11 @@
     }
     .process-name {
       font-weight: 600;
-      color: #111827;
+      color: var(--text-main);
     }
     .cmd-snippet {
       font-family: 'JetBrains Mono', monospace;
-      color: #4b5563;
+      color: var(--text-muted);
       font-size: 0.75rem;
       max-width: 380px;
       overflow: hidden;
@@ -547,7 +697,7 @@
     .mini-bar {
       width: 50px;
       height: 5px;
-      background: #e5e7eb;
+      background: var(--gray-bg);
       border-radius: 4px;
       overflow: hidden;
     }
@@ -564,11 +714,11 @@
       gap: 16px;
     }
     .service-card {
-      background: #ffffff;
+      background: var(--card-bg);
       border: 1px solid var(--card-border);
       border-radius: 10px;
       padding: 16px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      box-shadow: var(--card-shadow);
       display: flex;
       flex-direction: column;
       justify-content: space-between;
@@ -576,8 +726,8 @@
       transition: all 0.2s ease;
     }
     .service-card:hover {
-      border-color: #cfd8dc;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.07);
+      border-color: var(--primary-blue);
+      box-shadow: var(--card-hover-shadow);
     }
     .svc-header {
       display: flex;
@@ -588,7 +738,7 @@
     .svc-title {
       font-size: 0.88rem;
       font-weight: 700;
-      color: #1f2937;
+      color: var(--text-main);
     }
     .svc-type-badge {
       font-size: 0.68rem;
@@ -608,7 +758,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border-top: 1px solid #f3f4f6;
+      border-top: 1px solid var(--card-border);
       padding-top: 10px;
       margin-top: 4px;
       font-size: 0.75rem;
@@ -649,12 +799,14 @@
       display: flex;
     }
     .modal-dialog {
-      background: #ffffff;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
       width: 100%;
       max-width: 760px;
       max-height: 85vh;
       border-radius: 16px;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -674,7 +826,7 @@
     .modal-title {
       font-size: 1.15rem;
       font-weight: 700;
-      color: #111827;
+      color: var(--text-main);
       display: flex;
       align-items: center;
       gap: 10px;
@@ -688,14 +840,14 @@
       border-top: 1px solid var(--card-border);
       display: flex;
       justify-content: flex-end;
-      background: #fafbfc;
+      background: var(--bg-page);
     }
     .diag-item {
       padding: 12px 16px;
       border-radius: 8px;
       margin-bottom: 10px;
-      border: 1px solid #f3f4f6;
-      background: #fafafa;
+      border: 1px solid var(--card-border);
+      background: var(--gray-bg);
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
@@ -709,11 +861,11 @@
     .diag-target {
       font-weight: 600;
       font-size: 0.85rem;
-      color: #1f2937;
+      color: var(--text-main);
     }
     .diag-msg {
       font-size: 0.78rem;
-      color: #4b5563;
+      color: var(--text-muted);
     }
 
     /* RESPONSIVE LAYOUT */
@@ -767,10 +919,18 @@
       </div>
     </a>
     <div class="nav-actions">
-      <!-- Swagger Link -->
-      <a href="/docs" class="nav-link-btn" title="View Swagger API Documentation">
-        📖 Swagger Docs
+      <a href="/docs" class="nav-btn" title="View Swagger API Documentation">
+        📑 Docs
       </a>
+      <a href="/tutoring" class="nav-btn" title="Open Tutoring Calculator Console">
+        🧮 Tutoring Calc
+      </a>
+      <a href="/monitoring" class="nav-btn active" title="Flash Server Monitoring">
+        🖥️ System Monitor
+      </a>
+      <button id="theme-toggle" class="nav-btn" style="cursor: pointer;" aria-label="Toggle Theme">
+        🌙 Dark
+      </button>
     </div>
   </nav>
 
@@ -797,7 +957,7 @@
       <div class="audit-time">Audited: <span id="audit-timestamp">--:--:-- --</span></div>
       <div class="header-buttons">
         <!-- Auto refresh selector -->
-        <select id="auto-refresh-select" onchange="handleAutoRefreshChange()" style="padding: 7px 10px; border-radius: 8px; border: 1px solid var(--card-border); font-size: 0.8rem; background: #fff; color: var(--text-main); font-weight: 500;">
+        <select id="auto-refresh-select" onchange="handleAutoRefreshChange()" style="padding: 7px 10px; border-radius: 8px; border: 1px solid var(--card-border); font-size: 0.8rem; background: var(--card-bg); color: var(--text-main); font-weight: 500;">
           <option value="0">Auto-refresh: Off</option>
           <option value="5">Auto-refresh: 5s</option>
           <option value="10" selected>Auto-refresh: 10s</option>
@@ -1053,12 +1213,12 @@
       <button onclick="closeDiagnosticModal()" style="background: none; border: none; font-size: 1.3rem; cursor: pointer; color: var(--text-muted);">&times;</button>
     </div>
     <div class="modal-body">
-      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; padding: 12px 16px; background: #fffdf9; border: 1px solid #fed7aa; border-radius: 8px;">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; padding: 12px 16px; background: var(--gray-bg); border: 1px solid var(--card-border); border-radius: 8px;">
         <div>
-          <div style="font-size: 0.75rem; color: #9a3412; font-weight: 600;">AUDIT RESULT</div>
-          <div style="font-size: 1.05rem; font-weight: 700; color: #111827;" id="modal-audit-summary">Running checks...</div>
+          <div style="font-size: 0.75rem; color: var(--text-secondary); font-weight: 600;">AUDIT RESULT</div>
+          <div style="font-size: 1.05rem; font-weight: 700; color: var(--text-main);" id="modal-audit-summary">Running checks...</div>
         </div>
-        <div style="font-size: 0.8rem; color: #6b7280;" id="modal-audit-timestamp">--</div>
+        <div style="font-size: 0.8rem; color: var(--text-muted);" id="modal-audit-timestamp">--</div>
       </div>
       <div id="diag-items-container">
         <!-- Injected dynamically -->
@@ -1188,27 +1348,33 @@
       }
 
       data.processes.forEach((p, idx) => {
-        const userClass = p.user === 'root' ? 'root' : (p.user.includes('flash') ? 'flash' : '');
+        const user = p.user || p.username || 'system';
+        const userClass = user === 'root' ? 'root' : (user.toLowerCase().includes('flash') ? 'flash' : '');
+        const ramFormatted = p.ram_rss_formatted || p.rss_formatted || '--';
+        const ramPercent = p.ram_percent != null ? p.ram_percent : (p.memory_percent != null ? p.memory_percent : 0);
+        const cpuPercent = p.cpu_percent != null ? p.cpu_percent : 0;
+        const cmdline = p.cmdline || p.name || 'Unknown';
+
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td style="color: var(--text-secondary); font-weight: 500;">#${idx + 1}</td>
           <td class="mono-pid">${p.pid}</td>
-          <td><span class="user-pill ${userClass}">${escapeHtml(p.user)}</span></td>
+          <td><span class="user-pill ${userClass}">${escapeHtml(user)}</span></td>
           <td class="process-name">${escapeHtml(p.name)}</td>
-          <td style="font-weight: 600;">${p.ram_rss_formatted}</td>
+          <td style="font-weight: 600;">${ramFormatted}</td>
           <td>
             <div class="mini-bar-cell">
-              <span>${p.ram_percent}%</span>
-              <div class="mini-bar"><div class="mini-bar-fill" style="width: ${Math.min(p.ram_percent * 2.5, 100)}%;"></div></div>
+              <span>${ramPercent}%</span>
+              <div class="mini-bar"><div class="mini-bar-fill" style="width: ${Math.min(ramPercent * 2.5, 100)}%;"></div></div>
             </div>
           </td>
           <td>
             <div class="mini-bar-cell">
-              <span>${p.cpu_percent}%</span>
-              <div class="mini-bar"><div class="mini-bar-fill" style="background: #e95420; width: ${Math.min(p.cpu_percent * 2, 100)}%;"></div></div>
+              <span>${cpuPercent}%</span>
+              <div class="mini-bar"><div class="mini-bar-fill" style="background: #e95420; width: ${Math.min(cpuPercent * 2, 100)}%;"></div></div>
             </div>
           </td>
-          <td><span class="cmd-snippet" title="${escapeHtml(p.cmdline)}">${escapeHtml(p.cmdline)}</span></td>
+          <td><span class="cmd-snippet" title="${escapeHtml(cmdline)}">${escapeHtml(cmdline)}</span></td>
         `;
         tbody.appendChild(tr);
       });
@@ -1394,6 +1560,43 @@
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#039;');
   }
+
+  // --- UNIFIED THEME SYSTEM (Defaults to System Preferences) ---
+  function initTheme() {
+    const saved = localStorage.getItem('theme');
+    if (saved) {
+      setTheme(saved, false);
+    } else {
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      setTheme(prefersDark ? 'dark' : 'light', false);
+    }
+
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+      if (!localStorage.getItem('theme')) {
+        setTheme(e.matches ? 'dark' : 'light', false);
+      }
+    });
+  }
+
+  function setTheme(theme, save = true) {
+    document.documentElement.setAttribute('data-theme', theme);
+    document.documentElement.classList.toggle('dark', theme === 'dark');
+    if (save) localStorage.setItem('theme', theme);
+    const toggleBtn = document.getElementById('theme-toggle');
+    if (toggleBtn) {
+      toggleBtn.textContent = theme === 'dark' ? '☀️ Light' : '🌙 Dark';
+    }
+  }
+
+  const themeBtn = document.getElementById('theme-toggle');
+  if (themeBtn) {
+    themeBtn.addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-theme') || 'light';
+      setTheme(current === 'dark' ? 'light' : 'dark', true);
+    });
+  }
+
+  initTheme();
 </script>
 
 </body>

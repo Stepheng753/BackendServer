@@ -407,6 +407,7 @@ SWAGGER_HTML_TEMPLATE = """<!DOCTYPE html>
 <head>
   <meta charset="UTF-8">
   <title>Flash Server API</title>
+  <link rel="stylesheet" href="/css/shared.css" />
   <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui.css" />
   <link rel="icon" type="image/png" href="/static/flash.png" />
   <link rel="shortcut icon" type="image/png" href="/static/flash.png" />
@@ -467,6 +468,462 @@ SWAGGER_HTML_TEMPLATE = """<!DOCTYPE html>
         height: 130px !important;
       }
     }
+    :root {
+      --background: #ffffff;
+      --card: #ffffff;
+      --border: #e5e7eb;
+      --foreground: #333333;
+      --primary: #3b82f6;
+    }
+    .dark, [data-theme="dark"] {
+      --background: #171717;
+      --card: #262626;
+      --border: #404040;
+      --foreground: #ffffff;
+      --primary: #3b82f6;
+    }
+    /* BASE BACKGROUND & TEXT */
+    [data-theme="dark"] body, .dark body {
+      background: #171717 !important;
+      color: #ffffff !important;
+    }
+    [data-theme="dark"] .swagger-ui, .dark .swagger-ui {
+      color: #ffffff !important;
+      background: #171717 !important;
+    }
+
+    /* REMOVE ALL INVERT FILTERS */
+    [data-theme="dark"] .swagger-ui,
+    .dark .swagger-ui,
+    [data-theme="dark"] .swagger-ui *,
+    .dark .swagger-ui * {
+      filter: none !important;
+    }
+
+    /* HEADER & BANNER */
+    [data-theme="dark"] #flash-header-banner, .dark #flash-header-banner {
+      background: #262626 !important;
+      border: 1px solid #404040 !important;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+    }
+
+    /* EXHAUSTIVE ZERO GREY TEXT ENFORCEMENT IN DARK MODE */
+    [data-theme="dark"] .swagger-ui p,
+    .dark .swagger-ui p,
+    [data-theme="dark"] .swagger-ui span:not(.opblock-summary-method):not(.required),
+    .dark .swagger-ui span:not(.opblock-summary-method):not(.required),
+    [data-theme="dark"] .swagger-ui div:not(.opblock-summary-method),
+    .dark .swagger-ui div:not(.opblock-summary-method),
+    [data-theme="dark"] .swagger-ui label,
+    .dark .swagger-ui label,
+    [data-theme="dark"] .swagger-ui td,
+    .dark .swagger-ui td,
+    [data-theme="dark"] .swagger-ui th,
+    .dark .swagger-ui th,
+    [data-theme="dark"] .swagger-ui small,
+    .dark .swagger-ui small,
+    [data-theme="dark"] .swagger-ui i,
+    .dark .swagger-ui i,
+    [data-theme="dark"] .swagger-ui em,
+    .dark .swagger-ui em,
+    [data-theme="dark"] .swagger-ui strong,
+    .dark .swagger-ui strong,
+    [data-theme="dark"] .swagger-ui b,
+    .dark .swagger-ui b,
+    [data-theme="dark"] .swagger-ui h1, .dark .swagger-ui h1,
+    [data-theme="dark"] .swagger-ui h2, .dark .swagger-ui h2,
+    [data-theme="dark"] .swagger-ui h3, .dark .swagger-ui h3,
+    [data-theme="dark"] .swagger-ui h4, .dark .swagger-ui h4,
+    [data-theme="dark"] .swagger-ui h5, .dark .swagger-ui h5,
+    [data-theme="dark"] .swagger-ui .opblock-description-wrapper,
+    .dark .swagger-ui .opblock-description-wrapper,
+    [data-theme="dark"] .swagger-ui .opblock-description-wrapper p,
+    .dark .swagger-ui .opblock-description-wrapper p,
+    [data-theme="dark"] .swagger-ui .opblock-description,
+    .dark .swagger-ui .opblock-description,
+    [data-theme="dark"] .swagger-ui .opblock-description p,
+    .dark .swagger-ui .opblock-description p,
+    [data-theme="dark"] .swagger-ui .opblock-external-docs-wrapper,
+    .dark .swagger-ui .opblock-external-docs-wrapper,
+    [data-theme="dark"] .swagger-ui .opblock-title_normal,
+    .dark .swagger-ui .opblock-title_normal,
+    [data-theme="dark"] .swagger-ui .opblock-title_normal p,
+    .dark .swagger-ui .opblock-title_normal p,
+    [data-theme="dark"] .swagger-ui .markdown,
+    .dark .swagger-ui .markdown,
+    [data-theme="dark"] .swagger-ui .markdown p,
+    .dark .swagger-ui .markdown p,
+    [data-theme="dark"] .swagger-ui .renderedMarkdown,
+    .dark .swagger-ui .renderedMarkdown,
+    [data-theme="dark"] .swagger-ui .renderedMarkdown p,
+    .dark .swagger-ui .renderedMarkdown p,
+    [data-theme="dark"] .swagger-ui .parameter__name,
+    .dark .swagger-ui .parameter__name,
+    [data-theme="dark"] .swagger-ui .parameter__type,
+    .dark .swagger-ui .parameter__type,
+    [data-theme="dark"] .swagger-ui .parameter__in,
+    .dark .swagger-ui .parameter__in,
+    [data-theme="dark"] .swagger-ui .parameter__extension,
+    .dark .swagger-ui .parameter__extension,
+    [data-theme="dark"] .swagger-ui .parameters-col_name,
+    .dark .swagger-ui .parameters-col_name,
+    [data-theme="dark"] .swagger-ui .parameters-col_description,
+    .dark .swagger-ui .parameters-col_description,
+    [data-theme="dark"] .swagger-ui .response-col_status,
+    .dark .swagger-ui .response-col_status,
+    [data-theme="dark"] .swagger-ui .response-col_description,
+    .dark .swagger-ui .response-col_description,
+    [data-theme="dark"] .swagger-ui .response-col_links,
+    .dark .swagger-ui .response-col_links,
+    [data-theme="dark"] .swagger-ui .response-col_links i,
+    .dark .swagger-ui .response-col_links i,
+    [data-theme="dark"] .swagger-ui .response-undocumented,
+    .dark .swagger-ui .response-undocumented,
+    [data-theme="dark"] .swagger-ui .opblock-section-header h4,
+    .dark .swagger-ui .opblock-section-header h4,
+    [data-theme="dark"] .swagger-ui .opblock-section-header label,
+    .dark .swagger-ui .opblock-section-header label,
+    [data-theme="dark"] .swagger-ui .responses-inner h4,
+    .dark .swagger-ui .responses-inner h4,
+    [data-theme="dark"] .swagger-ui .responses-inner h5,
+    .dark .swagger-ui .responses-inner h5 {
+      color: #ffffff !important;
+    }
+
+    /* LINKS IN SWAGGER */
+    [data-theme="dark"] .swagger-ui a:not(.nav-btn):not(.swagger-btn),
+    .dark .swagger-ui a:not(.nav-btn):not(.swagger-btn) {
+      color: #60a5fa !important;
+    }
+
+    /* REQUIRED ASTERISK */
+    [data-theme="dark"] .swagger-ui .parameter__name.required span,
+    .dark .swagger-ui .parameter__name.required span,
+    [data-theme="dark"] .swagger-ui .parameter__name.required:after,
+    .dark .swagger-ui .parameter__name.required:after {
+      color: #ef4444 !important;
+    }
+
+    /* TRY IT OUT BUTTON */
+    [data-theme="dark"] .swagger-ui .btn.try-out__btn,
+    .dark .swagger-ui .btn.try-out__btn {
+      color: #ffffff !important;
+      border: 1px solid #3b82f6 !important;
+      background: rgba(59, 130, 246, 0.15) !important;
+      border-radius: 6px !important;
+      font-weight: 600 !important;
+      transition: all 0.2s ease !important;
+    }
+    [data-theme="dark"] .swagger-ui .btn.try-out__btn:hover,
+    .dark .swagger-ui .btn.try-out__btn:hover {
+      background: #3b82f6 !important;
+      color: #ffffff !important;
+    }
+
+    /* EXECUTE & CANCEL BUTTONS */
+    [data-theme="dark"] .swagger-ui .btn.execute,
+    .dark .swagger-ui .btn.execute {
+      background-color: #3b82f6 !important;
+      border-color: #3b82f6 !important;
+      color: #ffffff !important;
+      font-weight: 700 !important;
+    }
+    [data-theme="dark"] .swagger-ui .btn.execute:hover,
+    .dark .swagger-ui .btn.execute:hover {
+      background-color: #2563eb !important;
+      border-color: #2563eb !important;
+    }
+    [data-theme="dark"] .swagger-ui .btn.btn-clear,
+    .dark .swagger-ui .btn.btn-clear {
+      color: #ffffff !important;
+      border-color: #52525b !important;
+      background: #27272a !important;
+    }
+
+    /* INPUTS & TEXTAREAS & PLACEHOLDERS */
+    [data-theme="dark"] .swagger-ui input[type=text],
+    [data-theme="dark"] .swagger-ui input[type=password],
+    [data-theme="dark"] .swagger-ui textarea,
+    .dark .swagger-ui input[type=text],
+    .dark .swagger-ui input[type=password],
+    .dark .swagger-ui textarea {
+      background: #141414 !important;
+      color: #ffffff !important;
+      border: 1px solid #52525b !important;
+      border-radius: 6px !important;
+    }
+    [data-theme="dark"] .swagger-ui input::placeholder,
+    .dark .swagger-ui input::placeholder,
+    [data-theme="dark"] .swagger-ui textarea::placeholder,
+    .dark .swagger-ui textarea::placeholder {
+      color: rgba(255, 255, 255, 0.75) !important;
+    }
+
+    /* ACCEPT CONTROL MESSAGE */
+    [data-theme="dark"] .swagger-ui .response-control-media-type__accept-message,
+    .dark .swagger-ui .response-control-media-type__accept-message {
+      color: #86efac !important;
+    }
+
+    /* SERVERS SECTION */
+    [data-theme="dark"] .swagger-ui .scheme-container,
+    .dark .swagger-ui .scheme-container {
+      background: #262626 !important;
+      box-shadow: none !important;
+      border-top: 1px solid #404040 !important;
+      border-bottom: 1px solid #404040 !important;
+      padding: 16px 0 !important;
+      margin: 20px 0 !important;
+    }
+    [data-theme="dark"] .swagger-ui .scheme-container label,
+    .dark .swagger-ui .scheme-container label {
+      color: #ffffff !important;
+      font-weight: 600 !important;
+    }
+    [data-theme="dark"] .swagger-ui select,
+    .dark .swagger-ui select {
+      background: #171717 !important;
+      color: #ffffff !important;
+      border: 1px solid #404040 !important;
+      border-radius: 6px !important;
+      padding: 8px 12px !important;
+    }
+
+    /* AUTHORIZE BUTTON */
+    [data-theme="dark"] .swagger-ui .btn.authorize,
+    .dark .swagger-ui .btn.authorize {
+      color: #3b82f6 !important;
+      border-color: #3b82f6 !important;
+      background: rgba(59, 130, 246, 0.12) !important;
+    }
+    [data-theme="dark"] .swagger-ui .btn.authorize svg,
+    .dark .swagger-ui .btn.authorize svg {
+      fill: #3b82f6 !important;
+    }
+
+    /* TAGS & HEADINGS */
+    [data-theme="dark"] .swagger-ui .opblock-tag,
+    .dark .swagger-ui .opblock-tag {
+      color: #ffffff !important;
+      border-bottom: 1px solid #404040 !important;
+    }
+    [data-theme="dark"] .swagger-ui .opblock-tag:hover,
+    .dark .swagger-ui .opblock-tag:hover {
+      background: rgba(255, 255, 255, 0.04) !important;
+    }
+    [data-theme="dark"] .swagger-ui .opblock-tag small,
+    .dark .swagger-ui .opblock-tag small {
+      color: #ffffff !important;
+    }
+
+    /* OPERATION BLOCKS */
+    [data-theme="dark"] .swagger-ui .opblock,
+    .dark .swagger-ui .opblock {
+      background: #262626 !important;
+      border: 1px solid #404040 !important;
+      border-radius: 8px !important;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
+      margin-bottom: 12px !important;
+    }
+    [data-theme="dark"] .swagger-ui .opblock .opblock-summary,
+    .dark .swagger-ui .opblock .opblock-summary {
+      border-color: transparent !important;
+    }
+    [data-theme="dark"] .swagger-ui .opblock .opblock-summary-path,
+    .dark .swagger-ui .opblock .opblock-summary-path {
+      color: #ffffff !important;
+      font-weight: 700 !important;
+    }
+    [data-theme="dark"] .swagger-ui .opblock .opblock-summary-description,
+    .dark .swagger-ui .opblock .opblock-summary-description {
+      color: #ffffff !important;
+    }
+
+    /* METHOD BADGES & HIGHLIGHTS */
+    [data-theme="dark"] .swagger-ui .opblock.opblock-get,
+    .dark .swagger-ui .opblock.opblock-get {
+      background: rgba(59, 130, 246, 0.08) !important;
+      border-color: rgba(59, 130, 246, 0.35) !important;
+    }
+    [data-theme="dark"] .swagger-ui .opblock.opblock-get .opblock-summary-method,
+    .dark .swagger-ui .opblock.opblock-get .opblock-summary-method {
+      background: #3b82f6 !important;
+      color: #ffffff !important;
+    }
+    [data-theme="dark"] .swagger-ui .opblock.opblock-post,
+    .dark .swagger-ui .opblock.opblock-post {
+      background: rgba(34, 197, 94, 0.08) !important;
+      border-color: rgba(34, 197, 94, 0.35) !important;
+    }
+    [data-theme="dark"] .swagger-ui .opblock.opblock-post .opblock-summary-method,
+    .dark .swagger-ui .opblock.opblock-post .opblock-summary-method {
+      background: #22c55e !important;
+      color: #ffffff !important;
+    }
+    [data-theme="dark"] .swagger-ui .opblock.opblock-put,
+    .dark .swagger-ui .opblock.opblock-put {
+      background: rgba(245, 158, 11, 0.08) !important;
+      border-color: rgba(245, 158, 11, 0.35) !important;
+    }
+    [data-theme="dark"] .swagger-ui .opblock.opblock-put .opblock-summary-method,
+    .dark .swagger-ui .opblock.opblock-put .opblock-summary-method {
+      background: #f59e0b !important;
+      color: #ffffff !important;
+    }
+    [data-theme="dark"] .swagger-ui .opblock.opblock-delete,
+    .dark .swagger-ui .opblock.opblock-delete {
+      background: rgba(239, 68, 68, 0.08) !important;
+      border-color: rgba(239, 68, 68, 0.35) !important;
+    }
+    [data-theme="dark"] .swagger-ui .opblock.opblock-delete .opblock-summary-method,
+    .dark .swagger-ui .opblock.opblock-delete .opblock-summary-method {
+      background: #ef4444 !important;
+      color: #ffffff !important;
+    }
+
+    /* EXPANDED OPBLOCK BODY & PARAMETERS */
+    [data-theme="dark"] .swagger-ui .opblock-body,
+    .dark .swagger-ui .opblock-body {
+      background: #1c1c1c !important;
+      color: #ffffff !important;
+    }
+    [data-theme="dark"] .swagger-ui .opblock-body pre,
+    .dark .swagger-ui .opblock-body pre {
+      background: #141414 !important;
+      color: #ffffff !important;
+      border: 1px solid #404040 !important;
+    }
+    [data-theme="dark"] .swagger-ui .opblock-section-header,
+    .dark .swagger-ui .opblock-section-header {
+      background: #262626 !important;
+    }
+
+    /* CODE & SYNTAX HIGHLIGHTING (MICROLIGHT) */
+    [data-theme="dark"] .swagger-ui .microlight,
+    .dark .swagger-ui .microlight,
+    [data-theme="dark"] .swagger-ui .microlight *,
+    .dark .swagger-ui .microlight * {
+      color: #ffffff !important;
+      background: transparent !important;
+    }
+
+    /* TAB LINKS */
+    [data-theme="dark"] .swagger-ui .tab li button.tablinks,
+    .dark .swagger-ui .tab li button.tablinks {
+      color: #ffffff !important;
+    }
+    [data-theme="dark"] .swagger-ui .tab li button.tablinks.active,
+    .dark .swagger-ui .tab li button.tablinks.active {
+      color: #60a5fa !important;
+      border-bottom: 2px solid #60a5fa !important;
+      font-weight: 700 !important;
+    }
+
+    /* AUTHORIZE MODAL */
+    [data-theme="dark"] .swagger-ui .dialog-ux .backdrop-ux,
+    .dark .swagger-ui .dialog-ux .backdrop-ux {
+      background: rgba(0, 0, 0, 0.75) !important;
+    }
+    [data-theme="dark"] .swagger-ui .dialog-ux .modal-ux,
+    .dark .swagger-ui .dialog-ux .modal-ux {
+      background: #262626 !important;
+      border: 1px solid #404040 !important;
+      color: #ffffff !important;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5) !important;
+    }
+    [data-theme="dark"] .swagger-ui .dialog-ux .modal-ux-header,
+    .dark .swagger-ui .dialog-ux .modal-ux-header {
+      border-bottom: 1px solid #404040 !important;
+    }
+    [data-theme="dark"] .swagger-ui .dialog-ux .modal-ux-header h3,
+    .dark .swagger-ui .dialog-ux .modal-ux-header h3 {
+      color: #ffffff !important;
+    }
+    [data-theme="dark"] .swagger-ui .dialog-ux .modal-ux-content,
+    .dark .swagger-ui .dialog-ux .modal-ux-content {
+      color: #ffffff !important;
+    }
+    [data-theme="dark"] .swagger-ui .dialog-ux .modal-ux-content h4,
+    .dark .swagger-ui .dialog-ux .modal-ux-content h4 {
+      color: #ffffff !important;
+    }
+    [data-theme="dark"] .swagger-ui .dialog-ux .modal-ux-content p,
+    .dark .swagger-ui .dialog-ux .modal-ux-content p {
+      color: #ffffff !important;
+    }
+
+    /* UNIFIED ACTION BUTTONS ACROSS ALL INTERFACES */
+    .nav-btn,
+    .swagger-btn {
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 7px !important;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+      font-weight: 600 !important;
+      font-size: 13px !important;
+      padding: 7px 14px !important;
+      border-radius: 8px !important;
+      text-decoration: none !important;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.15) !important;
+      transition: all 0.18s ease !important;
+      cursor: pointer !important;
+      background: #3b82f6 !important;
+      color: #ffffff !important;
+      border: 1px solid #3b82f6 !important;
+      white-space: nowrap !important;
+    }
+    .nav-btn:hover,
+    .swagger-btn:hover {
+      background: #2563eb !important;
+      border-color: #2563eb !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3) !important;
+      transform: translateY(-1px);
+    }
+    .nav-btn.active,
+    .swagger-btn.active {
+      background: #1d4ed8 !important;
+      border-color: #1e40af !important;
+      color: #ffffff !important;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.25) !important;
+    }
+
+    /* Guarantee pure white text regardless of parent anchor styling */
+    .dark .nav-btn,
+    .dark .swagger-btn,
+    [data-theme="dark"] .nav-btn,
+    [data-theme="dark"] .swagger-btn,
+    .swagger-ui .info a.nav-btn,
+    .swagger-ui .info a.swagger-btn,
+    .dark .swagger-ui .info a.nav-btn,
+    .dark .swagger-ui .info a.swagger-btn,
+    [data-theme="dark"] .swagger-ui .info a.nav-btn,
+    [data-theme="dark"] .swagger-ui .info a.swagger-btn {
+      color: #ffffff !important;
+      background: #3b82f6 !important;
+      border: 1px solid #3b82f6 !important;
+    }
+    .dark .nav-btn:hover,
+    .dark .swagger-btn:hover,
+    [data-theme="dark"] .nav-btn:hover,
+    [data-theme="dark"] .swagger-btn:hover,
+    .dark .swagger-ui .info a.nav-btn:hover,
+    .dark .swagger-ui .info a.swagger-btn:hover,
+    [data-theme="dark"] .swagger-ui .info a.nav-btn:hover,
+    [data-theme="dark"] .swagger-ui .info a.swagger-btn:hover {
+      color: #ffffff !important;
+      background: #2563eb !important;
+      border-color: #2563eb !important;
+    }
+    .dark .nav-btn.active,
+    .dark .swagger-btn.active,
+    [data-theme="dark"] .nav-btn.active,
+    [data-theme="dark"] .swagger-btn.active {
+      background: #1d4ed8 !important;
+      border-color: #1e40af !important;
+      color: #ffffff !important;
+    }
   </style>
 </head>
 <body>
@@ -474,6 +931,33 @@ SWAGGER_HTML_TEMPLATE = """<!DOCTYPE html>
   <script src="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui-bundle.js"></script>
   <script src="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui-standalone-preset.js"></script>
   <script>
+    // --- UNIFIED THEME SYSTEM ---
+    function initTheme() {
+      const saved = localStorage.getItem('theme');
+      if (saved) {
+        setTheme(saved, false);
+      } else {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        setTheme(prefersDark ? 'dark' : 'light', false);
+      }
+
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+        if (!localStorage.getItem('theme')) {
+          setTheme(e.matches ? 'dark' : 'light', false);
+        }
+      });
+    }
+
+    function setTheme(theme, save = true) {
+      document.documentElement.setAttribute('data-theme', theme);
+      document.documentElement.classList.toggle('dark', theme === 'dark');
+      if (save) localStorage.setItem('theme', theme);
+      const toggleBtn = document.getElementById('swagger-theme-toggle');
+      if (toggleBtn) {
+        toggleBtn.textContent = theme === 'dark' ? '☀️ Light' : '🌙 Dark';
+      }
+    }
+
     function injectFlashBanner() {
       const info = document.querySelector('.swagger-ui .info');
       if (info && !document.getElementById('flash-header-banner')) {
@@ -483,15 +967,31 @@ SWAGGER_HTML_TEMPLATE = """<!DOCTYPE html>
         banner.innerHTML = '<img src="/static/flash.gif" alt="Flash Animation" />';
         info.appendChild(banner);
 
-        const linkContainer = document.createElement('div');
-        linkContainer.id = 'swagger-monitor-link';
-        linkContainer.style = 'margin-top: 14px;';
-        linkContainer.innerHTML = '<a href="/monitoring" style="display:inline-flex; align-items:center; gap:6px; background:#1a73e8; color:#ffffff; font-weight:600; font-size:13px; padding:7px 14px; border-radius:8px; text-decoration:none; box-shadow:0 1px 3px rgba(0,0,0,0.12); transition:background 0.2s;">🖥️ Open System Telemetry & Monitor (/monitoring) ↗</a>';
-        info.appendChild(linkContainer);
+        const actionContainer = document.createElement('div');
+        actionContainer.id = 'swagger-action-bar';
+        actionContainer.style = 'margin-top: 16px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;';
+        
+        const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+        const toggleIcon = currentTheme === 'dark' ? '☀️ Light' : '🌙 Dark';
+
+        actionContainer.innerHTML = `
+          <a href="/docs" class="nav-btn active" title="Swagger API Documentation">📑 Docs</a>
+          <a href="/tutoring" class="nav-btn" title="Crossroads Tutoring Console">🧮 Tutoring Calc</a>
+          <a href="/monitoring" class="nav-btn" title="Flash Server Monitoring">🖥️ System Monitor</a>
+          <button id="swagger-theme-toggle" class="nav-btn">${toggleIcon}</button>
+        `;
+        info.appendChild(actionContainer);
+
+        document.getElementById('swagger-theme-toggle').addEventListener('click', () => {
+          const theme = document.documentElement.getAttribute('data-theme') || 'light';
+          setTheme(theme === 'dark' ? 'light' : 'dark', true);
+        });
       }
     }
 
     window.onload = function() {
+      initTheme();
+
       window.ui = SwaggerUIBundle({
         url: "/openapi.json",
         dom_id: '#swagger-ui',
@@ -508,7 +1008,6 @@ SWAGGER_HTML_TEMPLATE = """<!DOCTYPE html>
         }
       });
 
-      // Observe DOM to ensure banner is added as soon as Swagger UI info component mounts
       const swaggerContainer = document.getElementById('swagger-ui');
       if (swaggerContainer) {
         const observer = new MutationObserver(() => {
@@ -517,7 +1016,6 @@ SWAGGER_HTML_TEMPLATE = """<!DOCTYPE html>
         observer.observe(swaggerContainer, { childList: true, subtree: true });
       }
 
-      // Fallback timer check for first few seconds
       const timer = setInterval(injectFlashBanner, 150);
       setTimeout(() => clearInterval(timer), 3500);
     };

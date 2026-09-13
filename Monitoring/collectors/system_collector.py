@@ -4,7 +4,7 @@ import socket
 import platform
 import datetime
 import psutil
-from .config import (
+from ..config import (
     STORAGE_MOUNTS,
     DISK_WARNING_THRESHOLD,
     DISK_CRITICAL_THRESHOLD,

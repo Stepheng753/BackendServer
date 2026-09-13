@@ -181,3 +181,23 @@ All monitoring targets and warning limits are defined in [Monitoring/config.py](
 
 * **WSL Development**: Gathers real live CPU/RAM metrics from your WSL VM. Services that are not running locally report `⚪ Standby / Offline` without blocking or throwing 500 errors.
 * **Production (`flash-server`)**: Discovers physical partitions (`/dev/sda1`, NTFS mounts) and queries active local daemons.
+
+---
+
+## 5. Package Structure
+
+```
+Monitoring/
+├── __init__.py                # Blueprint export (monitoring_bp)
+├── config.py                  # Mount targets, service matrix, thresholds, and WSL detector
+├── routes.py                  # Flask route handlers (/monitoring and /api/monitoring/*)
+├── collectors/                # Non-blocking telemetry collectors & probes
+│   ├── __init__.py            # Collector exports
+│   ├── system_collector.py    # CPU load, thermal zone, RAM, swap, and disk inspectors
+│   ├── process_collector.py   # Process enumeration with RAM/CPU sort
+│   └── service_checker.py     # Concurrent multi-threaded socket probes & diagnostics
+├── templates/
+│   └── monitoring.html        # Swagger-styled HTML dashboard with dark mode & modals
+└── README.md                  # Package technical reference
+```
+

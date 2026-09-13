@@ -21,7 +21,7 @@ A core requirement for the monitoring engine is that **collecting telemetry must
 
 ## 2. Hardware Telemetry Collectors
 
-Implementation: [Monitoring/system_collector.py](../../Monitoring/system_collector.py)
+Implementation: [Monitoring/collectors/system_collector.py](../../Monitoring/collectors/system_collector.py)
 
 ### 2.1. CPU & Thermal Profile
 * **Core Count**:
@@ -57,7 +57,7 @@ Implementation: [Monitoring/system_collector.py](../../Monitoring/system_collect
 
 ## 3. Live Process Iteration & Sorting
 
-Implementation: [Monitoring/process_collector.py](../../Monitoring/process_collector.py)
+Implementation: [Monitoring/collectors/process_collector.py](../../Monitoring/collectors/process_collector.py)
 
 * **Process Enumeration**:
   * Uses `psutil.process_iter(['pid', 'name', 'username', 'memory_info', 'memory_percent', 'cpu_percent', 'cmdline'])`.

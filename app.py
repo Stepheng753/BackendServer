@@ -34,6 +34,12 @@ def test():
     return {"status": "success", "message": "Hello, World!"}
 
 
+@app.route("/css/<path:filename>")
+def serve_css(filename):
+    from flask import send_from_directory
+    return send_from_directory(os.path.join(app.root_path, "css"), filename)
+
+
 if __name__ == "__main__":
     from TutoringCalculator.config import CONFIG
     port = int(os.environ.get("PORT", CONFIG.get("PORT", 5000)))

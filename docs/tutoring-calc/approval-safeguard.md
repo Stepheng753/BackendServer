@@ -9,7 +9,7 @@ This document details the **human-in-the-loop approval mechanism**, the **`CALCU
 Automated billing should never charge clients or dispatch text messages without human verification. To prevent erroneous messages (e.g., miscategorized calendar entries, adjusted student rates, or in-person cash payments):
 
 ```
-                                [4:00 AM Cron /run_calc.py]
+                                [4:00 AM Cron POST /tutoring/run-calc]
                                               │
                                               ▼
                              [Sheet Created in Google Drive]
@@ -32,7 +32,7 @@ Automated billing should never charge clients or dispatch text messages without 
                            └──────────────────┬──────────────────┘
                                               │
                                               ▼
-                                 [12:00 PM Cron /run_send_texts.py]
+                             [12:00 PM Cron POST /tutoring/run-send-texts]
                                               │
                          ┌────────────────────┴────────────────────┐
                          ▼                                         ▼
@@ -48,14 +48,14 @@ Automated billing should never charge clients or dispatch text messages without 
 ## 2. The `CALCULATED` Safety Gate
 
 ### 2.1. Generation Phase
-When `POST /copy-template` or `run_calc.py` creates a new spreadsheet, it appends the tag `CALCULATED` to the sheet title:
+When `POST /tutoring/run-calc` (or `POST /copy-template`) creates a new spreadsheet, it appends the tag `CALCULATED` to the sheet title:
 ```
 Title Format: MM.DD.YY - MM.DD.YY CALCULATED
 Example:      08.31.26 - 09.06.26 CALCULATED
 ```
 
 ### 2.2. Human Verification Checklist
-Stephen receives an automated email at 4:00 AM with the sheet link. Before noon, perform the following verification:
+Stephen receives an automated email at 4:00 AM with the sheet link (or reviews it via the `/tutoring` dashboard). Before noon, perform the following verification:
 1. **Check Student Hours (Column D)**: Confirm tutoring calendar events matched actual sessions.
 2. **Review Hourly Rates (Column C)**: Confirm rates are accurate for individual students.
 3. **Verify Previous Balances (Column G)**: Confirm rollover balances from prior unpaid weeks.
@@ -65,7 +65,7 @@ Stephen receives an automated email at 4:00 AM with the sheet link. Before noon,
      `08.31.26 - 09.06.26`
 
 ### 2.3. Safety Interception in Code
-When `POST /send-texts` or `run_send_texts.py` executes, it evaluates `get_pending_text_recipients()`:
+When `POST /tutoring/run-send-texts` (or `POST /send-texts`) executes, it evaluates `get_pending_text_recipients()`:
 
 ```python
 # TutoringCalculator/apis/drive_sheets_api.py
@@ -78,7 +78,7 @@ if "CALCULATED" in sheet_title:
     }
 ```
 
-If `CALCULATED` is present, the script immediately exits with zero texts sent.
+If `CALCULATED` is present, the endpoint immediately returns `"status": "skipped"` with zero texts sent.
 
 ---
 

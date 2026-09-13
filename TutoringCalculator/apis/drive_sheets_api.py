@@ -189,14 +189,46 @@ def get_previous_balances(creds, current_start_str, current_end_str):
 
         if status.lower() == 'need to pay' and student_name:
             first_name = student_name.split()[0].capitalize()
-            balances[first_name] = parse_currency(total_balance_raw)
+            bal = parse_currency(total_balance_raw)
+            balances[student_name] = bal
+            balances[first_name] = bal
 
     return balances
 
 
+def get_student_names_from_sheet(creds, sheet_id=None):
+    """
+    Reads active student names from Column C (starting at row 5) of the given sheet
+    (or master template if sheet_id is None).
+    """
+    sheets_service = get_sheets_service(creds)
+    target_id = sheet_id or config.TEMPLATE_SHEET_ID
+    if not target_id:
+        return []
+
+    try:
+        result = sheets_service.spreadsheets().values().get(
+            spreadsheetId=target_id,
+            range='C5:C'
+        ).execute()
+        student_rows = result.get('values', [])
+        names = []
+        for row in student_rows:
+            if not row or not row[0].strip():
+                break
+            full_name = row[0].strip()
+            if not is_valid_student_name(full_name):
+                break
+            names.append(full_name)
+        return names
+    except Exception as e:
+        print(f"Error fetching student names from sheet {target_id}: {e}")
+        return []
+
+
 def update_sheet_hours_and_balances(creds, sheet_id, hours_by_student, previous_balances):
     """
-    Updates Column D (# Hours) matching student first names,
+    Updates Column D (# Hours) matching student full names and first names,
     and updates Column G (Remaining Balance) with prior balances.
     Stops processing when Column C no longer has text or is not more than 5 characters,
     preventing overwriting of subtotal / formula rows.
@@ -211,7 +243,7 @@ def update_sheet_hours_and_balances(creds, sheet_id, hours_by_student, previous_
 
     hours_data = []
     balance_data = []
-    updated_students = []
+    raw_students = []
 
     for idx, row in enumerate(student_rows, start=5):
         if not row or not row[0].strip():
@@ -223,19 +255,20 @@ def update_sheet_hours_and_balances(creds, sheet_id, hours_by_student, previous_
 
         first_name = full_name.split()[0].capitalize()
 
-        hrs = hours_by_student.get(first_name, 0.0)
-        rem_balance = previous_balances.get(first_name, 0.0)
+        # Match by full name first, then fallback to first name
+        hrs = hours_by_student.get(full_name, hours_by_student.get(first_name, 0.0))
+        rem_balance = previous_balances.get(full_name, previous_balances.get(first_name, 0.0))
 
         hours_data.append([hrs])
         balance_data.append([rem_balance])
-        updated_students.append({
+        raw_students.append({
             "name": full_name,
             "first_name": first_name,
             "hours": hrs,
             "remaining_balance": rem_balance
         })
 
-    total_rows = len(updated_students)
+    total_rows = len(raw_students)
     if total_rows > 0:
         batch_body = {
             "valueInputOption": "USER_ENTERED",
@@ -254,6 +287,51 @@ def update_sheet_hours_and_balances(creds, sheet_id, hours_by_student, previous_
             spreadsheetId=sheet_id,
             body=batch_body
         ).execute()
+
+    # Re-read C5:H{4 + total_rows} with FORMATTED_VALUE to get evaluated totals directly from Google Sheets
+    updated_students = []
+    try:
+        calculated_range = f"C5:H{4 + total_rows}"
+        calc_res = sheets_service.spreadsheets().values().get(
+            spreadsheetId=sheet_id,
+            range=calculated_range,
+            valueRenderOption='FORMATTED_VALUE'
+        ).execute()
+        calc_rows = calc_res.get('values', [])
+        for r in calc_rows:
+            if not r or not r[0].strip():
+                continue
+            s_name = r[0].strip()
+            if not is_valid_student_name(s_name):
+                break
+            s_hours = r[1].strip() if len(r) > 1 else '0'
+            s_rate = r[2].strip() if len(r) > 2 else '$0.00'
+            s_subtotal = r[3].strip() if len(r) > 3 else '$0.00'
+            s_prev_bal = r[4].strip() if len(r) > 4 else '$0.00'
+            s_total = r[5].strip() if len(r) > 5 else '$0.00'
+
+            updated_students.append({
+                "student": s_name,
+                "name": s_name,
+                "first_name": s_name.split()[0].capitalize(),
+                "hours": s_hours,
+                "rate": s_rate,
+                "subtotal": s_subtotal,
+                "remaining_balance": s_prev_bal,
+                "total": s_total
+            })
+    except Exception as e:
+        print(f"Error fetching calculated student rows: {e}")
+        # Fallback to local data if formatted fetch fails
+        for s in raw_students:
+            updated_students.append({
+                "student": s["name"],
+                "name": s["name"],
+                "first_name": s["first_name"],
+                "hours": s["hours"],
+                "remaining_balance": s["remaining_balance"],
+                "total": f"${s['hours'] * 60:.2f}"
+            })
 
     # Fetch total balance from the summary row (last row of Column H)
     total_balance_str = ""
@@ -395,3 +473,23 @@ def get_pending_text_recipients(creds, sheet_id):
         "title": title,
         "recipients": recipients
     }
+
+
+def find_current_week_sheet(creds, start_date_str, end_date_str):
+    """Finds the existing Google Sheet matching the week date range inside the year folder."""
+    drive_service = get_drive_service(creds)
+    start_date = parse_date_string(start_date_str)
+    end_date = parse_date_string(end_date_str)
+    year_folder_id = get_or_create_year_folder(drive_service, str(start_date.year))
+
+    base_name = f"{start_date.strftime('%m.%d.%y')} - {end_date.strftime('%m.%d.%y')}"
+    query = (
+        f"name contains '{base_name}' and "
+        f"mimeType='application/vnd.google-apps.spreadsheet' and "
+        f"trashed=false and "
+        f"'{year_folder_id}' in parents"
+    )
+    res = drive_service.files().list(q=query, spaces='drive', fields='files(id, name, webViewLink)').execute()
+    files = res.get('files', [])
+    return files[0] if files else None
+

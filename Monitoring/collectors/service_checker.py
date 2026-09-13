@@ -6,7 +6,7 @@ from concurrent.futures import ThreadPoolExecutor
 import urllib.request
 import urllib.error
 
-from .config import (
+from ..config import (
     SERVICES_MATRIX,
     CRON_LOGS,
     DISK_WARNING_THRESHOLD,

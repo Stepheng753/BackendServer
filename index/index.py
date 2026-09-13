@@ -46,8 +46,8 @@ def check_auth():
     if request.path in ['/login_oauth', '/TutoringCalculator/login_oauth'] and 'code' in request.args:
         return None
 
-    # Allow static assets and favicon without triggering separate auth prompt
-    if request.path.startswith('/static/') or request.path == '/favicon.ico':
+    # Allow static assets, CSS, and favicon without triggering separate auth prompt
+    if request.path.startswith('/static/') or request.path.startswith('/css/') or request.path == '/favicon.ico':
         return None
 
     auth_header = request.headers.get('Authorization')

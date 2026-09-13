@@ -71,11 +71,69 @@ def resolve_calendar_id(calendar_service):
     return 'primary'
 
 
-def calculate_tutoring_hours(creds, start_date_str, end_date_str):
+def match_event_to_student(event_summary, student_names):
+    """
+    Matches a Google Calendar event summary against actual student names from the Google Sheet.
+    Example event_summary: 'Elijah Tutoring', 'Michael Brower Tutoring', 'Ellie Tutoring'
+    Example student_names: ['Elijah Dinh', 'Ellie Hoang', 'Thea Sharma', 'Amelie Meeker', 'Michael Brower', 'Jack Glandorf']
+    """
+    if not event_summary:
+        return None
+
+    if not student_names:
+        words = event_summary.strip().split()
+        return words[0].capitalize() if words else None
+
+    summary_lower = event_summary.lower()
+    words = event_summary.strip().split()
+    first_word = words[0].lower() if words else ""
+
+    # 1. Check for exact full name in summary (e.g., 'Michael Brower' in 'Michael Brower Tutoring')
+    for name in student_names:
+        if name.lower() in summary_lower:
+            return name
+
+    # 2. Check for first name + last initial (e.g., 'Michael B' in 'Michael B Tutoring')
+    if len(words) >= 2:
+        candidate_initial = f"{words[0].lower()} {words[1][0].lower()}"
+        for name in student_names:
+            parts = name.lower().split()
+            if len(parts) >= 2 and f"{parts[0]} {parts[1][0]}" == candidate_initial:
+                return name
+
+    # 3. Check for single first-name match
+    matching_students = [
+        name for name in student_names
+        if name.lower().split()[0] == first_word
+    ]
+    if len(matching_students) == 1:
+        return matching_students[0]
+
+    # 4. If multiple students share the first name, check if last name is in summary
+    if len(matching_students) > 1:
+        for name in matching_students:
+            parts = name.lower().split()
+            if len(parts) >= 2 and parts[1] in summary_lower:
+                return name
+        return matching_students[0]
+
+    # 5. Fallback to first word
+    return words[0].capitalize() if words else None
+
+
+def calculate_tutoring_hours(creds, start_date_str, end_date_str, sheet_student_names=None):
     """
     Queries tutoring calendar for events in range, filters for events ending in 'Tutoring'
-    with primary color (colorId is None), and consolidates hours by first word of summary.
+    with primary color (colorId is None), and matches hours against actual Google Sheet student names.
     """
+    # If student names not provided, attempt to load them from the master template
+    if not sheet_student_names:
+        try:
+            from .drive_sheets_api import get_student_names_from_sheet
+            sheet_student_names = get_student_names_from_sheet(creds)
+        except Exception:
+            sheet_student_names = []
+
     calendar_service = get_calendar_service(creds)
     calendar_id = resolve_calendar_id(calendar_service)
     time_min, time_max = get_calendar_time_range(start_date_str, end_date_str)
@@ -90,7 +148,6 @@ def calculate_tutoring_hours(creds, start_date_str, end_date_str):
         ).execute()
     except HttpError as e:
         if e.resp.status == 404:
-            # Automatic fallback: find "Tutoring" in the user's calendars
             calendars = calendar_service.calendarList().list().execute().get('items', [])
             tutoring_cal = next(
                 (c for c in calendars if c.get('summary', '').strip().lower() == 'tutoring'),
@@ -148,11 +205,18 @@ def calculate_tutoring_hours(creds, start_date_str, end_date_str):
 
         duration_hours = (end_dt - start_dt).total_seconds() / 3600.0
 
-        # Grab the first word of the event title which is their name
-        student_first_name = words[0].capitalize()
-        hours_by_student[student_first_name] = round(
-            hours_by_student.get(student_first_name, 0.0) + duration_hours, 2
-        )
+        # Match against actual student names from the Google Sheet
+        matched_student = match_event_to_student(summary, sheet_student_names)
+        if matched_student:
+            first_name = matched_student.split()[0].capitalize()
+            # Record under both matched full name and first name for seamless lookup
+            hours_by_student[matched_student] = round(
+                hours_by_student.get(matched_student, 0.0) + duration_hours, 2
+            )
+            hours_by_student[first_name] = round(
+                hours_by_student.get(first_name, 0.0) + duration_hours, 2
+            )
 
     return hours_by_student
+
 

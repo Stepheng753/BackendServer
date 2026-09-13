@@ -104,3 +104,14 @@ Crossroads Tutoring operates on a weekly billing cycle running from Monday to Su
   3. Writes previous unpaid balances to Column G.
   4. Halts processing before the summary / subtotal row.
   5. Sends an email notification to `NOTIFICATION_EMAIL` containing the sheet link.
+
+### 2.6. `POST /tutoring/run-calc` (Orchestrator Endpoint)
+* **Parameters**: `start_date`, `end_date` (optional, auto-calculated if omitted).
+* **Behavior**:
+  1. Automatically runs steps 2.1 through 2.5 in a single unified atomic workflow.
+  2. Copies template into year folder titled `MM.DD.YY - MM.DD.YY CALCULATED`.
+  3. Scrapes Google Calendar and updates spreadsheet cells.
+  4. Sends email notification.
+  5. Returns JSON response containing `sheet_id`, `sheet_url`, `sheet_title`, `total_balance`, and student list.
+  6. Used by both the **`[⚡ Run Weekly Pay Calculation]`** web dashboard button and Monday morning automated crontab.
+

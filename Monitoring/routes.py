@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, render_template, request
-from .system_collector import collect_system_telemetry, get_storage_info
-from .process_collector import get_top_processes
-from .service_checker import get_services_status, run_diagnostics
+from .collectors.system_collector import collect_system_telemetry, get_storage_info
+from .collectors.process_collector import get_top_processes
+from .collectors.service_checker import get_services_status, run_diagnostics
 from .config import is_wsl_environment
 
 monitoring_bp = Blueprint('monitoring', __name__, template_folder='templates')

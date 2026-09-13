@@ -91,8 +91,8 @@
 | Directory / File | Description | Environment / Port |
 | :--- | :--- | :--- |
 | **[`app.py`](./app.py)** | Main Flask application entry point with blueprint registrations. | `localhost:5000` / Unix Socket |
-| **[`Monitoring/`](./Monitoring/)** | System telemetry collectors, process monitors, service probes, and HTML dashboard. | `/monitoring` |
-| **[`TutoringCalculator/`](./TutoringCalculator/)** | Weekly invoicing engine, Google APIs integration, Twilio client, and cron scripts. | `/dates`, `/calc-hours`, etc. |
+| **[`Monitoring/`](./Monitoring/)** | System telemetry collectors (`collectors/`), process monitors, service probes, and HTML dashboard. | `/monitoring` |
+| **[`TutoringCalculator/`](./TutoringCalculator/)** | Weekly invoicing engine, web dashboard (`/tutoring`), Google APIs integration, and Twilio SMS client. | `/tutoring`, `/dates`, etc. |
 | **[`swagger/`](./swagger/)** | Interactive OpenAPI 3.0 Swagger documentation console and JSON spec generator. | `/`, `/docs`, `/openapi.json` |
 | **[`index/`](./index/)** | HTTP Basic Auth middleware, security checkers, and route protection decorators. | Application middleware |
 | **[`config/`](./config/)** | Environment configuration files and secrets schemas (`config.json`, `secrets.json`). | Application configuration |
@@ -109,6 +109,7 @@ Accessible at `http://localhost:5000/monitoring` (or `https://dev.stepheng753.co
 * **Storage Devices & Mounts**: Live capacity and usage tracking across all 5 flash-server storage pools (`/`, `Dragon-Ball`, `Photos`, `CapCut-Videos`, `TV-Series`).
 * **Services Matrix**: Multi-threaded socket probes verifying uptime for 11 critical homelab services (`Immich`, `Jellyfin`, `qBittorrent`, `Gluetun`, `n8n`, `PostgreSQL`, `AIU`, `BackendServer`, `Nginx`, `Samba`, `Tailscale`).
 * **Diagnostic Audit Suite**: One-click modal audit testing disk space, RAM pressure, CPU thermals, and background cron log freshness.
+* **Unified Dark Mode**: Defaults to system color scheme with manual toggle button.
 
 ### Monitoring Endpoints
 | Endpoint | Method | Description |
@@ -122,27 +123,33 @@ Accessible at `http://localhost:5000/monitoring` (or `https://dev.stepheng753.co
 
 ---
 
-## 🎓 Tutoring Calculator Automation
+## 🎓 Tutoring Calculator Automation & Web Dashboard
 
-The `TutoringCalculator` module automates the billing lifecycle for Crossroads Tutoring on a weekly cycle (Monday–Sunday):
+Accessible at `http://localhost:5000/tutoring` (or `https://dev.stepheng753.com/tutoring`), the web console provides one-click triggers, Google Sheet links, earnings modal summaries, text message audit logs, and direct access to the Google Drive Pay folder.
+
+Weekly billing cycle runs Monday–Sunday:
 
 ```
-Monday 04:00 AM PST ───> run_calc.py        (Parses hours, creates sheet, sends email)
+Monday 04:00 AM PST ───> curl -u "$USER:$PASS" -X POST /tutoring/run-calc
                                │
                 [Human Review Window: 8 Hours]
                                │
-Monday 12:00 PM PST ───> run_send_texts.py (Checks title approval, sends SMS notifications)
+Monday 12:00 PM PST ───> curl -u "$USER:$PASS" -X POST /tutoring/run-send-texts
 ```
 
 ### Tutoring Calculator Endpoints
 | Endpoint | Method | Description |
 | :--- | :--- | :--- |
+| `/tutoring` | `GET` | Interactive HTML Web Dashboard with one-click actions, modals, and dark mode. |
+| `/tutoring/status` | `GET` | Live billing dates, Google auth state, current week sheet metadata, and Drive folder links. |
+| `/tutoring/run-calc` | `POST` | One-click full pay calculation: clones template, scrapes hours, checks balances, updates sheet, and emails summary. |
+| `/tutoring/run-send-texts` | `POST` | One-click SMS dispatch: evaluates `CALCULATED` title safeguard, sends Twilio texts, and updates statuses. |
 | `/dates` | `GET` | Computes preceding Monday & following Sunday billing week dates (`MM.DD.YY`). |
 | `/copy-template` | `POST` | Clones master template into target year folder named `MM.DD.YY - MM.DD.YY CALCULATED`. |
 | `/calc-hours` | `GET` | Scrapes Google Calendar for sessions ending in "Tutoring" and consolidates hours. |
 | `/previous-balances` | `GET` | Queries prior week's sheet for students marked `"Need to Pay"`. |
 | `/update-sheet` | `POST` | Injects hours into Column D, unpaid balances into Column G, and sends notification email. |
-| `/send-texts` | `POST` | Safeguard check: Aborts if `CALCULATED` is in title. When approved, sends Twilio SMS notices. |
+| `/send-texts` | `POST` | Low-level text dispatch route guarded by `CALCULATED` approval check. |
 | `/text-logs` | `GET` | Returns raw audit log of all dispatched text messages (`text_messages.log`). |
 | `/login_oauth` | `GET` | Google OAuth 2.0 web consent flow for Calendar, Drive, Sheets, and Gmail scopes. |
 
@@ -219,6 +226,7 @@ python3 app.py
 * The local server will be accessible at `http://localhost:5000`.
 * Open `http://localhost:5000/docs` to view the interactive Swagger UI.
 * Open `http://localhost:5000/monitoring` to view the real-time hardware telemetry dashboard.
+* Open `http://localhost:5000/tutoring` to view the interactive Crossroads Tutoring Console.
 
 ---
 
@@ -240,10 +248,10 @@ sudo journalctl -u dev_stepheng753_com_api.service -f
 On `flash-server`, schedule the automated billing workflow via `crontab -e`:
 ```bash
 # 1. Weekly Pay Calculation: Monday 4:00 AM PST (12:00 UTC)
-0 12 * * 1 /home/stepheng753/Development/BackendServer/.venv/bin/python /home/stepheng753/Development/BackendServer/TutoringCalculator/scripts/run_calc.py >> /home/stepheng753/Development/BackendServer/TutoringCalculator/logs/cron.log 2>&1
+0 12 * * 1 curl -s -u "$USERNAME:$PASSWORD" -X POST http://localhost:5000/tutoring/run-calc >> /home/stepheng753/Development/BackendServer/TutoringCalculator/logs/cron.log 2>&1
 
-# 2. Text Message Dispatch: Monday 12:00 PM PST (20:00 UTC)
-0 20 * * 1 /home/stepheng753/Development/BackendServer/.venv/bin/python /home/stepheng753/Development/BackendServer/TutoringCalculator/scripts/run_send_texts.py >> /home/stepheng753/Development/BackendServer/TutoringCalculator/logs/cron.log 2>&1
+# 2. Text Message Dispatch Guarded by Approval: Monday 12:00 PM PST (20:00 UTC)
+0 20 * * 1 curl -s -u "$USERNAME:$PASSWORD" -X POST http://localhost:5000/tutoring/run-send-texts >> /home/stepheng753/Development/BackendServer/TutoringCalculator/logs/cron.log 2>&1
 ```
 
 ---

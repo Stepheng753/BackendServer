@@ -4,22 +4,22 @@ This document details the **automated cron job schedules** and the **Google OAut
 
 ---
 
-## 1. Automated Cron Schedules
+## 1. Automated Cron Schedules & Endpoints
 
-The tutoring billing pipeline runs on two scheduled cron scripts every Monday on the host machine (`flash-server`):
+The tutoring billing pipeline runs on two scheduled HTTP endpoint triggers every Monday on the host machine (`flash-server`):
 
 ```
-Monday 04:00 AM PST ───> run_calc.py        (Parses hours, creates sheet, sends email)
+Monday 04:00 AM PST ───> curl -u "$USER:$PASS" -X POST /tutoring/run-calc
                                │
                 [Human Review Window: 8 Hours]
                                │
-Monday 12:00 PM PST ───> run_send_texts.py (Checks title approval, sends SMS notifications)
+Monday 12:00 PM PST ───> curl -u "$USER:$PASS" -X POST /tutoring/run-send-texts
 ```
 
-### 1.1. Script Reference
+### 1.1. Endpoint Execution Reference
 
-#### `run_calc.py` (Script 1)
-* **Path**: `TutoringCalculator/scripts/run_calc.py`
+#### `POST /tutoring/run-calc` (Action 1)
+* **Endpoint**: `http://localhost:5000/tutoring/run-calc` (or `/run-calc`)
 * **Schedule**: Every Monday at `04:00 AM` PST
 * **Responsibilities**:
   1. Computes preceding Monday–Sunday date range.
@@ -28,17 +28,19 @@ Monday 12:00 PM PST ───> run_send_texts.py (Checks title approval, sends S
   4. Scrapes Google Calendar for tutoring sessions and updates hours in Column D.
   5. Scrapes previous week's sheet for unpaid balances and updates Column G.
   6. Sends calculation summary email with direct spreadsheet link to `stepheng753@gmail.com`.
+  7. Returns JSON with `sheet_url`, `total_balance`, and student breakdown for web UI and log tracking.
 
-#### `run_send_texts.py` (Script 2)
-* **Path**: `TutoringCalculator/scripts/run_send_texts.py`
+#### `POST /tutoring/run-send-texts` (Action 2)
+* **Endpoint**: `http://localhost:5000/tutoring/run-send-texts` (or `/send-texts`)
 * **Schedule**: Every Monday at `12:00 PM` (Noon) PST
 * **Responsibilities**:
-  1. Locates the current week's sheet in Google Drive.
-  2. **Safeguard Check**: If title still contains `CALCULATED`, aborts immediately.
-  3. If approved, iterates over students with balances and blank status.
+  1. Locates the current week's sheet in Google Drive (auto-detected via date range).
+  2. **Safeguard Check**: If title still contains `CALCULATED`, aborts immediately with `"status": "skipped"`.
+  3. If approved (human deleted `CALCULATED`), iterates over students with balances and blank status.
   4. Sends SMS via Twilio API with invoice breakdown and payment details.
   5. Updates student status to `"Need to Pay"` in Column B.
   6. Appends audit log to `TutoringCalculator/logs/text_messages.log`.
+  7. Returns JSON with sent count, message details, and recent log lines.
 
 ---
 
@@ -49,17 +51,17 @@ Edit your server user's crontab:
 crontab -e
 ```
 
-Add the following entries (pointing to the Python executable inside your virtual environment):
+Add the following entries (using authenticated `curl` with your basic auth credentials):
 
 ```bash
 # -----------------------------------------------------------------------------
-# Crossroads Tutoring Weekly Automation Pipeline
+# Crossroads Tutoring Weekly Automation Pipeline (Endpoint-Driven)
 # -----------------------------------------------------------------------------
 # 1. Weekly Pay Calculation: Monday 4:00 AM PST (12:00 UTC)
-0 12 * * 1 /home/stepheng753/Development/BackendServer/.venv/bin/python /home/stepheng753/Development/BackendServer/TutoringCalculator/scripts/run_calc.py >> /home/stepheng753/Development/BackendServer/TutoringCalculator/logs/cron.log 2>&1
+0 12 * * 1 curl -s -u "$USERNAME:$PASSWORD" -X POST http://localhost:5000/tutoring/run-calc >> /home/stepheng753/Development/BackendServer/TutoringCalculator/logs/cron.log 2>&1
 
-# 2. Text Message Dispatch: Monday 12:00 PM PST (20:00 UTC)
-0 20 * * 1 /home/stepheng753/Development/BackendServer/.venv/bin/python /home/stepheng753/Development/BackendServer/TutoringCalculator/scripts/run_send_texts.py >> /home/stepheng753/Development/BackendServer/TutoringCalculator/logs/cron.log 2>&1
+# 2. Text Message Dispatch Guarded by Approval: Monday 12:00 PM PST (20:00 UTC)
+0 20 * * 1 curl -s -u "$USERNAME:$PASSWORD" -X POST http://localhost:5000/tutoring/run-send-texts >> /home/stepheng753/Development/BackendServer/TutoringCalculator/logs/cron.log 2>&1
 ```
 
 > [!NOTE]
