@@ -57,23 +57,24 @@ Add the following entries (using authenticated `curl` with your basic auth crede
 # -----------------------------------------------------------------------------
 # Crossroads Tutoring Weekly Automation Pipeline (Endpoint-Driven)
 # -----------------------------------------------------------------------------
-# 1. Weekly Pay Calculation: Monday 4:00 AM PST (12:00 UTC)
-0 12 * * 1 curl -sS -u "$USERNAME:$PASSWORD" -X POST https://dev.stepheng753.com/tutoring/run-calc >> /home/flash-server/Development/BackendServer/TutoringCalculator/logs/cron.log 2>&1
+# 1. Weekly Pay Calculation: Monday 4:00 AM PST
+0 4 * * 1 curl -sS -u "$USERNAME:$PASSWORD" -X POST https://dev.stepheng753.com/tutoring/run-calc >> /home/flash-server/Development/BackendServer/TutoringCalculator/logs/cron.log 2>&1
 
-# 2. Text Message Dispatch Guarded by Approval: Monday 12:00 PM PST (20:00 UTC)
-0 20 * * 1 curl -sS -u "$USERNAME:$PASSWORD" -X POST https://dev.stepheng753.com/tutoring/run-send-texts >> /home/flash-server/Development/BackendServer/TutoringCalculator/logs/cron.log 2>&1
+# 2. Text Message Dispatch Guarded by Approval: Monday 12:00 PM (Noon) PST
+0 12 * * 1 curl -sS -u "$USERNAME:$PASSWORD" -X POST https://dev.stepheng753.com/tutoring/run-send-texts >> /home/flash-server/Development/BackendServer/TutoringCalculator/logs/cron.log 2>&1
 ```
 
 > [!TIP]
 > **Production Socket Alternative**: If you prefer triggering directly via the local Gunicorn socket without DNS/HTTPS routing:
 > ```bash
-> 0 12 * * 1 curl -sS -u "$USERNAME:$PASSWORD" --unix-socket /tmp/dev_stepheng753_com_api.sock -X POST http://localhost/tutoring/run-calc >> /home/flash-server/Development/BackendServer/TutoringCalculator/logs/cron.log 2>&1
+> 0 4 * * 1 curl -sS -u "$USERNAME:$PASSWORD" --unix-socket /tmp/dev_stepheng753_com_api.sock -X POST http://localhost/tutoring/run-calc >> /home/flash-server/Development/BackendServer/TutoringCalculator/logs/cron.log 2>&1
+> 0 12 * * 1 curl -sS -u "$USERNAME:$PASSWORD" --unix-socket /tmp/dev_stepheng753_com_api.sock -X POST http://localhost/tutoring/run-send-texts >> /home/flash-server/Development/BackendServer/TutoringCalculator/logs/cron.log 2>&1
 > ```
 
 > [!NOTE]
-> Adjust UTC hours if your server timezone is set to `America/Los_Angeles` rather than `UTC`. If `date` returns PST/PDT:
-> * `0 4 * * 1` (4:00 AM local time)
-> * `0 12 * * 1` (12:00 PM local time)
+> `flash-server` is configured to Pacific Time (`America/Los_Angeles`), so standard cron times run natively in PST/PDT:
+> * `0 4 * * 1` = 4:00 AM Pacific Time
+> * `0 12 * * 1` = 12:00 PM (Noon) Pacific Time
 
 ---
 

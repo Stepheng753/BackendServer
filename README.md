@@ -247,11 +247,11 @@ sudo journalctl -u dev_stepheng753_com_api.service -f
 ### Automated Monday Crontab
 On `flash-server`, schedule the automated billing workflow via `crontab -e`:
 ```bash
-# 1. Weekly Pay Calculation: Monday 4:00 AM PST (12:00 UTC)
-0 12 * * 1 curl -sS -u "$USERNAME:$PASSWORD" -X POST https://dev.stepheng753.com/tutoring/run-calc >> /home/flash-server/Development/BackendServer/TutoringCalculator/logs/cron.log 2>&1
+# 1. Weekly Pay Calculation: Monday 4:00 AM PST
+0 4 * * 1 curl -sS -u "$USERNAME:$PASSWORD" -X POST https://dev.stepheng753.com/tutoring/run-calc >> /home/flash-server/Development/BackendServer/TutoringCalculator/logs/cron.log 2>&1
 
-# 2. Text Message Dispatch Guarded by Approval: Monday 12:00 PM PST (20:00 UTC)
-0 20 * * 1 curl -sS -u "$USERNAME:$PASSWORD" -X POST https://dev.stepheng753.com/tutoring/run-send-texts >> /home/flash-server/Development/BackendServer/TutoringCalculator/logs/cron.log 2>&1
+# 2. Text Message Dispatch Guarded by Approval: Monday 12:00 PM (Noon) PST
+0 12 * * 1 curl -sS -u "$USERNAME:$PASSWORD" -X POST https://dev.stepheng753.com/tutoring/run-send-texts >> /home/flash-server/Development/BackendServer/TutoringCalculator/logs/cron.log 2>&1
 ```
 *(Or target the local socket directly: `curl -sS -u "$USERNAME:$PASSWORD" --unix-socket /tmp/dev_stepheng753_com_api.sock -X POST http://localhost/tutoring/run-calc ...`)*
 
