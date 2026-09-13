@@ -6,17 +6,27 @@ from googleapiclient.discovery import build
 from ..config import NOTIFICATION_EMAIL
 
 
+def format_currency_val(val):
+    """Safely formats currency strings or numbers like '$ 180.00', '$ -', 0, 180.0 to clean '$180.00'."""
+    if val is None:
+        return "$0.00"
+    val_str = str(val).strip()
+    if not val_str or val_str in ('$ -', '-', '$ 0.00', '$0.00', '$ 0'):
+        return "$0.00"
+    if val_str.startswith('$'):
+        num_part = val_str.replace('$', '').strip()
+        return f"${num_part}"
+    try:
+        num = float(val_str.replace(',', '').strip())
+        return f"${num:,.2f}"
+    except (ValueError, TypeError):
+        return val_str
+
+
 def format_total_balance(total_balance):
     if not total_balance:
         return "N/A"
-    val_str = str(total_balance).strip()
-    if val_str.startswith('$'):
-        return val_str
-    try:
-        num = float(val_str.replace(',', ''))
-        return f"${num:,.2f}"
-    except ValueError:
-        return val_str
+    return format_currency_val(total_balance)
 
 
 def send_calculation_email(creds, sheet_id, sheet_url, year_folder_id, start_date_str, end_date_str, updated_students=None, total_balance=None):
@@ -37,8 +47,14 @@ def send_calculation_email(creds, sheet_id, sheet_url, year_folder_id, start_dat
         student_rows_text = ""
         if updated_students:
             for s in updated_students:
-                student_rows_html += f"<li style='margin-bottom: 4px;'><b>{s.get('name', 'Student')}</b>: {s.get('hours', 0)} hrs (Prior Balance: ${s.get('remaining_balance', 0):.2f})</li>"
-                student_rows_text += f"  * {s.get('name', 'Student')}: {s.get('hours', 0)} hrs (Prior Balance: ${s.get('remaining_balance', 0):.2f})\n"
+                s_name = s.get('name') or s.get('student') or 'Student'
+                s_hours = s.get('hours', 0)
+                s_prev_bal = format_currency_val(s.get('remaining_balance', 0))
+                s_subtotal = format_currency_val(s.get('subtotal', 0))
+                s_total = format_currency_val(s.get('total', 0))
+
+                student_rows_html += f"<li style='margin-bottom: 6px;'><b>{s_name}</b>: {s_hours} hrs (Subtotal: {s_subtotal} | Prior Balance: {s_prev_bal} | Total Due: <b>{s_total}</b>)</li>"
+                student_rows_text += f"  * {s_name}: {s_hours} hrs (Subtotal: {s_subtotal} | Prior Balance: {s_prev_bal} | Total Due: {s_total})\n"
 
         # Plain-text alternative (helps avoid spam/unverified flags)
         text_body = f"""Tutoring Pay Calculated

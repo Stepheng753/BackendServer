@@ -244,7 +244,9 @@ def run_calc_orchestration():
             "year_folder_id": year_folder_id,
             "year_folder_url": year_folder_url,
             "pay_parent_folder_url": pay_folder_url,
-            "email_status": email_res.get('status')
+            "email_status": email_res.get('status'),
+            "email_id": email_res.get('email_id'),
+            "email_error": email_res.get('message') if email_res.get('status') == 'error' else None
         }), 200
 
     except Exception as e:
