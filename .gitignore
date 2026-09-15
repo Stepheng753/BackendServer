@@ -29,6 +29,10 @@ docs/setup/setup.conf
 *.csv
 *.sh
 *.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
 
 
 # Application Keys and Logs
