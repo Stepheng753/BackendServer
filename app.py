@@ -9,6 +9,8 @@ from index.index import check_auth
 from swagger.swagger import swagger_bp
 from TutoringCalculator.routes import tutoring_bp
 from Monitoring.routes import monitoring_bp
+from ToDo.routes import todo_bp
+from ToDo.scheduler import start_todo_scheduler
 
 app = Flask(__name__)
 CORS(app)
@@ -22,6 +24,12 @@ app.register_blueprint(monitoring_bp)
 # Register Tutoring Calculator endpoints (both top-level and with /TutoringCalculator prefix)
 app.register_blueprint(tutoring_bp)
 app.register_blueprint(tutoring_bp, name='tutoring_calculator', url_prefix='/TutoringCalculator')
+
+# Register To-Do board & endpoints
+app.register_blueprint(todo_bp)
+
+# Start background auto-archive scheduler
+start_todo_scheduler()
 
 
 @app.before_request

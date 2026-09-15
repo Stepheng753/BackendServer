@@ -150,10 +150,10 @@ def get_storage_info() -> list:
                 item["free_formatted"] = format_bytes(usage.free)
 
                 if item["percent"] >= DISK_CRITICAL_THRESHOLD:
-                    item["status"] = "🚨 Near Full"
+                    item["status"] = "Near Full"
                     item["status_class"] = "badge-critical"
                 elif item["percent"] >= DISK_WARNING_THRESHOLD:
-                    item["status"] = "⚠️ High Usage"
+                    item["status"] = "High Usage"
                     item["status_class"] = "badge-warning"
                 else:
                     item["status"] = "Healthy"
@@ -196,7 +196,7 @@ def get_storage_info() -> list:
                     "total_formatted": format_bytes(usage.total),
                     "used_formatted": format_bytes(usage.used),
                     "free_formatted": format_bytes(usage.free),
-                    "status": "Healthy" if pct < DISK_WARNING_THRESHOLD else ("⚠️ High Usage" if pct < DISK_CRITICAL_THRESHOLD else "🚨 Near Full"),
+                    "status": "Healthy" if pct < DISK_WARNING_THRESHOLD else ("High Usage" if pct < DISK_CRITICAL_THRESHOLD else "Near Full"),
                     "status_class": "badge-healthy" if pct < DISK_WARNING_THRESHOLD else ("badge-warning" if pct < DISK_CRITICAL_THRESHOLD else "badge-critical")
                 })
         except Exception:

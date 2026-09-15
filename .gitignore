@@ -7,6 +7,8 @@ secrets.json
 config.json
 **/config.json
 !config/config.template.json
+**/categories.json
+!config/categories.template.json
 !config/.gitkeep
 *credentials.json
 StephenG753-OAuth.json
@@ -26,6 +28,8 @@ domainPortSetUp.json
 docs/setup/setup.conf
 *.csv
 *.sh
+*.db
+
 
 # Application Keys and Logs
 TutoringCalculator/keys/*

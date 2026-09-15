@@ -270,13 +270,13 @@ def run_diagnostics() -> dict:
 
     # Overall Summary
     if critical_count > 0:
-        overall_status = f"🚨 {critical_count} Critical Storage Alert{'s' if critical_count > 1 else ''}"
+        overall_status = f"{critical_count} Critical Storage Alert{'s' if critical_count > 1 else ''}"
         overall_badge_class = "badge-critical"
     elif warning_count > 0:
-        overall_status = f"⚠️ {warning_count} Warning{'s' if warning_count > 1 else ''} Detected"
+        overall_status = f"{warning_count} Warning{'s' if warning_count > 1 else ''} Detected"
         overall_badge_class = "badge-warning"
     else:
-        overall_status = "● All Systems Nominal"
+        overall_status = "All Systems Nominal"
         overall_badge_class = "badge-nominal"
 
     return {

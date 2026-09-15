@@ -1,0 +1,1451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>To-Do Board - Crossroads Backend & Services</title>
+  <link rel="icon" type="image/png" href="/static/flash.png" />
+  <link rel="shortcut icon" type="image/png" href="/static/flash.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/shared.css" />
+  <style>
+    /* --------------------------------------------------------------------------
+       TO-DO BOARD PAGE-SPECIFIC STYLES
+       -------------------------------------------------------------------------- */
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-page);
+      color: var(--text-main);
+      padding: 24px 32px 60px 32px;
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    /* TOP NAVBAR */
+    .top-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      padding: 12px 20px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      box-shadow: var(--card-shadow);
+      margin-bottom: 20px;
+    }
+
+    .brand-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .brand-left img {
+      width: 38px;
+      height: 38px;
+      object-fit: contain;
+      border-radius: 6px;
+    }
+
+    .brand-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-main);
+      line-height: 1.2;
+    }
+
+    .brand-subtitle {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    /* HEADER CARD */
+    .header-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 20px;
+      padding: 24px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      box-shadow: var(--card-shadow);
+      margin-bottom: 24px;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .pulse-icon-box {
+      width: 52px;
+      height: 52px;
+      border-radius: 12px;
+      background: rgba(107, 163, 214, 0.14);
+      color: #5b95cb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    [data-theme="dark"] .pulse-icon-box {
+      background: rgba(107, 163, 214, 0.22);
+      color: #8bbbe5;
+    }
+
+    .header-headings h1 {
+      margin: 0;
+      font-size: 1.45rem;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header-subtext {
+      margin-top: 4px;
+      font-size: 0.86rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .badge-info {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 10px;
+      font-size: 0.76rem;
+      font-weight: 600;
+      border-radius: 9999px;
+      background: var(--blue-subtle, #edf5fc);
+      color: #4f89be;
+      border: 1px solid rgba(107, 163, 214, 0.35);
+    }
+
+    [data-theme="dark"] .badge-info {
+      background: rgba(107, 163, 214, 0.2);
+      color: #b9d8f3;
+      border-color: rgba(107, 163, 214, 0.4);
+    }
+
+    .badge-schedule {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
+      font-size: 0.76rem;
+      font-weight: 500;
+      border-radius: 9999px;
+      background: var(--secondary);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+    }
+
+    /* ACTION BUTTONS TOOLBAR */
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: var(--radius);
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.15s ease-in-out;
+      font-family: inherit;
+      user-select: none;
+    }
+
+    .btn-primary {
+      background: #5b95cb;
+      color: #ffffff;
+      border: 1px solid #5b95cb;
+    }
+
+    .btn-primary:hover {
+      background: #4f89be;
+      border-color: #4f89be;
+      transform: translateY(-1px);
+      box-shadow: 0 3px 8px rgba(91, 149, 203, 0.25);
+    }
+
+    .btn-secondary {
+      background: var(--secondary);
+      color: var(--text-main);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: var(--card-border);
+      color: var(--text-main);
+    }
+
+    .btn-warning {
+      background: #fef3c7;
+      color: #92400e;
+      border: 1px solid #fde68a;
+    }
+
+    [data-theme="dark"] .btn-warning {
+      background: rgba(245, 158, 11, 0.18);
+      color: #fcd34d;
+      border-color: rgba(245, 158, 11, 0.35);
+    }
+
+    .btn-warning:hover {
+      background: #fde68a;
+    }
+
+    [data-theme="dark"] .btn-warning:hover {
+      background: rgba(245, 158, 11, 0.28);
+    }
+
+    .btn-danger {
+      background: #fee2e2;
+      color: #b91c1c;
+      border: 1px solid #fecaca;
+    }
+
+    [data-theme="dark"] .btn-danger {
+      background: rgba(239, 68, 68, 0.18);
+      color: #fca5a5;
+      border-color: rgba(239, 68, 68, 0.35);
+    }
+
+    .btn-danger:hover {
+      background: #fecaca;
+    }
+
+    [data-theme="dark"] .btn-danger:hover {
+      background: rgba(239, 68, 68, 0.28);
+    }
+
+    .btn-sm {
+      padding: 4px 10px;
+      font-size: 0.78rem;
+    }
+
+    /* VIEW MODE BANNER */
+    .archive-banner {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      background: rgba(99, 102, 241, 0.1);
+      border: 1px solid rgba(99, 102, 241, 0.25);
+      border-radius: var(--radius);
+      margin-bottom: 20px;
+      color: var(--text-main);
+    }
+
+    .archive-banner.active {
+      display: flex;
+    }
+
+    /* CATEGORIES GRID */
+    .todo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 20px;
+      align-items: start;
+    }
+
+    @media (max-width: 768px) {
+      .todo-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* CATEGORY BOX */
+    .category-box {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      box-shadow: var(--card-shadow);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transition: box-shadow 0.2s ease, border-color 0.2s ease;
+      height: 410px; /* Fixed height: ~5 one-line tasks */
+    }
+
+    .category-box:hover {
+      box-shadow: var(--card-hover-shadow);
+    }
+
+    .category-box.drag-over-box {
+      border-color: var(--primary);
+      background: rgba(107, 163, 214, 0.06);
+    }
+
+    .cat-accent-bar {
+      height: 6px;
+      width: 100%;
+      background-color: var(--cat-color, #6ba3d6);
+      flex-shrink: 0;
+    }
+
+    .cat-header {
+      padding: 14px 16px 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--card-border);
+      background: var(--card-bg);
+      flex-shrink: 0;
+    }
+
+    .cat-header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .cat-color-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background-color: var(--cat-color, #6ba3d6);
+      flex-shrink: 0;
+      box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.05);
+    }
+
+    .cat-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-main);
+      letter-spacing: -0.01em;
+    }
+
+    .cat-count-badge {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 12px;
+      background: var(--secondary);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+    }
+
+    /* TASK LIST WITH INNER SCROLLBAR */
+    .task-list {
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex-grow: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      scrollbar-width: thin;
+      scrollbar-color: var(--card-border) transparent;
+    }
+
+    .task-list::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .task-list::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .task-list::-webkit-scrollbar-thumb {
+      background: var(--card-border);
+      border-radius: 9999px;
+    }
+
+    .task-list::-webkit-scrollbar-thumb:hover {
+      background: var(--text-muted);
+    }
+
+    .task-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px 12px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      transition: all 0.15s ease;
+      position: relative;
+      cursor: grab;
+      user-select: none;
+    }
+
+    .task-item:hover {
+      border-color: rgba(107, 163, 214, 0.4);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+    }
+
+    .task-item:active {
+      cursor: grabbing;
+    }
+
+    .task-item.dragging {
+      opacity: 0.4;
+      background: var(--secondary);
+      border: 1px dashed var(--primary);
+    }
+
+    .drag-handle {
+      color: var(--text-muted);
+      cursor: grab;
+      display: flex;
+      align-items: center;
+      padding-top: 2px;
+      opacity: 0.5;
+      transition: opacity 0.15s;
+    }
+
+    .task-item:hover .drag-handle {
+      opacity: 1;
+    }
+
+    /* CHECKBOX STYLING */
+    .task-checkbox-wrap {
+      display: flex;
+      align-items: center;
+      padding-top: 1px;
+    }
+
+    .task-checkbox {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+      accent-color: var(--primary);
+      border-radius: 4px;
+    }
+
+    /* TASK TEXT CONTENT */
+    .task-content {
+      flex-grow: 1;
+      min-width: 0;
+      word-break: break-word;
+    }
+
+    .task-text {
+      font-size: 0.92rem;
+      line-height: 1.4;
+      color: var(--text-main);
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+
+    /* CROSSED-OUT STYLE FOR COMPLETED TASKS */
+    .task-item.completed {
+      background: var(--secondary);
+      border-color: var(--card-border);
+      opacity: 0.78;
+    }
+
+    .task-item.completed .task-text {
+      text-decoration: line-through;
+      color: var(--text-muted);
+    }
+
+    .crossed-out-tag {
+      display: block;
+      font-size: 0.72rem;
+      color: #10b981;
+      font-weight: 500;
+      margin-top: 2px;
+    }
+
+    [data-theme="dark"] .crossed-out-tag {
+      color: #34d399;
+    }
+
+    /* ARCHIVED ITEM STYLING */
+    .task-item.archived {
+      background: var(--card-bg);
+      border: 1px dashed var(--card-border);
+      opacity: 0.88;
+      cursor: default;
+    }
+
+    .task-item.archived:hover {
+      opacity: 1;
+    }
+
+    .archived-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.72rem;
+      padding: 1px 6px;
+      border-radius: 4px;
+      background: rgba(99, 102, 241, 0.12);
+      color: #6366f1;
+      font-weight: 500;
+      margin-top: 4px;
+    }
+
+    [data-theme="dark"] .archived-tag {
+      background: rgba(99, 102, 241, 0.2);
+      color: #a5b4fc;
+    }
+
+    /* TASK ACTION BUTTONS */
+    .task-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      opacity: 0;
+      transition: opacity 0.15s ease;
+      flex-shrink: 0;
+    }
+
+    .task-item:hover .task-actions {
+      opacity: 1;
+    }
+
+    .task-btn {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 0.74rem;
+      font-weight: 500;
+      font-family: inherit;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+    }
+
+    .task-btn:hover {
+      background: var(--secondary);
+      color: var(--text-main);
+      border-color: var(--card-border);
+    }
+
+    .task-btn.btn-delete:hover {
+      background: #fee2e2;
+      color: #b91c1c;
+      border-color: #fecaca;
+    }
+
+    [data-theme="dark"] .task-btn.btn-delete:hover {
+      background: rgba(239, 68, 68, 0.2);
+      color: #fca5a5;
+      border-color: rgba(239, 68, 68, 0.4);
+    }
+
+    /* QUICK ADD FORM AT BOTTOM OF CARD */
+    .cat-quick-add {
+      padding: 10px 14px 14px 14px;
+      border-top: 1px solid var(--card-border);
+      background: var(--card-bg);
+      flex-shrink: 0;
+    }
+
+    .quick-add-input-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .quick-add-input {
+      flex-grow: 1;
+      padding: 8px 12px;
+      font-size: 0.85rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg-page);
+      color: var(--text-main);
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .quick-add-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(107, 163, 214, 0.15);
+    }
+
+    .quick-add-btn {
+      background: var(--secondary);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 8px 12px;
+      border-radius: var(--radius);
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .quick-add-btn:hover {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    /* EMPTY STATE */
+    .empty-cat-message {
+      padding: 36px 12px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      font-style: italic;
+      margin: auto 0;
+    }
+
+    /* MODALS */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(2px);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 24px;
+      max-width: 480px;
+      width: 90%;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    }
+
+    .modal-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .modal-body {
+      margin-bottom: 20px;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
+    .modal-footer {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--text-main);
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 9px 12px;
+      font-size: 0.9rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg-page);
+      color: var(--text-main);
+      box-sizing: border-box;
+      font-family: inherit;
+      outline: none;
+    }
+
+    .form-control:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(107, 163, 214, 0.15);
+    }
+
+    /* TOAST NOTIFICATION */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      padding: 12px 18px;
+      border-radius: var(--radius);
+      background: var(--foreground);
+      color: var(--background);
+      font-size: 0.85rem;
+      font-weight: 500;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+      z-index: 2000;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      pointer-events: none;
+    }
+
+    #toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    
+    <!-- TOP NAVIGATION BAR (Docs -> Tutoring Calc -> System Monitor -> To Do -> Theme) -->
+    <nav class="top-nav">
+      <a href="/todo" class="brand-left">
+        <img src="/static/flash.png" alt="Flash Logo" />
+        <div>
+          <div class="brand-title">To-Do Console</div>
+          <div class="brand-subtitle">Crossroads Task Management & Archival</div>
+        </div>
+      </a>
+      <div class="nav-actions">
+        <a href="/docs" class="nav-btn" title="View Swagger API Documentation">
+          Docs
+        </a>
+        <a href="/tutoring" class="nav-btn" title="Open Tutoring Calculator Console">
+          Tutoring Calc
+        </a>
+        <a href="/monitoring" class="nav-btn" title="Flash Server Monitoring">
+          System Monitor
+        </a>
+        <a href="/todo" class="nav-btn active" title="Crossroads To-Do Board">
+          To Do
+        </a>
+        <button id="theme-toggle" class="nav-btn" style="cursor: pointer;" aria-label="Toggle Theme">
+          Theme
+        </button>
+      </div>
+    </nav>
+
+    <!-- HEADER CARD -->
+    <div class="header-card">
+      <div class="header-left">
+        <div class="pulse-icon-box">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 11l3 3L22 4"></path>
+            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+          </svg>
+        </div>
+        <div class="header-headings">
+          <h1>
+            To-Do Board
+            <span class="badge-info" id="active-task-badge">Loading...</span>
+          </h1>
+          <div class="header-subtext">
+            <span>Organized across categories in a responsive grid.</span>
+            <span class="badge-schedule">Weekly rollover: Mondays @ 2:00 AM PST</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button id="btn-toggle-view" class="btn btn-secondary" title="Switch between Active and Archived tasks">
+          View Archive
+        </button>
+        <button id="btn-archive-completed" class="btn btn-warning" title="Move all crossed-out items to archive right now">
+          Archive Completed
+        </button>
+        <button id="btn-archive-all" class="btn btn-secondary" title="Archive all tasks in current view">
+          Archive All
+        </button>
+        <button id="btn-delete-all" class="btn btn-danger" title="Delete all tasks in current view">
+          Delete All
+        </button>
+        <button id="btn-add-modal" class="btn btn-primary" title="Create a new task">
+          + New Task
+        </button>
+      </div>
+    </div>
+
+    <!-- ARCHIVE VIEW BANNER -->
+    <div id="archive-banner" class="archive-banner">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="21 8 21 21 3 21 3 8"></polyline>
+          <rect x="1" y="3" width="22" height="5"></rect>
+          <line x1="10" y1="12" x2="14" y2="12"></line>
+        </svg>
+        <strong>Archive View Active:</strong> Showing archived tasks per category. Archived items can be restored back to the active board anytime.
+      </div>
+      <button id="btn-exit-archive" class="btn btn-primary btn-sm">
+        Return to Active Board
+      </button>
+    </div>
+
+    <!-- CATEGORIES GRID -->
+    <div id="todo-grid" class="todo-grid">
+      <!-- Generated dynamically by JavaScript -->
+    </div>
+
+  </div>
+
+  <!-- ADD TASK MODAL -->
+  <div id="modal-add-task" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-title">
+        <span>+ Add New Task</span>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" for="modal-task-category">Category</label>
+          <select id="modal-task-category" class="form-control">
+            <!-- Populated dynamically -->
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="modal-task-text">Task Description</label>
+          <input type="text" id="modal-task-text" class="form-control" placeholder="What needs to be done?" autofocus />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="modal-add-cancel" class="btn btn-secondary">Cancel</button>
+        <button id="modal-add-submit" class="btn btn-primary">Add Task</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONFIRM ACTION MODAL -->
+  <div id="modal-confirm" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-title" id="confirm-title">Confirm Action</div>
+      <div class="modal-body" id="confirm-message">Are you sure you want to proceed?</div>
+      <div class="modal-footer">
+        <button id="confirm-cancel" class="btn btn-secondary">Cancel</button>
+        <button id="confirm-proceed" class="btn btn-danger">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST MESSAGE -->
+  <div id="toast">Action completed</div>
+
+  <script>
+    /* ==========================================================================
+       TO-DO BOARD CLIENT APPLICATION
+       ========================================================================== */
+    let currentView = 'active'; // 'active' or 'archived'
+    let categories = [];
+    let tasks = [];
+    let draggedTaskId = null;
+    let draggedSourceCategory = null;
+
+    // Theme handling (mirrors shared theme logic)
+    function initTheme() {
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      document.documentElement.classList.toggle('dark', savedTheme === 'dark');
+    }
+
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme') || 'light';
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      document.documentElement.classList.toggle('dark', next === 'dark');
+      localStorage.setItem('theme', next);
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2500);
+    }
+
+    // Confirmation Modal Helper
+    function showConfirmModal(title, message, confirmBtnClass, onConfirm) {
+      const modal = document.getElementById('modal-confirm');
+      const titleEl = document.getElementById('confirm-title');
+      const msgEl = document.getElementById('confirm-message');
+      const proceedBtn = document.getElementById('confirm-proceed');
+      const cancelBtn = document.getElementById('confirm-cancel');
+
+      titleEl.textContent = title;
+      msgEl.textContent = message;
+      proceedBtn.className = `btn ${confirmBtnClass}`;
+
+      function cleanup() {
+        modal.classList.remove('active');
+        proceedBtn.onclick = null;
+        cancelBtn.onclick = null;
+      }
+
+      proceedBtn.onclick = () => {
+        cleanup();
+        onConfirm();
+      };
+      cancelBtn.onclick = cleanup;
+      modal.classList.add('active');
+    }
+
+    // Load data from Backend API
+    async function loadBoardData() {
+      try {
+        const res = await fetch(`/api/todo/items?status=${currentView}`);
+        if (!res.ok) throw new Error('Failed to fetch tasks');
+        const data = await res.json();
+        categories = data.categories || [];
+        tasks = data.tasks || [];
+        renderBoard();
+        populateCategorySelect();
+      } catch (err) {
+        console.error('Error loading tasks:', err);
+        showToast('Error loading board data');
+      }
+    }
+
+    function populateCategorySelect() {
+      const sel = document.getElementById('modal-task-category');
+      if (!sel) return;
+      sel.innerHTML = categories.map(c => `<option value="${escapeHtml(c.name)}">${escapeHtml(c.name)}</option>`).join('');
+    }
+
+    // Render the Category Grid
+    function renderBoard() {
+      const grid = document.getElementById('todo-grid');
+      const badge = document.getElementById('active-task-badge');
+      const viewBtn = document.getElementById('btn-toggle-view');
+      const banner = document.getElementById('archive-banner');
+
+      if (currentView === 'active') {
+        banner.classList.remove('active');
+        viewBtn.textContent = 'View Archive';
+        const totalActive = tasks.filter(t => !t.completed).length;
+        const totalCompleted = tasks.filter(t => t.completed).length;
+        badge.textContent = `${totalActive} Active (${totalCompleted} crossed out)`;
+      } else {
+        banner.classList.add('active');
+        viewBtn.textContent = 'Active Tasks';
+        badge.textContent = `${tasks.length} Archived Tasks`;
+      }
+
+      grid.innerHTML = '';
+
+      categories.forEach(cat => {
+        const catBox = document.createElement('div');
+        catBox.className = 'category-box';
+        catBox.style.setProperty('--cat-color', cat.color);
+        catBox.dataset.category = cat.name;
+
+        // Filter tasks for this category
+        const catTasks = tasks.filter(t => t.category === cat.name);
+
+        catBox.innerHTML = `
+          <div class="cat-accent-bar"></div>
+          <div class="cat-header">
+            <div class="cat-header-left">
+              <div class="cat-color-dot"></div>
+              <div class="cat-title">${escapeHtml(cat.name)}</div>
+            </div>
+            <span class="cat-count-badge">${catTasks.length}</span>
+          </div>
+          <div class="task-list" id="list-${cat.id || cat.name}"></div>
+          ${currentView === 'active' ? `
+            <div class="cat-quick-add">
+              <div class="quick-add-input-wrap">
+                <input type="text" class="quick-add-input" placeholder="+ Add a task to ${escapeHtml(cat.name)}..." data-category="${escapeHtml(cat.name)}" />
+                <button class="quick-add-btn" title="Add" data-category="${escapeHtml(cat.name)}">Add</button>
+              </div>
+            </div>
+          ` : ''}
+        `;
+
+        const taskListEl = catBox.querySelector('.task-list');
+
+        // Drag and Drop listeners on category box / list
+        taskListEl.addEventListener('dragover', onDragOver);
+        taskListEl.addEventListener('dragenter', onDragEnter);
+        taskListEl.addEventListener('dragleave', onDragLeave);
+        taskListEl.addEventListener('drop', (e) => onDrop(e, cat.name));
+
+        if (catTasks.length === 0) {
+          taskListEl.innerHTML = `<div class="empty-cat-message">No ${currentView} tasks</div>`;
+        } else {
+          catTasks.forEach(task => {
+            const itemEl = createTaskElement(task);
+            taskListEl.appendChild(itemEl);
+          });
+        }
+
+        // Quick add inputs
+        const input = catBox.querySelector('.quick-add-input');
+        const submitBtn = catBox.querySelector('.quick-add-btn');
+        if (input && submitBtn) {
+          const submitHandler = () => {
+            const val = input.value.trim();
+            if (val) {
+              handleAddTask(val, cat.name);
+              input.value = '';
+            }
+          };
+          input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') submitHandler();
+          });
+          submitBtn.addEventListener('click', submitHandler);
+        }
+
+        grid.appendChild(catBox);
+      });
+    }
+
+    function createTaskElement(task) {
+      const el = document.createElement('div');
+      el.className = `task-item ${task.completed ? 'completed' : ''} ${task.status === 'archived' ? 'archived' : ''}`;
+      el.dataset.id = task.id;
+      el.dataset.category = task.category;
+      el.draggable = (currentView === 'active');
+
+      if (currentView === 'active') {
+        el.addEventListener('dragstart', onDragStart);
+        el.addEventListener('dragend', onDragEnd);
+      }
+
+      let subLabel = '';
+      if (task.completed && currentView === 'active') {
+        subLabel = `<span class="crossed-out-tag">Crossed out this week (Archives Mon 2 AM)</span>`;
+      } else if (task.status === 'archived') {
+        const dateStr = task.archived_at ? new Date(task.archived_at).toLocaleDateString() : 'Archived';
+        subLabel = `<span class="archived-tag">Archived ${dateStr}</span>`;
+      }
+
+      el.innerHTML = `
+        ${currentView === 'active' ? `<div class="drag-handle" title="Drag to reorder" style="display:inline-flex; align-items:center;"><svg width="10" height="14" viewBox="0 0 10 16" fill="currentColor"><circle cx="2" cy="2" r="1.5"/><circle cx="8" cy="2" r="1.5"/><circle cx="2" cy="8" r="1.5"/><circle cx="8" cy="8" r="1.5"/><circle cx="2" cy="14" r="1.5"/><circle cx="8" cy="14" r="1.5"/></svg></div>` : ''}
+        ${currentView === 'active' ? `
+          <div class="task-checkbox-wrap">
+            <input type="checkbox" class="task-checkbox" ${task.completed ? 'checked' : ''} title="${task.completed ? 'Uncross task' : 'Cross out task'}" />
+          </div>
+        ` : ''}
+        <div class="task-content">
+          <div class="task-text" title="Double click to edit">${escapeHtml(task.text)}</div>
+          ${subLabel}
+        </div>
+        <div class="task-actions">
+          ${currentView === 'active' ? `
+            <button class="task-btn btn-archive-single" title="Archive now">Archive</button>
+          ` : `
+            <button class="task-btn btn-restore-single" title="Restore to active board">Restore</button>
+          `}
+          <button class="task-btn btn-delete btn-delete-single" title="Permanently delete">Delete</button>
+        </div>
+      `;
+
+      // Checkbox listener
+      const cb = el.querySelector('.task-checkbox');
+      if (cb) {
+        cb.addEventListener('change', async (e) => {
+          const isDone = e.target.checked;
+          await handleToggleComplete(task.id, isDone);
+        });
+      }
+
+      // Inline Edit listener on double-click
+      const textEl = el.querySelector('.task-text');
+      if (textEl && currentView === 'active') {
+        textEl.addEventListener('dblclick', () => makeTaskEditable(el, task));
+      }
+
+      // Action button listeners
+      const archiveBtn = el.querySelector('.btn-archive-single');
+      if (archiveBtn) {
+        archiveBtn.addEventListener('click', () => handleArchiveSingle(task.id));
+      }
+
+      const restoreBtn = el.querySelector('.btn-restore-single');
+      if (restoreBtn) {
+        restoreBtn.addEventListener('click', () => handleRestoreSingle(task.id));
+      }
+
+      const deleteBtn = el.querySelector('.btn-delete-single');
+      if (deleteBtn) {
+        deleteBtn.addEventListener('click', () => handleDeleteSingle(task.id));
+      }
+
+      return el;
+    }
+
+    function makeTaskEditable(itemEl, task) {
+      const contentEl = itemEl.querySelector('.task-content');
+      const currentText = task.text;
+      contentEl.innerHTML = `
+        <input type="text" class="form-control edit-task-input" value="${escapeHtml(currentText)}" style="padding: 4px 8px; font-size: 0.9rem;" />
+      `;
+      const input = contentEl.querySelector('.edit-task-input');
+      input.focus();
+      input.select();
+
+      const finishEdit = async () => {
+        const newText = input.value.trim();
+        if (newText && newText !== currentText) {
+          await handleUpdateText(task.id, newText);
+        } else {
+          renderBoard();
+        }
+      };
+
+      input.addEventListener('blur', finishEdit);
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') finishEdit();
+        if (e.key === 'Escape') renderBoard();
+      });
+    }
+
+    // Drag and Drop Logic
+    function onDragStart(e) {
+      draggedTaskId = parseInt(this.dataset.id);
+      draggedSourceCategory = this.dataset.category;
+      this.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', draggedTaskId);
+    }
+
+    function onDragEnd() {
+      this.classList.remove('dragging');
+      document.querySelectorAll('.category-box').forEach(b => b.classList.remove('drag-over-box'));
+      document.querySelectorAll('.task-list').forEach(l => l.classList.remove('drag-over-list'));
+    }
+
+    function onDragOver(e) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      const list = e.currentTarget;
+      const afterElement = getDragAfterElement(list, e.clientY);
+      const draggingEl = document.querySelector('.dragging');
+      if (!draggingEl) return;
+
+      if (afterElement == null) {
+        list.appendChild(draggingEl);
+      } else {
+        list.insertBefore(draggingEl, afterElement);
+      }
+    }
+
+    function onDragEnter(e) {
+      e.preventDefault();
+      const box = e.currentTarget.closest('.category-box');
+      if (box) box.classList.add('drag-over-box');
+    }
+
+    function onDragLeave(e) {
+      const box = e.currentTarget.closest('.category-box');
+      if (box && !box.contains(e.relatedTarget)) {
+        box.classList.remove('drag-over-box');
+      }
+    }
+
+    async function onDrop(e, targetCategory) {
+      e.preventDefault();
+      document.querySelectorAll('.category-box').forEach(b => b.classList.remove('drag-over-box'));
+
+      if (!draggedTaskId) return;
+
+      // Calculate new ordering for all tasks in the destination list
+      const targetListEl = document.getElementById(`list-${targetCategory}`);
+      if (!targetListEl) return;
+
+      const itemEls = Array.from(targetListEl.querySelectorAll('.task-item'));
+      const reorderPayload = [];
+
+      itemEls.forEach((el, index) => {
+        reorderPayload.push({
+          id: parseInt(el.dataset.id),
+          display_order: index + 1,
+          category: targetCategory
+        });
+      });
+
+      try {
+        await fetch('/api/todo/reorder', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({items: reorderPayload})
+        });
+        await loadBoardData();
+        showToast('Task order updated');
+      } catch (err) {
+        console.error('Reorder error:', err);
+      }
+    }
+
+    function getDragAfterElement(container, y) {
+      const draggableElements = [...container.querySelectorAll('.task-item:not(.dragging)')];
+      return draggableElements.reduce((closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offset = y - box.top - box.height / 2;
+        if (offset < 0 && offset > closest.offset) {
+          return { offset: offset, element: child };
+        } else {
+          return closest;
+        }
+      }, { offset: Number.NEGATIVE_INFINITY }).element;
+    }
+
+    // CRUD Handlers
+    async function handleAddTask(text, category) {
+      try {
+        const res = await fetch('/api/todo/items', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({text, category})
+        });
+        if (!res.ok) throw new Error('Failed to create task');
+        showToast('Task added');
+        await loadBoardData();
+      } catch (err) {
+        showToast('Error adding task');
+      }
+    }
+
+    async function handleToggleComplete(id, completed) {
+      try {
+        await fetch(`/api/todo/items/${id}`, {
+          method: 'PATCH',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({completed})
+        });
+        await loadBoardData();
+        showToast(completed ? 'Task crossed out (archiving Mon 2 AM)' : 'Task marked active');
+      } catch (err) {
+        showToast('Error updating task');
+      }
+    }
+
+    async function handleUpdateText(id, text) {
+      try {
+        await fetch(`/api/todo/items/${id}`, {
+          method: 'PATCH',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({text})
+        });
+        await loadBoardData();
+        showToast('Task updated');
+      } catch (err) {
+        showToast('Error updating task');
+      }
+    }
+
+    async function handleArchiveSingle(id) {
+      try {
+        await fetch(`/api/todo/items/${id}`, {
+          method: 'PATCH',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({completed: true})
+        });
+        // Call manual archive
+        await fetch('/api/todo/archive-completed', { method: 'POST' });
+        await loadBoardData();
+        showToast('Moved to archive');
+      } catch (err) {
+        showToast('Error archiving task');
+      }
+    }
+
+    async function handleRestoreSingle(id) {
+      try {
+        await fetch(`/api/todo/items/${id}/restore`, { method: 'POST' });
+        await loadBoardData();
+        showToast('Task restored to active board');
+      } catch (err) {
+        showToast('Error restoring task');
+      }
+    }
+
+    async function handleDeleteSingle(id) {
+      try {
+        await fetch(`/api/todo/items/${id}`, { method: 'DELETE' });
+        await loadBoardData();
+        showToast('Task permanently deleted');
+      } catch (err) {
+        showToast('Error deleting task');
+      }
+    }
+
+    // Batch Action Handlers
+    document.getElementById('btn-archive-completed').addEventListener('click', async () => {
+      const crossedOutCount = tasks.filter(t => t.completed && currentView === 'active').length;
+      if (crossedOutCount === 0) {
+        showToast('No crossed-out tasks to archive.');
+        return;
+      }
+      try {
+        const res = await fetch('/api/todo/archive-completed', { method: 'POST' });
+        const data = await res.json();
+        showToast(`Archived ${data.archived_count} completed tasks`);
+        await loadBoardData();
+      } catch (err) {
+        showToast('Error archiving tasks');
+      }
+    });
+
+    document.getElementById('btn-archive-all').addEventListener('click', () => {
+      if (currentView === 'archived') {
+        showToast('Already viewing archive.');
+        return;
+      }
+      showConfirmModal(
+        'Archive All Tasks',
+        'Are you sure you want to move all active tasks to the archive?',
+        'btn-warning',
+        async () => {
+          try {
+            const res = await fetch('/api/todo/archive-all', {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({})
+            });
+            const data = await res.json();
+            showToast(`Archived ${data.archived_count} tasks`);
+            await loadBoardData();
+          } catch (err) {
+            showToast('Error archiving tasks');
+          }
+        }
+      );
+    });
+
+    document.getElementById('btn-delete-all').addEventListener('click', () => {
+      const label = currentView === 'active' ? 'all active tasks' : 'all archived tasks';
+      showConfirmModal(
+        'Delete All Tasks',
+        `CAUTION: This will permanently delete ${label}. This action cannot be undone. Proceed?`,
+        'btn-danger',
+        async () => {
+          try {
+            const res = await fetch('/api/todo/delete-all', {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({status: currentView})
+            });
+            const data = await res.json();
+            showToast(`Deleted ${data.deleted_count} tasks`);
+            await loadBoardData();
+          } catch (err) {
+            showToast('Error deleting tasks');
+          }
+        }
+      );
+    });
+
+    // View switcher
+    document.getElementById('btn-toggle-view').addEventListener('click', () => {
+      currentView = (currentView === 'active') ? 'archived' : 'active';
+      loadBoardData();
+    });
+
+    document.getElementById('btn-exit-archive').addEventListener('click', () => {
+      currentView = 'active';
+      loadBoardData();
+    });
+
+    // Add Task Modal
+    const modalAdd = document.getElementById('modal-add-task');
+    const inputModalText = document.getElementById('modal-task-text');
+    const selectModalCat = document.getElementById('modal-task-category');
+
+    document.getElementById('btn-add-modal').addEventListener('click', () => {
+      modalAdd.classList.add('active');
+      inputModalText.value = '';
+      inputModalText.focus();
+    });
+
+    document.getElementById('modal-add-cancel').addEventListener('click', () => {
+      modalAdd.classList.remove('active');
+    });
+
+    document.getElementById('modal-add-submit').addEventListener('click', async () => {
+      const text = inputModalText.value.trim();
+      const cat = selectModalCat.value;
+      if (!text) {
+        inputModalText.focus();
+        return;
+      }
+      modalAdd.classList.remove('active');
+      await handleAddTask(text, cat);
+    });
+
+    inputModalText.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        document.getElementById('modal-add-submit').click();
+      }
+    });
+
+    // Escape key closes modals
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        modalAdd.classList.remove('active');
+        document.getElementById('modal-confirm').classList.remove('active');
+      }
+    });
+
+    // Theme toggle button
+    document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+
+    // Escape helper
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    // Initialize
+    window.addEventListener('DOMContentLoaded', () => {
+      initTheme();
+      loadBoardData();
+    });
+  </script>
+</body>
+</html>

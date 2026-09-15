@@ -1,0 +1,32 @@
+{
+  "categories": [
+    {
+      "name": "Category 1",
+      "color": "#005fa3"
+    },
+    {
+      "name": "Category 2",
+      "color": "#55b080"
+    },
+    {
+      "name": "Category 3",
+      "color": "#a479b1"
+    },
+    {
+      "name": "Category 4",
+      "color": "#e7ba51"
+    },
+    {
+      "name": "Category 5",
+      "color": "#bc2b2e"
+    },
+    {
+      "name": "Category 6",
+      "color": "#f294e9"
+    },
+    {
+      "name": "Category 7",
+      "color": "#e0963c"
+    }
+  ]
+}

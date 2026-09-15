@@ -13,19 +13,19 @@
   <style>
     :root {
       --card: #ffffff;
-      --ring: #3b82f6;
+      --ring: #6ba3d6;
       --input: #e5e7eb;
       --muted: #f9fafb;
-      --accent: #e0f2fe;
+      --accent: #eaf3fa;
       --border: #e5e7eb;
       --radius: 0.375rem;
-      --chart-1: #3b82f6;
-      --chart-2: #2563eb;
-      --chart-3: #1d4ed8;
-      --chart-4: #1e40af;
-      --chart-5: #1e3a8a;
+      --chart-1: #6ba3d6;
+      --chart-2: #548ec4;
+      --chart-3: #467eb5;
+      --chart-4: #3b6f9e;
+      --chart-5: #2d567c;
       --popover: #ffffff;
-      --primary: #3b82f6;
+      --primary: #6ba3d6;
       --sidebar: #f9fafb;
       --font-mono: 'JetBrains Mono', monospace;
       --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -34,11 +34,11 @@
       --font-serif: 'Source Serif 4', serif;
       --foreground: #111827;
       --destructive: #ef4444;
-      --sidebar-ring: #3b82f6;
-      --sidebar-accent: #e0f2fe;
+      --sidebar-ring: #6ba3d6;
+      --sidebar-accent: #eaf3fa;
       --sidebar-border: #e5e7eb;
       --card-foreground: #111827;
-      --sidebar-primary: #3b82f6;
+      --sidebar-primary: #6ba3d6;
       --muted-foreground: #4b5563;
       --accent-foreground: #1e3a8a;
       --popover-foreground: #111827;
@@ -92,29 +92,29 @@
 
     .dark, [data-theme="dark"] {
       --card: #262626;
-      --ring: #3b82f6;
+      --ring: #6ba3d6;
       --input: #404040;
       --muted: #262626;
-      --accent: #1e3a8a;
+      --accent: #1e293b;
       --border: #404040;
       --radius: 0.375rem;
-      --chart-1: #60a5fa;
-      --chart-2: #3b82f6;
-      --chart-3: #2563eb;
-      --chart-4: #1d4ed8;
-      --chart-5: #1e40af;
+      --chart-1: #8bbbe5;
+      --chart-2: #6ba3d6;
+      --chart-3: #548ec4;
+      --chart-4: #467eb5;
+      --chart-5: #3b6f9e;
       --popover: #262626;
-      --primary: #3b82f6;
+      --primary: #6ba3d6;
       --sidebar: #171717;
       --secondary: #262626;
       --background: #171717;
       --foreground: #ffffff; /* Crisp pure white text everywhere */
       --destructive: #ef4444;
-      --sidebar-ring: #3b82f6;
-      --sidebar-accent: #1e3a8a;
+      --sidebar-ring: #6ba3d6;
+      --sidebar-accent: #1e293b;
       --sidebar-border: #404040;
       --card-foreground: #ffffff;
-      --sidebar-primary: #3b82f6;
+      --sidebar-primary: #6ba3d6;
       --muted-foreground: #ffffff; /* No grey text */
       --accent-foreground: #ffffff;
       --popover-foreground: #ffffff;
@@ -340,8 +340,8 @@
     }
     .dark .drive-btn:hover,
     [data-theme="dark"] .drive-btn:hover {
-      background: rgba(59, 130, 246, 0.2);
-      border-color: #3b82f6;
+      background: rgba(107, 163, 214, 0.2);
+      border-color: #6ba3d6;
       color: #ffffff;
     }
 
@@ -686,16 +686,19 @@
       </a>
       <div class="nav-actions">
         <a href="/docs" class="nav-btn" title="View Swagger API Documentation">
-          📑 Docs
+          Docs
         </a>
         <a href="/tutoring" class="nav-btn active" title="Crossroads Tutoring Console">
-          🧮 Tutoring Calc
+          Tutoring Calc
         </a>
         <a href="/monitoring" class="nav-btn" title="Flash Server Monitoring">
-          🖥️ System Monitor
+          System Monitor
+        </a>
+        <a href="/todo" class="nav-btn" title="Crossroads To-Do Board">
+          To Do
         </a>
         <button id="theme-toggle" class="nav-btn" aria-label="Toggle Theme">
-          🌙 Dark
+          Theme
         </button>
       </div>
     </header>
@@ -714,7 +717,7 @@
         <div class="header-headings">
           <div class="title-row">
             <h1>Billing Cycle & Operations</h1>
-            <span class="status-badge badge-nominal" id="auth-status-badge">● Google Cloud Connected</span>
+            <span class="status-badge badge-nominal" id="auth-status-badge">Google Cloud Connected</span>
             <span class="status-badge badge-normal" id="cycle-badge">{{ dates.start_date }} — {{ dates.end_date }}</span>
           </div>
           <p class="header-description">
@@ -725,13 +728,13 @@
       
       <!-- SEPARATED GOOGLE DRIVE WORKSPACE PANEL -->
       <div class="drive-workspace-panel">
-        <div class="drive-panel-title">📁 GOOGLE DRIVE WORKSPACE</div>
+        <div class="drive-panel-title">GOOGLE DRIVE WORKSPACE</div>
         <div class="drive-panel-buttons">
           <a href="{{ pay_folder_url }}" target="_blank" rel="noopener noreferrer" class="drive-btn" id="btn-pay-folder" title="Open Google Drive Master Pay Folder">
-            📁 Master Pay Folder ↗
+            Master Pay Folder
           </a>
           <a href="{{ year_folder_url or pay_folder_url }}" target="_blank" rel="noopener noreferrer" class="drive-btn" id="btn-year-folder" title="Open Google Drive Target Year Folder">
-            📅 {{ current_year }} Year Folder ↗
+            {{ current_year }} Year Folder
           </a>
         </div>
       </div>
@@ -740,10 +743,10 @@
     <!-- SECTION 1: SPREADSHEET & CYCLE STATUS -->
     <div class="section-header">
       <div class="section-title">
-        ⚙ BILLING CYCLE & SPREADSHEET STATUS
+        BILLING CYCLE & SPREADSHEET STATUS
       </div>
       <a href="javascript:void(0)" class="section-refresh" onclick="loadStatus()">
-        <span>🔄</span> Refresh Status
+        <span></span>Refresh Status
       </a>
     </div>
 
@@ -764,22 +767,22 @@
           <span id="sheet-banner-status" class="status-badge badge-warning" style="margin-left: 8px;">CALCULATED</span>
         </div>
         <a href="#" id="sheet-banner-link" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="padding: 6px 12px; font-size: 0.8rem;">
-          Open Google Sheet ↗
+          Open Google Sheet
         </a>
       </div>
 
       <!-- Auth Warning Banner -->
       <div id="auth-warning-banner" style="display: none; padding: 14px 18px; border-radius: 10px; margin-top: 6px; background: var(--yellow-bg); border: 1px solid var(--yellow-border); color: var(--yellow-text);">
-        <strong>⚠️ Google Authentication Required:</strong>
+        <strong>Google Authentication Required:</strong>
         <p style="font-size: 0.85rem; margin: 6px 0 10px 0;">Google Drive, Sheets, and Calendar access token is expired or not authorized.</p>
-        <a href="/login_oauth" class="btn btn-primary">Authorize Google Account ↗</a>
+        <a href="/login_oauth" class="btn btn-primary">Authorize Google Account</a>
       </div>
     </div>
 
     <!-- SECTION 2: ONE-CLICK ACTIONS -->
     <div class="section-header">
       <div class="section-title">
-        ⚡ ONE-CLICK ACTIONS & AUTOMATIONS
+        ONE-CLICK ACTIONS & AUTOMATIONS
       </div>
     </div>
 
@@ -791,7 +794,7 @@
             <span class="card-label">STEP 1: PAY CALCULATION</span>
             <span class="status-badge badge-blue">Monday 4:00 AM</span>
           </div>
-          <div class="card-title" style="margin-bottom: 8px;">⚡ Run Pay Calculation</div>
+          <div class="card-title" style="margin-bottom: 8px;">Run Pay Calculation</div>
           <p class="card-desc">
             Clones master template into target year folder, parses Google Calendar hours, retrieves prior unpaid balances, populates spreadsheet, and sends notification email.
           </p>
@@ -800,7 +803,7 @@
           </div>
         </div>
         <button id="btn-run-calc" class="btn btn-primary" style="width: 100%; padding: 12px 18px; font-size: 0.9rem;">
-          <span>⚡ Run Weekly Pay Calculation</span>
+          <span>Run Weekly Pay Calculation</span>
         </button>
       </div>
 
@@ -811,7 +814,7 @@
             <span class="card-label">STEP 2: PAYMENT REMINDERS</span>
             <span class="status-badge badge-nominal">Monday 12:00 PM</span>
           </div>
-          <div class="card-title" style="margin-bottom: 8px;">📱 Send Text Reminders</div>
+          <div class="card-title" style="margin-bottom: 8px;">Send Text Reminders</div>
           <p class="card-desc">
             Evaluates the human approval safety gate. If <code>CALCULATED</code> is removed from the sheet title, sends Twilio SMS payment notices with Venmo & Zelle links and updates status to "Need to Pay".
           </p>
@@ -820,7 +823,7 @@
           </div>
         </div>
         <button id="btn-send-texts" class="btn btn-green" style="width: 100%; padding: 12px 18px; font-size: 0.9rem;">
-          <span>📱 Run Send Text Messages</span>
+          <span>Run Send Text Messages</span>
         </button>
       </div>
     </div>
@@ -828,10 +831,10 @@
     <!-- SECTION 3: AUDIT LOGS -->
     <div class="section-header">
       <div class="section-title">
-        📜 TEXT MESSAGE AUDIT LOG (text_messages.log)
+        TEXT MESSAGE AUDIT LOG (text_messages.log)
       </div>
       <a href="javascript:void(0)" class="section-refresh" id="btn-refresh-logs">
-        <span>🔄</span> Refresh Logs
+        <span></span>Refresh Logs
       </a>
     </div>
 
@@ -850,7 +853,7 @@
   <div class="modal-overlay" id="modal-calc">
     <div class="modal-content">
       <div class="modal-header">
-        <h3>⚡ Pay Calculation Results</h3>
+        <h3>Pay Calculation Results</h3>
         <button class="modal-close" onclick="closeModal('modal-calc')">&times;</button>
       </div>
       <div class="modal-body">
@@ -860,7 +863,7 @@
         </div>
 
         <div style="background: var(--yellow-bg); border: 1px solid var(--yellow-border); color: var(--yellow-text); padding: 12px 16px; border-radius: 8px; font-size: 0.85rem; margin-bottom: 18px;">
-          <strong>⚠️ Action Required (Approval Gate):</strong>
+          <strong>Action Required (Approval Gate):</strong>
           <p style="margin-top: 4px;">
             The sheet was created as <code id="calc-modal-sheet-name">... CALCULATED</code>. Please click the link below, review student hours, and <strong>delete <code> CALCULATED</code> from the sheet title</strong> to approve SMS sending!
           </p>
@@ -886,7 +889,7 @@
       </div>
       <div class="modal-footer">
         <a href="#" id="calc-modal-sheet-link" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
-          Open Google Sheet ↗
+          Open Google Sheet
         </a>
         <button class="btn btn-outline" onclick="closeModal('modal-calc')">Close</button>
       </div>
@@ -897,7 +900,7 @@
   <div class="modal-overlay" id="modal-texts">
     <div class="modal-content">
       <div class="modal-header">
-        <h3 id="texts-modal-title">📱 SMS Dispatch Report</h3>
+        <h3 id="texts-modal-title">SMS Dispatch Report</h3>
         <button class="modal-close" onclick="closeModal('modal-texts')">&times;</button>
       </div>
       <div class="modal-body">
@@ -905,14 +908,14 @@
         <!-- Safeguard Alert Box (Shown if CALCULATED is in title) -->
         <div id="texts-safeguard-box" style="display: none; background: var(--yellow-bg); border: 1px solid var(--yellow-border); color: var(--yellow-text); padding: 16px; border-radius: 10px; margin-bottom: 20px;">
           <div style="display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 1rem; margin-bottom: 6px;">
-            <span>⚠️ Dispatch Intercepted by Safety Gate</span>
+            <span>Dispatch Intercepted by Safety Gate</span>
           </div>
           <p id="texts-safeguard-msg" style="font-size: 0.88rem; line-height: 1.5;">
             The sheet title still contains <code>CALCULATED</code>. SMS reminders were stopped to protect against sending unverified invoices to parents.
           </p>
           <div style="margin-top: 12px;">
             <a href="#" id="texts-safeguard-link" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="padding: 8px 14px;">
-              Open Google Sheet to Approve ↗
+              Open Google Sheet to Approve
             </a>
           </div>
         </div>
@@ -920,7 +923,7 @@
         <!-- Success Report Box (Shown if texts dispatched) -->
         <div id="texts-success-box" style="display: none;">
           <div style="background: var(--green-bg); border: 1px solid var(--green-border); color: var(--green-text); padding: 14px 18px; border-radius: 10px; margin-bottom: 18px;">
-            <strong style="font-size: 1rem;">✅ Text Messages Dispatched Successfully!</strong>
+            <strong style="font-size: 1rem;">Text Messages Dispatched Successfully!</strong>
             <p id="texts-success-msg" style="font-size: 0.88rem; margin-top: 4px;">Processed messages to all eligible student parents.</p>
           </div>
         </div>
@@ -934,7 +937,7 @@
       </div>
       <div class="modal-footer">
         <a href="#" id="texts-modal-sheet-link" target="_blank" rel="noopener noreferrer" class="btn btn-outline">
-          Open Google Sheet ↗
+          Open Google Sheet
         </a>
         <button class="btn btn-primary" onclick="closeModal('modal-texts')">Done</button>
       </div>
@@ -963,10 +966,6 @@
       document.documentElement.setAttribute('data-theme', theme);
       document.documentElement.classList.toggle('dark', theme === 'dark');
       if (save) localStorage.setItem('theme', theme);
-      const toggleBtn = document.getElementById('theme-toggle');
-      if (toggleBtn) {
-        toggleBtn.textContent = theme === 'dark' ? '☀️ Light' : '🌙 Dark';
-      }
     }
 
     document.getElementById('theme-toggle').addEventListener('click', () => {
@@ -998,11 +997,11 @@
         const authWarning = document.getElementById('auth-warning-banner');
         if (data.is_authenticated) {
           authBadge.className = 'status-badge badge-nominal';
-          authBadge.textContent = '● Google Cloud Connected';
+          authBadge.textContent = 'Google Cloud Connected';
           authWarning.style.display = 'none';
         } else {
           authBadge.className = 'status-badge badge-critical';
-          authBadge.textContent = '⚠️ Google Auth Required';
+          authBadge.textContent = 'Google Auth Required';
           authWarning.style.display = 'block';
         }
 
@@ -1011,7 +1010,7 @@
           const yfBtn = document.getElementById('btn-year-folder');
           if (yfBtn) {
             yfBtn.href = data.year_folder_url;
-            yfBtn.textContent = `📅 ${data.current_year || 'Year'} Folder ↗`;
+            yfBtn.textContent = `${data.current_year || 'Year'} Folder`;
           }
         }
 
@@ -1026,7 +1025,7 @@
             statusSpan.textContent = 'Pending Review (CALCULATED)';
           } else {
             statusSpan.className = 'status-badge badge-nominal';
-            statusSpan.textContent = 'Approved ✓';
+            statusSpan.textContent = 'Approved';
           }
           document.getElementById('sheet-banner-link').href = data.current_sheet.sheet_url;
         } else {

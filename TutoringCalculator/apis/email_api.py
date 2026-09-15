@@ -81,14 +81,14 @@ Automated message from Crossroads Tutoring Server.
             <p>The sheet has been initialized with <b>CALCULATED</b> in the title. Please review the sheet and remove CALCULATED from its title to approve sending text notifications.</p>
             
             <div style="margin: 20px 0; padding: 15px; background: #f1f3f4; border-radius: 8px;">
-                <p style="margin: 6px 0;">📄 <b>Calculated Sheet:</b> <a href="{sheet_url}" target="_blank">{sheet_url}</a><br><span style="font-size: 12px; color: #555;">(ID: {sheet_id})</span></p>
-                <p style="margin: 6px 0;">📁 <b>Pay Year Folder:</b> <a href="{folder_url}" target="_blank">{folder_url}</a></p>
+                <p style="margin: 6px 0;"><b>Calculated Sheet:</b> <a href="{sheet_url}" target="_blank">{sheet_url}</a><br><span style="font-size: 12px; color: #555;">(ID: {sheet_id})</span></p>
+                <p style="margin: 6px 0;"><b>Pay Year Folder:</b> <a href="{folder_url}" target="_blank">{folder_url}</a></p>
             </div>
 
             {f"<h3 style='margin-bottom: 8px;'>Students Summary:</h3><ul style='padding-left: 20px; margin-top: 4px;'>{student_rows_html}</ul>" if student_rows_html else ""}
             
             <div style="margin-top: 18px; padding: 12px 18px; background: #e6f4ea; border-left: 4px solid #137333; border-radius: 4px;">
-                <span style="font-size: 16px; font-weight: bold; color: #137333;">💰 Total Balance: {total_balance_display}</span>
+                <span style="font-size: 16px; font-weight: bold; color: #137333;">Total Balance: {total_balance_display}</span>
             </div>
 
             <hr style="border: none; border-top: 1px solid #ddd; margin: 25px 0 15px 0;">

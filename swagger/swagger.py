@@ -42,6 +42,10 @@ OPENAPI_SPEC = {
         {
             "name": "Monitoring",
             "description": "Flash Server hardware telemetry, disk storage monitoring, service health matrix, and diagnostic test suite."
+        },
+        {
+            "name": "To Do",
+            "description": "Interactive Crossroads To-Do board, categorized task items, auto-archive cutoff, and reordering API."
         }
     ],
     "components": {
@@ -395,6 +399,257 @@ OPENAPI_SPEC = {
                 "responses": {
                     "200": {
                         "description": "JSON diagnostic audit report."
+                    }
+                }
+            }
+        },
+        "/api/todo/categories": {
+            "get": {
+                "tags": ["To Do"],
+                "summary": "List Configured Categories",
+                "description": "Retrieves the list of active task categories and associated hex color codes from config/categories.json.",
+                "responses": {
+                    "200": {
+                        "description": "JSON list of categories."
+                    }
+                }
+            }
+        },
+        "/api/todo/items": {
+            "get": {
+                "tags": ["To Do"],
+                "summary": "List Tasks",
+                "description": "Retrieves active or archived tasks, optionally filtered by category name.",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": False,
+                        "description": "Task status filter ('active' or 'archived', defaults to 'active')",
+                        "schema": {"type": "string", "enum": ["active", "archived"], "default": "active"}
+                    },
+                    {
+                        "name": "category",
+                        "in": "query",
+                        "required": False,
+                        "description": "Optional category name filter",
+                        "schema": {"type": "string"}
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "JSON object with status, categories, and tasks list."
+                    }
+                }
+            },
+            "post": {
+                "tags": ["To Do"],
+                "summary": "Create New Task",
+                "description": "Adds a new task item under a specified category box.",
+                "requestBody": {
+                    "required": True,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["text"],
+                                "properties": {
+                                    "text": {"type": "string", "example": "Grade homework assignments"},
+                                    "category": {"type": "string", "example": "Crossroads Tutoring"}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Task created successfully."
+                    },
+                    "400": {
+                        "description": "Validation error."
+                    }
+                }
+            }
+        },
+        "/api/todo/items/{item_id}": {
+            "patch": {
+                "tags": ["To Do"],
+                "summary": "Update Task",
+                "description": "Modifies task text, completion status, or category.",
+                "parameters": [
+                    {
+                        "name": "item_id",
+                        "in": "path",
+                        "required": True,
+                        "description": "Task ID",
+                        "schema": {"type": "integer"}
+                    }
+                ],
+                "requestBody": {
+                    "required": True,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "text": {"type": "string"},
+                                    "completed": {"type": "integer", "enum": [0, 1]},
+                                    "category": {"type": "string"}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Task updated successfully."
+                    },
+                    "404": {
+                        "description": "Task not found."
+                    }
+                }
+            },
+            "delete": {
+                "tags": ["To Do"],
+                "summary": "Delete Task",
+                "description": "Permanently deletes a task from the database.",
+                "parameters": [
+                    {
+                        "name": "item_id",
+                        "in": "path",
+                        "required": True,
+                        "description": "Task ID",
+                        "schema": {"type": "integer"}
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Task deleted successfully."
+                    },
+                    "404": {
+                        "description": "Task not found."
+                    }
+                }
+            }
+        },
+        "/api/todo/items/{item_id}/restore": {
+            "post": {
+                "tags": ["To Do"],
+                "summary": "Restore Archived Task",
+                "description": "Restores an archived task back to the active board.",
+                "parameters": [
+                    {
+                        "name": "item_id",
+                        "in": "path",
+                        "required": True,
+                        "description": "Task ID",
+                        "schema": {"type": "integer"}
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Task restored."
+                    },
+                    "404": {
+                        "description": "Task not found."
+                    }
+                }
+            }
+        },
+        "/api/todo/reorder": {
+            "post": {
+                "tags": ["To Do"],
+                "summary": "Reorder Tasks",
+                "description": "Updates display order and category assignments for ordered tasks.",
+                "requestBody": {
+                    "required": True,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["items"],
+                                "properties": {
+                                    "items": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "required": ["id", "display_order"],
+                                            "properties": {
+                                                "id": {"type": "integer"},
+                                                "display_order": {"type": "integer"},
+                                                "category": {"type": "string"}
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Tasks reordered successfully."
+                    }
+                }
+            }
+        },
+        "/api/todo/archive-completed": {
+            "post": {
+                "tags": ["To Do"],
+                "summary": "Archive Completed Tasks",
+                "description": "Immediately archives all currently crossed-out (completed) active tasks across categories.",
+                "responses": {
+                    "200": {
+                        "description": "Archived count returned."
+                    }
+                }
+            }
+        },
+        "/api/todo/archive-all": {
+            "post": {
+                "tags": ["To Do"],
+                "summary": "Archive All Tasks",
+                "description": "Archives all active tasks (optionally filtered by category).",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "category": {"type": "string"}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Archived count returned."
+                    }
+                }
+            }
+        },
+        "/api/todo/delete-all": {
+            "post": {
+                "tags": ["To Do"],
+                "summary": "Delete All Tasks",
+                "description": "Permanently deletes all tasks in a view (active or archived, optionally filtered by category).",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "status": {"type": "string", "enum": ["active", "archived"]},
+                                    "category": {"type": "string"}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Deleted count returned."
                     }
                 }
             }
@@ -868,23 +1123,23 @@ SWAGGER_HTML_TEMPLATE = """<!DOCTYPE html>
       box-shadow: 0 1px 3px rgba(0,0,0,0.15) !important;
       transition: all 0.18s ease !important;
       cursor: pointer !important;
-      background: #3b82f6 !important;
+      background: #5b95cb !important;
       color: #ffffff !important;
-      border: 1px solid #3b82f6 !important;
+      border: 1px solid #5b95cb !important;
       white-space: nowrap !important;
     }
     .nav-btn:hover,
     .swagger-btn:hover {
-      background: #2563eb !important;
-      border-color: #2563eb !important;
+      background: #4f89be !important;
+      border-color: #4f89be !important;
       color: #ffffff !important;
-      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3) !important;
+      box-shadow: 0 4px 12px rgba(91, 149, 203, 0.3) !important;
       transform: translateY(-1px);
     }
     .nav-btn.active,
     .swagger-btn.active {
-      background: #1d4ed8 !important;
-      border-color: #1e40af !important;
+      background: #396a97 !important;
+      border-color: #305c83 !important;
       color: #ffffff !important;
       box-shadow: inset 0 2px 4px rgba(0,0,0,0.25) !important;
     }
@@ -901,8 +1156,8 @@ SWAGGER_HTML_TEMPLATE = """<!DOCTYPE html>
     [data-theme="dark"] .swagger-ui .info a.nav-btn,
     [data-theme="dark"] .swagger-ui .info a.swagger-btn {
       color: #ffffff !important;
-      background: #3b82f6 !important;
-      border: 1px solid #3b82f6 !important;
+      background: #4f89be !important;
+      border: 1px solid #4f89be !important;
     }
     .dark .nav-btn:hover,
     .dark .swagger-btn:hover,
@@ -913,15 +1168,15 @@ SWAGGER_HTML_TEMPLATE = """<!DOCTYPE html>
     [data-theme="dark"] .swagger-ui .info a.nav-btn:hover,
     [data-theme="dark"] .swagger-ui .info a.swagger-btn:hover {
       color: #ffffff !important;
-      background: #2563eb !important;
-      border-color: #2563eb !important;
+      background: #5b95cb !important;
+      border-color: #5b95cb !important;
     }
     .dark .nav-btn.active,
     .dark .swagger-btn.active,
     [data-theme="dark"] .nav-btn.active,
     [data-theme="dark"] .swagger-btn.active {
-      background: #1d4ed8 !important;
-      border-color: #1e40af !important;
+      background: #396a97 !important;
+      border-color: #305c83 !important;
       color: #ffffff !important;
     }
   </style>
@@ -952,10 +1207,6 @@ SWAGGER_HTML_TEMPLATE = """<!DOCTYPE html>
       document.documentElement.setAttribute('data-theme', theme);
       document.documentElement.classList.toggle('dark', theme === 'dark');
       if (save) localStorage.setItem('theme', theme);
-      const toggleBtn = document.getElementById('swagger-theme-toggle');
-      if (toggleBtn) {
-        toggleBtn.textContent = theme === 'dark' ? '☀️ Light' : '🌙 Dark';
-      }
     }
 
     function injectFlashBanner() {
@@ -970,15 +1221,13 @@ SWAGGER_HTML_TEMPLATE = """<!DOCTYPE html>
         const actionContainer = document.createElement('div');
         actionContainer.id = 'swagger-action-bar';
         actionContainer.style = 'margin-top: 16px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;';
-        
-        const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
-        const toggleIcon = currentTheme === 'dark' ? '☀️ Light' : '🌙 Dark';
 
         actionContainer.innerHTML = `
-          <a href="/docs" class="nav-btn active" title="Swagger API Documentation">📑 Docs</a>
-          <a href="/tutoring" class="nav-btn" title="Crossroads Tutoring Console">🧮 Tutoring Calc</a>
-          <a href="/monitoring" class="nav-btn" title="Flash Server Monitoring">🖥️ System Monitor</a>
-          <button id="swagger-theme-toggle" class="nav-btn">${toggleIcon}</button>
+          <a href="/docs" class="nav-btn active" title="Swagger API Documentation">Docs</a>
+          <a href="/tutoring" class="nav-btn" title="Crossroads Tutoring Console">Tutoring Calc</a>
+          <a href="/monitoring" class="nav-btn" title="Flash Server Monitoring">System Monitor</a>
+          <a href="/todo" class="nav-btn" title="Crossroads To-Do Board">To Do</a>
+          <button id="swagger-theme-toggle" class="nav-btn">Theme</button>
         `;
         info.appendChild(actionContainer);
 
