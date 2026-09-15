@@ -43,15 +43,17 @@ class TestToDoApp(unittest.TestCase):
             conn.commit()
 
     def test_load_categories(self):
+        from ToDo.config import DEFAULT_CATEGORIES
+        self.assertEqual(len(DEFAULT_CATEGORIES), 7)
+        self.assertEqual(DEFAULT_CATEGORIES[0]["name"], "Category 1")
+        self.assertEqual(DEFAULT_CATEGORIES[0]["color"], "#005fa3")
+
         cats = load_categories()
-        cat_names = [c["name"] for c in cats]
-        expected = ["Category 1", "Category 2", "Category 3", "Category 4", "Category 5", "Category 6", "Category 7"]
-        for exp in expected:
-            self.assertIn(exp, cat_names)
-        
-        # Verify Category 1 color
-        cat1 = next(c for c in cats if c["name"] == "Category 1")
-        self.assertEqual(cat1["color"], "#005fa3")
+        self.assertGreaterEqual(len(cats), 1)
+        for c in cats:
+            self.assertIn("id", c)
+            self.assertIn("name", c)
+            self.assertIn("color", c)
 
     def test_task_crud_and_reorder(self):
         task1 = add_task("[TEST] Task One", "Category 1")

@@ -476,17 +476,7 @@
       color: var(--text-muted);
     }
 
-    .crossed-out-tag {
-      display: block;
-      font-size: 0.72rem;
-      color: #10b981;
-      font-weight: 500;
-      margin-top: 2px;
-    }
 
-    [data-theme="dark"] .crossed-out-tag {
-      color: #34d399;
-    }
 
     /* ARCHIVED ITEM STYLING */
     .task-item.archived {
@@ -528,7 +518,8 @@
       flex-shrink: 0;
     }
 
-    .task-item:hover .task-actions {
+    .task-item:hover .task-actions,
+    .task-item:focus-within .task-actions {
       opacity: 1;
     }
 
@@ -537,15 +528,15 @@
       border: 1px solid var(--border);
       color: var(--text-muted);
       cursor: pointer;
-      padding: 3px 8px;
+      width: 24px;
+      height: 24px;
+      padding: 0;
       border-radius: 4px;
-      font-size: 0.74rem;
-      font-weight: 500;
-      font-family: inherit;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       transition: all 0.15s ease;
+      flex-shrink: 0;
     }
 
     .task-btn:hover {
@@ -554,10 +545,22 @@
       border-color: var(--card-border);
     }
 
+    .task-btn.btn-restore-single:hover {
+      background: var(--blue-subtle);
+      color: var(--primary-blue);
+      border-color: var(--primary-blue);
+    }
+
     .task-btn.btn-delete:hover {
       background: #fee2e2;
       color: #b91c1c;
       border-color: #fecaca;
+    }
+
+    [data-theme="dark"] .task-btn.btn-restore-single:hover {
+      background: rgba(107, 163, 214, 0.2);
+      color: #8bbbe5;
+      border-color: rgba(107, 163, 214, 0.4);
     }
 
     [data-theme="dark"] .task-btn.btn-delete:hover {
@@ -1052,9 +1055,7 @@
       }
 
       let subLabel = '';
-      if (task.completed && currentView === 'active') {
-        subLabel = `<span class="crossed-out-tag">Crossed out this week (Archives Mon 2 AM)</span>`;
-      } else if (task.status === 'archived') {
+      if (task.status === 'archived') {
         const dateStr = task.archived_at ? new Date(task.archived_at).toLocaleDateString() : 'Archived';
         subLabel = `<span class="archived-tag">Archived ${dateStr}</span>`;
       }
@@ -1071,12 +1072,14 @@
           ${subLabel}
         </div>
         <div class="task-actions">
-          ${currentView === 'active' ? `
-            <button class="task-btn btn-archive-single" title="Archive now">Archive</button>
-          ` : `
-            <button class="task-btn btn-restore-single" title="Restore to active board">Restore</button>
-          `}
-          <button class="task-btn btn-delete btn-delete-single" title="Permanently delete">Delete</button>
+          ${currentView === 'archived' ? `
+            <button class="task-btn btn-restore-single" title="Restore task" aria-label="Restore task">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+            </button>
+          ` : ''}
+          <button class="task-btn btn-delete btn-delete-single" title="Delete task" aria-label="Delete task">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
         </div>
       `;
 
@@ -1096,11 +1099,6 @@
       }
 
       // Action button listeners
-      const archiveBtn = el.querySelector('.btn-archive-single');
-      if (archiveBtn) {
-        archiveBtn.addEventListener('click', () => handleArchiveSingle(task.id));
-      }
-
       const restoreBtn = el.querySelector('.btn-restore-single');
       if (restoreBtn) {
         restoreBtn.addEventListener('click', () => handleRestoreSingle(task.id));
@@ -1274,21 +1272,7 @@
       }
     }
 
-    async function handleArchiveSingle(id) {
-      try {
-        await fetch(`/api/todo/items/${id}`, {
-          method: 'PATCH',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({completed: true})
-        });
-        // Call manual archive
-        await fetch('/api/todo/archive-completed', { method: 'POST' });
-        await loadBoardData();
-        showToast('Moved to archive');
-      } catch (err) {
-        showToast('Error archiving task');
-      }
-    }
+
 
     async function handleRestoreSingle(id) {
       try {
