@@ -10,22 +10,22 @@ DB_PATH = os.path.join(CONFIG_DIR, "tasks.db")
 APP_TIMEZONE = pytz.timezone("America/Los_Angeles")
 
 DEFAULT_CATEGORIES = [
-    {"name": "ASH", "color": "#005fa3"},
-    {"name": "PWL", "color": "#55b080"},
-    {"name": "TIP", "color": "#a479b1"},
-    {"name": "Guidant MSO", "color": "#e7ba51"},
-    {"name": "Crossroads Tutoring", "color": "#bc2b2e"},
-    {"name": "Thanh", "color": "#f294e9"},
-    {"name": "Misc", "color": "#e0963c"}
+    {"name": "Category 1", "color": "#005fa3"},
+    {"name": "Category 2", "color": "#55b080"},
+    {"name": "Category 3", "color": "#a479b1"},
+    {"name": "Category 4", "color": "#e7ba51"},
+    {"name": "Category 5", "color": "#bc2b2e"},
+    {"name": "Category 6", "color": "#f294e9"},
+    {"name": "Category 7", "color": "#e0963c"}
 ]
 
 
 def load_categories():
     """
     Loads categories from config/categories.json, supporting various formats:
-    - {"categories": [{"name": "ASH", "color": "#005fa3"}, ...]}
-    - {"categories": [{"ASH": "#005fa3"}, ...]}
-    - {"categories": {"ASH": "#005fa3", ...}}
+    - {"categories": [{"name": "Category 1", "color": "#005fa3"}, ...]}
+    - {"categories": [{"Category 1": "#005fa3"}, ...]}
+    - {"categories": {"Category 1": "#005fa3", ...}}
     - [{"name": "...", "color": "..."}, ...]
     Returns a normalized list of objects: [{'id': str, 'name': str, 'color': str}, ...]
     Auto-initializes config/categories.json if missing.
@@ -73,7 +73,7 @@ def load_categories():
                             "color": cat_color
                         })
                 else:
-                    # e.g. {"ASH": "#005fa3"}
+                    # e.g. {"Category 1": "#005fa3"}
                     for k, v in item.items():
                         if isinstance(v, dict):
                             cat_color = v.get("color", "#6ba3d6")

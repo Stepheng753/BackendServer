@@ -45,23 +45,23 @@ class TestToDoApp(unittest.TestCase):
     def test_load_categories(self):
         cats = load_categories()
         cat_names = [c["name"] for c in cats]
-        expected = ["ASH", "PWL", "TIP", "Guidant MSO", "Crossroads Tutoring", "Thanh", "Misc"]
+        expected = ["Category 1", "Category 2", "Category 3", "Category 4", "Category 5", "Category 6", "Category 7"]
         for exp in expected:
             self.assertIn(exp, cat_names)
         
-        # Verify ASH color
-        ash = next(c for c in cats if c["name"] == "ASH")
-        self.assertEqual(ash["color"], "#005fa3")
+        # Verify Category 1 color
+        cat1 = next(c for c in cats if c["name"] == "Category 1")
+        self.assertEqual(cat1["color"], "#005fa3")
 
     def test_task_crud_and_reorder(self):
-        task1 = add_task("[TEST] Task One", "ASH")
+        task1 = add_task("[TEST] Task One", "Category 1")
         self.assertIsNotNone(task1)
         self.assertEqual(task1["text"], "[TEST] Task One")
-        self.assertEqual(task1["category"], "ASH")
+        self.assertEqual(task1["category"], "Category 1")
         self.assertFalse(task1["completed"])
         self.assertEqual(task1["status"], "active")
 
-        task2 = add_task("[TEST] Task Two", "ASH")
+        task2 = add_task("[TEST] Task Two", "Category 1")
         self.assertGreater(task2["display_order"], task1["display_order"])
 
         # Mark complete
@@ -71,10 +71,10 @@ class TestToDoApp(unittest.TestCase):
 
         # Reorder
         reorder_tasks([
-            {"id": task2["id"], "display_order": 1, "category": "ASH"},
-            {"id": task1["id"], "display_order": 2, "category": "ASH"}
+            {"id": task2["id"], "display_order": 1, "category": "Category 1"},
+            {"id": task1["id"], "display_order": 2, "category": "Category 1"}
         ])
-        tasks = [t for t in get_tasks(status="active", category="ASH") if t["text"].startswith("[TEST]")]
+        tasks = [t for t in get_tasks(status="active", category="Category 1") if t["text"].startswith("[TEST]")]
         self.assertEqual(tasks[0]["id"], task2["id"])
         self.assertEqual(tasks[1]["id"], task1["id"])
 
@@ -82,13 +82,13 @@ class TestToDoApp(unittest.TestCase):
         self.assertTrue(delete_task(task2["id"]))
 
     def test_manual_archive_and_restore(self):
-        task = add_task("[TEST] To Archive", "PWL")
+        task = add_task("[TEST] To Archive", "Category 2")
         update_task(task["id"], completed=True)
 
         count = archive_completed_now()
         self.assertGreaterEqual(count, 1)
 
-        archived_tasks = [t for t in get_tasks(status="archived", category="PWL") if t["id"] == task["id"]]
+        archived_tasks = [t for t in get_tasks(status="archived", category="Category 2") if t["id"] == task["id"]]
         self.assertEqual(len(archived_tasks), 1)
         self.assertEqual(archived_tasks[0]["status"], "archived")
 
@@ -105,7 +105,7 @@ class TestToDoApp(unittest.TestCase):
         self.assertEqual(cutoff.minute, 0)
 
         # Create a task completed 2 weeks ago (prior to cutoff)
-        task_old = add_task("[TEST] Old Completed Task", "TIP")
+        task_old = add_task("[TEST] Old Completed Task", "Category 3")
         old_completed_dt = (cutoff - timedelta(days=2)).isoformat()
         with get_connection() as conn:
             conn.cursor().execute(
@@ -115,7 +115,7 @@ class TestToDoApp(unittest.TestCase):
             conn.commit()
 
         # Create a task completed 10 minutes ago (assuming within current week)
-        task_recent = add_task("[TEST] Recent Completed Task", "TIP")
+        task_recent = add_task("[TEST] Recent Completed Task", "Category 3")
         recent_completed_dt = (now).isoformat()
         with get_connection() as conn:
             conn.cursor().execute(
@@ -128,8 +128,8 @@ class TestToDoApp(unittest.TestCase):
         auto_archive_expired_tasks()
 
         # Check statuses
-        active_ids = [t["id"] for t in get_tasks(status="active", category="TIP")]
-        archived_ids = [t["id"] for t in get_tasks(status="archived", category="TIP")]
+        active_ids = [t["id"] for t in get_tasks(status="active", category="Category 3")]
+        archived_ids = [t["id"] for t in get_tasks(status="archived", category="Category 3")]
 
         self.assertIn(task_old["id"], archived_ids)
         self.assertNotIn(task_old["id"], active_ids)

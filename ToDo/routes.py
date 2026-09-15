@@ -59,7 +59,7 @@ def api_add_item():
     """Creates a new task in a category."""
     data = request.get_json(force=True, silent=True) or {}
     text = data.get("text", "").strip()
-    category = data.get("category", "Misc").strip()
+    category = data.get("category", "Category 1").strip()
 
     if not text:
         return jsonify({"error": "Task text is required."}), 400
