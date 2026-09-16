@@ -228,6 +228,8 @@
       border: 1px solid var(--card-border);
       border-radius: 12px;
       box-shadow: var(--card-shadow);
+      flex-wrap: wrap;
+      gap: 12px;
     }
     .brand-left {
       display: flex;
@@ -255,7 +257,8 @@
     .nav-actions {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
+      flex-wrap: wrap;
     }
     .nav-link-btn {
       display: inline-flex;
@@ -876,12 +879,24 @@
     }
     @media (max-width: 768px) {
       body {
-        padding: 16px;
+        padding: 16px 12px 40px 12px;
+      }
+      .top-nav {
+        padding: 12px 14px;
+        gap: 10px;
+      }
+      .nav-actions {
+        gap: 8px;
+      }
+      .nav-btn {
+        padding: 6px 10px !important;
+        font-size: 12px !important;
       }
       .header-card {
         flex-direction: column;
         align-items: flex-start;
         gap: 18px;
+        padding: 18px 16px;
       }
       .header-right {
         align-items: flex-start;
@@ -893,6 +908,11 @@
       .table-top-bar {
         flex-direction: column;
         align-items: flex-start;
+        gap: 12px;
+      }
+      .table-actions {
+        width: 100%;
+        flex-wrap: wrap;
       }
     }
 

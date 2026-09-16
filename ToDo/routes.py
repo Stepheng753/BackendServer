@@ -78,9 +78,10 @@ def api_update_item(item_id):
     text = data.get("text")
     category = data.get("category")
     completed = data.get("completed")
+    display_order = data.get("display_order")
 
     try:
-        updated = update_task(item_id, text=text, category=category, completed=completed)
+        updated = update_task(item_id, text=text, category=category, completed=completed, display_order=display_order)
         if not updated:
             return jsonify({"error": "Task not found."}), 404
         return jsonify({"success": True, "task": updated})

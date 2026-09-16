@@ -285,6 +285,35 @@
     }
 
     @media (max-width: 768px) {
+      body {
+        padding: 16px 12px 40px 12px;
+      }
+      .top-nav {
+        padding: 12px 14px;
+        gap: 10px;
+      }
+      .nav-actions {
+        gap: 8px;
+      }
+      .nav-btn {
+        padding: 6px 10px !important;
+        font-size: 12px !important;
+      }
+      .header-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+        padding: 18px 16px;
+      }
+      .header-actions {
+        width: 100%;
+        justify-content: flex-start;
+        gap: 8px;
+      }
+      .btn {
+        padding: 7px 12px;
+        font-size: 0.82rem;
+      }
       .todo-grid {
         grid-template-columns: 1fr;
       }
@@ -973,6 +1002,15 @@
         badge.textContent = `${tasks.length} Archived Tasks`;
       }
 
+      // Preserve active input focus and any in-progress typing
+      let focusedCategory = null;
+      let pendingText = '';
+      const activeEl = document.activeElement;
+      if (activeEl && activeEl.classList && activeEl.classList.contains('quick-add-input')) {
+        focusedCategory = activeEl.dataset.category;
+        pendingText = activeEl.value;
+      }
+
       grid.innerHTML = '';
 
       categories.forEach(cat => {
@@ -1028,8 +1066,9 @@
           const submitHandler = () => {
             const val = input.value.trim();
             if (val) {
-              handleAddTask(val, cat.name);
               input.value = '';
+              input.focus();
+              handleAddTask(val, cat.name, true);
             }
           };
           input.addEventListener('keydown', (e) => {
@@ -1040,6 +1079,18 @@
 
         grid.appendChild(catBox);
       });
+
+      // Restore focus to the category input box if one was active
+      if (focusedCategory) {
+        const targetInput = Array.from(document.querySelectorAll('.quick-add-input'))
+          .find(inp => inp.dataset.category === focusedCategory);
+        if (targetInput) {
+          if (pendingText && !targetInput.value) {
+            targetInput.value = pendingText;
+          }
+          targetInput.focus();
+        }
+      }
     }
 
     function createTaskElement(task) {
@@ -1229,7 +1280,7 @@
     }
 
     // CRUD Handlers
-    async function handleAddTask(text, category) {
+    async function handleAddTask(text, category, keepFocus = false) {
       try {
         const res = await fetch('/api/todo/items', {
           method: 'POST',
@@ -1239,22 +1290,133 @@
         if (!res.ok) throw new Error('Failed to create task');
         showToast('Task added');
         await loadBoardData();
+        if (keepFocus) {
+          const targetInput = Array.from(document.querySelectorAll('.quick-add-input'))
+            .find(inp => inp.dataset.category === category);
+          if (targetInput) {
+            targetInput.focus();
+          }
+        }
       } catch (err) {
         showToast('Error adding task');
       }
     }
 
     async function handleToggleComplete(id, completed) {
-      try {
-        await fetch(`/api/todo/items/${id}`, {
-          method: 'PATCH',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({completed})
-        });
-        await loadBoardData();
-        showToast(completed ? 'Task crossed out (archiving Mon 2 AM)' : 'Task marked active');
-      } catch (err) {
-        showToast('Error updating task');
+      const el = document.querySelector(`.task-item[data-id="${id}"]`);
+      if (!el) return;
+
+      const listEl = el.parentElement;
+
+      if (completed) {
+        // Mark visual completion immediately
+        el.classList.add('completed');
+        const cb = el.querySelector('.task-checkbox');
+        if (cb) { cb.checked = true; cb.title = 'Uncross task'; }
+
+        // Find in-memory task
+        const taskObj = tasks.find(t => t.id === id);
+        if (taskObj) taskObj.completed = true;
+
+        // Animate smooth movement down to the bottom if not already at the bottom
+        if (listEl && el.nextElementSibling) {
+          const allItems = Array.from(listEl.querySelectorAll('.task-item'));
+          const firstTops = new Map();
+          allItems.forEach(item => {
+            firstTops.set(item, item.getBoundingClientRect().top);
+          });
+
+          // Move target element to the end of its category list
+          listEl.appendChild(el);
+
+          // Calculate offset deltas and invert with transform
+          allItems.forEach(item => {
+            const firstTop = firstTops.get(item);
+            const lastTop = item.getBoundingClientRect().top;
+            const deltaY = firstTop - lastTop;
+            if (deltaY !== 0) {
+              item.style.setProperty('transition', 'none', 'important');
+              item.style.transform = `translateY(${deltaY}px)`;
+            }
+          });
+
+          // Force reflow
+          void listEl.offsetHeight;
+
+          // Animate smoothly to final position
+          requestAnimationFrame(() => {
+            allItems.forEach(item => {
+              const firstTop = firstTops.get(item);
+              const lastTop = item.getBoundingClientRect().top;
+              if (firstTop !== lastTop) {
+                item.style.setProperty('transition', 'transform 0.45s cubic-bezier(0.2, 0, 0, 1)', 'important');
+                item.style.transform = '';
+              }
+            });
+          });
+
+          // Clean up inline styles once transition ends
+          setTimeout(() => {
+            allItems.forEach(item => {
+              item.style.removeProperty('transition');
+              item.style.removeProperty('transform');
+            });
+          }, 460);
+        }
+
+        // Persist new order for this category and task completion to backend
+        try {
+          const itemEls = listEl ? Array.from(listEl.querySelectorAll('.task-item')) : [el];
+          const reorderPayload = itemEls.map((itemEl, idx) => ({
+            id: parseInt(itemEl.dataset.id),
+            display_order: idx + 1,
+            category: itemEl.dataset.category
+          }));
+
+          // Update in-memory tasks order
+          reorderPayload.forEach(p => {
+            const t = tasks.find(x => x.id === p.id);
+            if (t) {
+              t.display_order = p.display_order;
+            }
+          });
+
+          await Promise.all([
+            fetch(`/api/todo/items/${id}`, {
+              method: 'PATCH',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({completed: true})
+            }),
+            fetch('/api/todo/reorder', {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({items: reorderPayload})
+            })
+          ]);
+          showToast('Task crossed out (archiving Mon 2 AM)');
+        } catch (err) {
+          showToast('Error updating task');
+          await loadBoardData();
+        }
+      } else {
+        // Mark visual uncrossed
+        el.classList.remove('completed');
+        const cb = el.querySelector('.task-checkbox');
+        if (cb) { cb.checked = false; cb.title = 'Cross out task'; }
+        const taskObj = tasks.find(t => t.id === id);
+        if (taskObj) taskObj.completed = false;
+
+        try {
+          await fetch(`/api/todo/items/${id}`, {
+            method: 'PATCH',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({completed: false})
+          });
+          showToast('Task marked active');
+        } catch (err) {
+          showToast('Error updating task');
+          await loadBoardData();
+        }
       }
     }
 

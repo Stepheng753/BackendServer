@@ -667,8 +667,39 @@
       border-top-color: #ffffff;
       animation: spin 0.8s linear infinite;
     }
-    @keyframes spin {
-      to { transform: rotate(360deg); }
+    /* RESPONSIVE LAYOUT */
+    @media (max-width: 768px) {
+      body {
+        padding: 16px 12px 40px 12px;
+      }
+      .top-nav {
+        padding: 12px 14px;
+        gap: 10px;
+      }
+      .nav-actions {
+        gap: 8px;
+      }
+      .nav-btn {
+        padding: 6px 10px !important;
+        font-size: 12px !important;
+      }
+      .header-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 18px;
+        padding: 18px 16px;
+      }
+      .drive-workspace-panel {
+        align-items: flex-start;
+        width: 100%;
+      }
+      .actions-grid {
+        grid-template-columns: 1fr;
+      }
+      .table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
     }
   </style>
 </head>

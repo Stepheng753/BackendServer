@@ -661,6 +661,7 @@ SWAGGER_HTML_TEMPLATE = """<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Flash Server API</title>
   <link rel="stylesheet" href="/css/shared.css" />
   <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui.css" />
@@ -718,9 +719,37 @@ SWAGGER_HTML_TEMPLATE = """<!DOCTYPE html>
         position: static !important;
         margin: 20px auto 10px auto !important;
         width: fit-content !important;
+        max-width: 100% !important;
       }
       #flash-header-banner img {
         height: 130px !important;
+        max-width: 100% !important;
+      }
+    }
+    @media (max-width: 600px) {
+      .swagger-ui .wrapper {
+        padding: 0 12px !important;
+      }
+      .swagger-ui .info {
+        margin: 14px 0 !important;
+      }
+      .swagger-ui .info .title {
+        font-size: 22px !important;
+      }
+      #flash-header-banner img {
+        height: 100px !important;
+      }
+      .nav-btn, .swagger-btn {
+        padding: 6px 10px !important;
+        font-size: 12px !important;
+      }
+      .swagger-ui table {
+        display: block !important;
+        overflow-x: auto !important;
+        max-width: 100% !important;
+      }
+      .swagger-ui .opblock-summary-path {
+        word-break: break-all !important;
       }
     }
     :root {

@@ -174,8 +174,8 @@ def add_task(text, category):
     return get_task_by_id(task_id)
 
 
-def update_task(task_id, text=None, category=None, completed=None):
-    """Updates a task's text, category, or completion status."""
+def update_task(task_id, text=None, category=None, completed=None, display_order=None):
+    """Updates a task's text, category, completion status, or display order."""
     task = get_task_by_id(task_id)
     if not task:
         return None
@@ -205,6 +205,10 @@ def update_task(task_id, text=None, category=None, completed=None):
             params.append(datetime.now(APP_TIMEZONE).isoformat())
         else:
             updates.append("completed_at = NULL")
+
+    if display_order is not None:
+        updates.append("display_order = ?")
+        params.append(int(display_order))
 
     if not updates:
         return task

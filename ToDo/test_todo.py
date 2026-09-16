@@ -80,8 +80,13 @@ class TestToDoApp(unittest.TestCase):
         self.assertEqual(tasks[0]["id"], task2["id"])
         self.assertEqual(tasks[1]["id"], task1["id"])
 
+        # Update display_order directly
+        updated_ord = update_task(task1["id"], display_order=50)
+        self.assertEqual(updated_ord["display_order"], 50)
+
         # Delete
         self.assertTrue(delete_task(task2["id"]))
+        self.assertTrue(delete_task(task1["id"]))
 
     def test_manual_archive_and_restore(self):
         task = add_task("[TEST] To Archive", "Category 2")
