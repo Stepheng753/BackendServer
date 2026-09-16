@@ -779,8 +779,8 @@ SWAGGER_HTML_TEMPLATE = """<!DOCTYPE html>
     /* REMOVE ALL INVERT FILTERS */
     [data-theme="dark"] .swagger-ui,
     .dark .swagger-ui,
-    [data-theme="dark"] .swagger-ui *,
-    .dark .swagger-ui * {
+    [data-theme="dark"] .swagger-ui *:not(.theme-icon),
+    .dark .swagger-ui *:not(.theme-icon) {
       filter: none !important;
     }
 
@@ -1208,6 +1208,24 @@ SWAGGER_HTML_TEMPLATE = """<!DOCTYPE html>
       border-color: #305c83 !important;
       color: #ffffff !important;
     }
+    #swagger-theme-toggle,
+    #theme-toggle {
+      padding: 5px 9px !important;
+    }
+    .theme-icon,
+    [data-theme="dark"] .theme-icon,
+    .dark .theme-icon,
+    [data-theme="dark"] .swagger-ui .theme-icon,
+    .dark .swagger-ui .theme-icon,
+    [data-theme="dark"] #swagger-theme-toggle .theme-icon,
+    .dark #swagger-theme-toggle .theme-icon {
+      width: 26px !important;
+      height: 21px !important;
+      object-fit: contain !important;
+      display: block !important;
+      filter: brightness(0) invert(1) !important;
+      pointer-events: none !important;
+    }
   </style>
 </head>
 <body>
@@ -1256,7 +1274,9 @@ SWAGGER_HTML_TEMPLATE = """<!DOCTYPE html>
           <a href="/tutoring" class="nav-btn" title="Crossroads Tutoring Console">Tutoring Calc</a>
           <a href="/monitoring" class="nav-btn" title="Flash Server Monitoring">System Monitor</a>
           <a href="/todo" class="nav-btn" title="Crossroads To-Do Board">To Do</a>
-          <button id="swagger-theme-toggle" class="nav-btn">Theme</button>
+          <button id="swagger-theme-toggle" class="nav-btn" aria-label="Toggle Theme" title="Toggle Theme">
+            <img src="/static/day-and-night.svg" alt="Theme" class="theme-icon" />
+          </button>
         `;
         info.appendChild(actionContainer);
 

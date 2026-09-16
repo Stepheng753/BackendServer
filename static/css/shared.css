@@ -270,6 +270,24 @@ h1, h2, h3, h4, h5, h6 {
   line-height: 1.4 !important;
 }
 
+#theme-toggle,
+#swagger-theme-toggle {
+  padding: 5px 9px !important;
+}
+
+.theme-icon,
+[data-theme="dark"] .theme-icon,
+.dark .theme-icon,
+[data-theme="dark"] .swagger-ui .theme-icon,
+.dark .swagger-ui .theme-icon {
+  width: 26px;
+  height: 21px;
+  object-fit: contain;
+  display: block;
+  filter: brightness(0) invert(1) !important;
+  pointer-events: none;
+}
+
 .nav-btn:hover,
 .swagger-btn:hover {
   background: #4f89be !important;
@@ -377,8 +395,8 @@ h1, h2, h3, h4, h5, h6 {
   color: #ffffff !important;
 }
 
-[data-theme="dark"] .swagger-ui *,
-.dark .swagger-ui * {
+[data-theme="dark"] .swagger-ui *:not(.theme-icon),
+.dark .swagger-ui *:not(.theme-icon) {
   filter: none !important;
 }
 
