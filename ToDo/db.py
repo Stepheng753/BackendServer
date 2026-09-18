@@ -1,11 +1,9 @@
 import sqlite3
 import os
-import shutil
-import json
 import re
 from datetime import datetime, timedelta
 import pytz
-from .config import DB_PATH, CONFIG_DIR, APP_TIMEZONE, DEFAULT_CATEGORIES
+from .config import DB_PATH, APP_TIMEZONE, DEFAULT_CATEGORIES
 
 HEX_COLOR_REGEX = re.compile(r"^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$")
 
@@ -65,8 +63,8 @@ def init_db():
             cursor.execute("UPDATE categories SET status = 'active' WHERE status != 'active' AND status != 'archived';")
             conn.commit()
 
-        # Migrate categories from categories.json if table is empty (zero data loss across dev & prod)
-        migrate_categories_from_json_if_needed(conn)
+        # Seed default categories if table is empty
+        seed_default_categories_if_needed(conn)
 
         # Drop legacy category_statuses table (now superseded by categories.custom_status column)
         cursor.execute("DROP TABLE IF EXISTS category_statuses;")
@@ -161,14 +159,9 @@ def normalize_active_tasks_order():
         conn.commit()
 
 
-def migrate_categories_from_json_if_needed(conn):
+def seed_default_categories_if_needed(conn):
     """
-    Migrates categories from config/categories.json (or template/defaults) into the SQLite categories table.
-    Ensures zero data loss in both dev and prod environments:
-    - Runs only if categories table has 0 rows.
-    - Preserves all category names, colors, and statuses.
-    - Creates a safety backup 'config/categories.json.migrated_backup'.
-    - Scans existing tasks to ensure any referenced categories are included.
+    Seeds DEFAULT_CATEGORIES into the SQLite categories table if the table is empty.
     """
     cursor = conn.cursor()
     cursor.execute("SELECT COUNT(*) as cnt FROM categories")
@@ -177,88 +170,16 @@ def migrate_categories_from_json_if_needed(conn):
         return
 
     now_iso = datetime.now(APP_TIMEZONE).isoformat()
-    imported_categories = []
-
-    cat_json_path = os.path.join(CONFIG_DIR, "categories.json")
-    cat_template_path = os.path.join(CONFIG_DIR, "categories.template.json")
-    backup_path = os.path.join(CONFIG_DIR, "categories.json.migrated_backup")
-
-    source_path = None
-    if os.path.exists(cat_json_path):
-        source_path = cat_json_path
-    elif os.path.exists(cat_template_path):
-        source_path = cat_template_path
-
-    if source_path:
-        try:
-            with open(source_path, "r", encoding="utf-8") as f:
-                raw = json.load(f)
-            items = raw.get("categories", raw) if isinstance(raw, dict) else raw
-            if isinstance(items, list):
-                for item in items:
-                    if isinstance(item, dict) and "name" in item:
-                        cat_name = str(item.get("name", "")).strip()
-                        cat_color = str(item.get("color", "#6ba3d6")).strip()
-                        cat_status = str(item.get("status", "")).strip()
-                        if cat_name:
-                            imported_categories.append({
-                                "name": cat_name,
-                                "color": cat_color,
-                                "status": cat_status
-                            })
-            # Make safety backup copy if migrating from categories.json
-            if source_path == cat_json_path and not os.path.exists(backup_path):
-                shutil.copy2(cat_json_path, backup_path)
-                print(f"[ToDo Migration] Created safety backup at {backup_path}")
-        except Exception as e:
-            print(f"[ToDo Migration] Error reading {source_path}: {e}")
-
-    # Fallback to DEFAULT_CATEGORIES if empty
-    if not imported_categories:
-        for c in DEFAULT_CATEGORIES:
-            imported_categories.append({
-                "name": c["name"],
-                "color": c.get("color", "#6ba3d6"),
-                "status": ""
-            })
-
-    # Merge statuses from category_statuses table if any exist
-    try:
-        cursor.execute("SELECT category, status FROM category_statuses")
-        status_rows = {r["category"].lower(): r["status"] for r in cursor.fetchall()}
-        for cat in imported_categories:
-            if cat["name"].lower() in status_rows and status_rows[cat["name"].lower()]:
-                cat["status"] = status_rows[cat["name"].lower()]
-    except Exception:
-        pass
-
-    # Ensure any categories used in existing tasks are not missed
-    try:
-        cursor.execute("SELECT DISTINCT category FROM tasks WHERE category IS NOT NULL AND category != ''")
-        existing_task_cats = [r["category"].strip() for r in cursor.fetchall() if r["category"].strip()]
-        existing_names_lower = {c["name"].lower() for c in imported_categories}
-        for task_cat in existing_task_cats:
-            if task_cat.lower() not in existing_names_lower:
-                imported_categories.append({
-                    "name": task_cat,
-                    "color": "#6ba3d6",
-                    "status": ""
-                })
-                existing_names_lower.add(task_cat.lower())
-    except Exception as e:
-        print(f"[ToDo Migration] Warning checking tasks categories: {e}")
-
-    # Insert into categories table
     order = 1
-    for cat in imported_categories:
+    for c in DEFAULT_CATEGORIES:
         cursor.execute("""
             INSERT OR IGNORE INTO categories (name, color, status, custom_status, display_order, created_at)
-            VALUES (?, ?, 'active', ?, ?, ?)
-        """, (cat["name"], cat["color"], cat.get("status", ""), order, now_iso))
+            VALUES (?, ?, 'active', '', ?, ?)
+        """, (c["name"], c.get("color", "#6ba3d6"), order, now_iso))
         order += 1
 
     conn.commit()
-    print(f"[ToDo Migration] Successfully migrated {len(imported_categories)} categories into SQLite categories table.")
+    print(f"[ToDo] Seeded {len(DEFAULT_CATEGORIES)} default categories into categories table.")
 
 
 class CategoryArchivedConflict(Exception):

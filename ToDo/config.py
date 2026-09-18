@@ -1,10 +1,8 @@
 import os
-import json
 import pytz
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CONFIG_DIR = os.path.join(BASE_DIR, "config")
-CATEGORIES_FILE = os.path.join(CONFIG_DIR, "categories.json")
 DB_PATH = os.path.join(CONFIG_DIR, "tasks.db")
 
 APP_TIMEZONE = pytz.timezone("America/Los_Angeles")
