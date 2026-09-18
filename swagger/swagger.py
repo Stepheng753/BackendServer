@@ -406,11 +406,130 @@ OPENAPI_SPEC = {
         "/api/todo/categories": {
             "get": {
                 "tags": ["To Do"],
-                "summary": "List Configured Categories",
-                "description": "Retrieves the list of active task categories and associated hex color codes from config/categories.json.",
+                "summary": "List Categories",
+                "description": "Retrieves the list of active task categories and associated hex color codes and status from the SQLite categories table.",
                 "responses": {
                     "200": {
                         "description": "JSON list of categories."
+                    }
+                }
+            },
+            "post": {
+                "tags": ["To Do"],
+                "summary": "Create New Category",
+                "description": "Creates a new category with a unique name and color.",
+                "requestBody": {
+                    "required": True,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["name"],
+                                "properties": {
+                                    "name": {"type": "string", "example": "New Project"},
+                                    "color": {"type": "string", "example": "#5b95cb"}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "JSON object with success boolean and created category."
+                    },
+                    "400": {
+                        "description": "Category name required or duplicate active category."
+                    },
+                    "409": {
+                        "description": "Category exists in archived status (conflict)."
+                    }
+                }
+            }
+        },
+        "/api/todo/categories/{category_id}/archive": {
+            "post": {
+                "tags": ["To Do"],
+                "summary": "Archive Category",
+                "description": "Archives a category and cascades to automatically archive all its active tasks.",
+                "parameters": [
+                    {
+                        "name": "category_id",
+                        "in": "path",
+                        "required": True,
+                        "schema": {"type": "integer"}
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "JSON object with category and tasks_archived count."
+                    },
+                    "404": {
+                        "description": "Category not found."
+                    }
+                }
+            }
+        },
+        "/api/todo/categories/{category_id}/restore": {
+            "post": {
+                "tags": ["To Do"],
+                "summary": "Restore Category",
+                "description": "Restores an archived category to active status without changing task archival status.",
+                "parameters": [
+                    {
+                        "name": "category_id",
+                        "in": "path",
+                        "required": True,
+                        "schema": {"type": "integer"}
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "JSON object with restored active category."
+                    },
+                    "404": {
+                        "description": "Category not found."
+                    }
+                }
+            }
+        },
+        "/api/todo/categories/archived-summary": {
+            "get": {
+                "tags": ["To Do"],
+                "summary": "List Archived Categories with Tasks",
+                "description": "Retrieves all archived categories and their archived tasks.",
+                "responses": {
+                    "200": {
+                        "description": "JSON object with archived_categories list."
+                    }
+                }
+            }
+        },
+        "/api/todo/categories/status": {
+            "patch": {
+                "tags": ["To Do"],
+                "summary": "Update Category Status",
+                "description": "Updates the status text bar for a specific category.",
+                "requestBody": {
+                    "required": True,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["category"],
+                                "properties": {
+                                    "category": {"type": "string", "example": "ASH"},
+                                    "status": {"type": "string", "example": "In Progress"}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "JSON object with success boolean and updated category."
+                    },
+                    "400": {
+                        "description": "Category name required."
                     }
                 }
             }

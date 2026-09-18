@@ -20,75 +20,30 @@ DEFAULT_CATEGORIES = [
 ]
 
 
-def load_categories():
+def save_category_status(category_name, status_text):
+    """Updates the status field of a category in SQLite."""
+    try:
+        from .db import set_category_status
+        return set_category_status(category_name, status_text)
+    except Exception as e:
+        print(f"[ToDo] Note: could not set category status: {e}")
+        return None
+
+
+def load_categories(status="active"):
     """
-    Loads categories from config/categories.json, supporting various formats:
-    - {"categories": [{"name": "Category 1", "color": "#005fa3"}, ...]}
-    - {"categories": [{"Category 1": "#005fa3"}, ...]}
-    - {"categories": {"Category 1": "#005fa3", ...}}
-    - [{"name": "...", "color": "..."}, ...]
-    Returns a normalized list of objects: [{'id': str, 'name': str, 'color': str}, ...]
-    Auto-initializes config/categories.json if missing.
+    Loads categories from SQLite categories table.
+    Falls back to DEFAULT_CATEGORIES if the DB table is not yet initialized.
     """
-    raw_data = None
-    if os.path.exists(CATEGORIES_FILE):
-        try:
-            with open(CATEGORIES_FILE, "r", encoding="utf-8") as f:
-                raw_data = json.load(f)
-        except Exception as e:
-            print(f"[ToDo] Warning loading categories.json: {e}")
-    else:
-        try:
-            os.makedirs(CONFIG_DIR, exist_ok=True)
-            with open(CATEGORIES_FILE, "w", encoding="utf-8") as f:
-                json.dump({"categories": DEFAULT_CATEGORIES}, f, indent=2)
-            raw_data = {"categories": DEFAULT_CATEGORIES}
-        except Exception as e:
-            print(f"[ToDo] Note: Could not auto-create categories.json: {e}")
+    try:
+        from .db import get_categories
+        cats = get_categories(status=status)
+        if cats:
+            return cats
+    except Exception as e:
+        print(f"[ToDo] Note loading categories from DB: {e}")
 
-    if not raw_data:
-        raw_data = {"categories": DEFAULT_CATEGORIES}
-
-    categories_list = []
-    items = raw_data.get("categories", raw_data) if isinstance(raw_data, dict) else raw_data
-
-    if isinstance(items, dict):
-        for name, color in items.items():
-            categories_list.append({
-                "id": str(name).strip(),
-                "name": str(name).strip(),
-                "color": str(color).strip() if isinstance(color, str) else "#6ba3d6"
-            })
-    elif isinstance(items, list):
-        for item in items:
-            if isinstance(item, dict):
-                if "name" in item:
-                    cat_name = str(item.get("name", "")).strip()
-                    cat_color = str(item.get("color", "#6ba3d6")).strip()
-                    cat_id = str(item.get("id", cat_name)).strip()
-                    if cat_name:
-                        categories_list.append({
-                            "id": cat_id,
-                            "name": cat_name,
-                            "color": cat_color
-                        })
-                else:
-                    # e.g. {"Category 1": "#005fa3"}
-                    for k, v in item.items():
-                        if isinstance(v, dict):
-                            cat_color = v.get("color", "#6ba3d6")
-                        else:
-                            cat_color = str(v)
-                        categories_list.append({
-                            "id": str(k).strip(),
-                            "name": str(k).strip(),
-                            "color": str(cat_color).strip()
-                        })
-
-    if not categories_list:
-        categories_list = [
-            {"id": c["name"], "name": c["name"], "color": c["color"]}
-            for c in DEFAULT_CATEGORIES
-        ]
-
-    return categories_list
+    return [
+        {"id": c["name"], "name": c["name"], "color": c["color"], "status": "active", "custom_status": "", "status_text": ""}
+        for c in DEFAULT_CATEGORIES
+    ]

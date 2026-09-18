@@ -329,7 +329,7 @@
       flex-direction: column;
       overflow: hidden;
       transition: box-shadow 0.2s ease, border-color 0.2s ease;
-      height: 410px; /* Fixed height: ~5 one-line tasks */
+      height: 440px; /* Accommodates status bar + ~5 one-line tasks */
     }
 
     .category-box:hover {
@@ -388,6 +388,105 @@
       background: var(--secondary);
       color: var(--text-secondary);
       border: 1px solid var(--border);
+    }
+
+    /* CATEGORY STATUS ROW */
+    .cat-status-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 6px 14px;
+      background: rgba(107, 163, 214, 0.05);
+      border-bottom: 1px solid var(--card-border);
+      min-height: 38px;
+      box-sizing: border-box;
+      flex-shrink: 0;
+      transition: background 0.15s ease;
+    }
+
+    .cat-status-row:hover {
+      background: rgba(107, 163, 214, 0.11);
+    }
+
+    [data-theme="dark"] .cat-status-row {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    [data-theme="dark"] .cat-status-row:hover {
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .cat-status-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-grow: 1;
+      min-width: 0;
+      cursor: pointer;
+    }
+
+    .cat-status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      padding: 1px 6px;
+      border-radius: 4px;
+      background: rgba(107, 163, 214, 0.16);
+      color: #3b82f6;
+      border: 1px solid rgba(107, 163, 214, 0.35);
+      flex-shrink: 0;
+      user-select: none;
+    }
+
+    [data-theme="dark"] .cat-status-badge {
+      background: rgba(107, 163, 214, 0.24);
+      color: #93c5fd;
+      border-color: rgba(107, 163, 214, 0.45);
+    }
+
+    .cat-status-text {
+      font-size: 0.83rem;
+      color: var(--text-main);
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex-grow: 1;
+    }
+
+    .cat-status-text.empty {
+      color: var(--text-muted);
+      font-style: italic;
+      font-weight: 400;
+    }
+
+    .cat-status-edit-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
+    }
+
+    .edit-status-input {
+      flex-grow: 1;
+      min-width: 0;
+      width: 100%;
+      box-sizing: border-box;
+      padding: 4px 8px;
+      font-size: 0.83rem;
+      border: 1px solid var(--primary);
+      border-radius: var(--radius);
+      background: var(--card-bg);
+      color: var(--text-main);
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(107, 163, 214, 0.2);
     }
 
     /* TASK LIST WITH INNER SCROLLBAR */
@@ -684,8 +783,10 @@
       border: 1px solid var(--card-border);
       border-radius: 8px;
       padding: 24px;
-      max-width: 480px;
+      max-width: 530px;
       width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
     }
 
@@ -741,6 +842,534 @@
     .form-control:focus {
       border-color: var(--primary);
       box-shadow: 0 0 0 2px rgba(107, 163, 214, 0.15);
+    }
+
+    /* COLOR PICKER & PREVIEW STYLES */
+    .color-picker-container {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .color-header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    .btn-advanced-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      border-radius: var(--radius);
+      background: var(--secondary);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-family: inherit;
+    }
+
+    .btn-advanced-toggle:hover {
+      background: var(--card-border);
+      color: var(--text-main);
+      border-color: var(--primary);
+    }
+
+    .btn-advanced-toggle.active {
+      background: var(--blue-subtle, #edf5fc);
+      color: #4f89be;
+      border-color: rgba(107, 163, 214, 0.5);
+    }
+
+    [data-theme="dark"] .btn-advanced-toggle.active {
+      background: rgba(107, 163, 214, 0.2);
+      color: #b9d8f3;
+      border-color: rgba(107, 163, 214, 0.4);
+    }
+
+    .btn-advanced-toggle svg {
+      transition: transform 0.2s ease;
+    }
+
+    .btn-advanced-toggle.active svg {
+      transform: rotate(180deg);
+    }
+
+    .color-swatches {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .color-swatch {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+      outline: none;
+    }
+
+    .color-swatch:hover {
+      transform: scale(1.18);
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
+    }
+
+    .color-swatch.active {
+      border-color: var(--text-main);
+      transform: scale(1.15);
+      box-shadow: 0 0 0 2px var(--primary);
+    }
+
+    /* GOOGLE-STYLE ADVANCED COLOR PICKER (Theme-responsive) */
+    .g-color-picker-card {
+      background: var(--secondary, #f3f4f6);
+      color: var(--text-main, #111827);
+      border: 1px solid var(--card-border, #e5e7eb);
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin-top: 4px;
+      margin-bottom: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      user-select: none;
+      box-sizing: border-box;
+      transition: background 0.2s ease, border-color 0.2s ease;
+    }
+
+    [data-theme="dark"] .g-color-picker-card {
+      background: #1f1f1f;
+      color: #ffffff;
+      border-color: #383838;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    }
+
+    .g-picker-topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .g-picker-subtitle {
+      font-size: 0.73rem;
+      color: var(--text-muted);
+      font-weight: normal;
+    }
+
+    /* Visual row: Current Swatch on left, 2D Saturation/Value surface on right */
+    .g-visual-area {
+      display: flex;
+      width: 100%;
+      height: 125px;
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      position: relative;
+      box-sizing: border-box;
+    }
+
+    [data-theme="dark"] .g-visual-area {
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .g-current-swatch {
+      width: 30%;
+      height: 100%;
+      background-color: #005fa3;
+      transition: background-color 0.04s linear;
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .g-gradient-surface {
+      flex: 1;
+      height: 100%;
+      position: relative;
+      background-color: hsl(205, 100%, 50%);
+      cursor: crosshair;
+      touch-action: none;
+    }
+
+    .g-gradient-surface::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to right, #ffffff, rgba(255, 255, 255, 0));
+      pointer-events: none;
+    }
+
+    .g-gradient-surface::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, #000000, rgba(0, 0, 0, 0));
+      pointer-events: none;
+    }
+
+    .g-surface-handle {
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 2px solid #ffffff;
+      box-shadow: 0 0 3px 1px rgba(0, 0, 0, 0.65);
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    /* Rainbow Hue Slider */
+    .g-hue-slider {
+      position: relative;
+      width: 100%;
+      height: 12px;
+      border-radius: 6px;
+      background: linear-gradient(to right,
+        #ff0000 0%,
+        #ffff00 17%,
+        #00ff00 33%,
+        #00ffff 50%,
+        #0000ff 67%,
+        #ff00ff 83%,
+        #ff0000 100%
+      );
+      cursor: pointer;
+      touch-action: none;
+      border: 1px solid var(--border);
+      box-sizing: border-box;
+    }
+
+    [data-theme="dark"] .g-hue-slider {
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .g-hue-handle {
+      position: absolute;
+      top: 50%;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid #ffffff;
+      background: #005fa3;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    /* HEX Box with Copy */
+    .g-hex-box {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--card-bg, #ffffff);
+      border: 1px solid var(--card-border, #e5e7eb);
+      border-radius: 6px;
+      padding: 5px 12px;
+      box-sizing: border-box;
+    }
+
+    [data-theme="dark"] .g-hex-box {
+      background: #141414;
+      border-color: #383838;
+    }
+
+    .g-hex-tag {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+    }
+
+    .g-hex-input {
+      background: transparent;
+      border: none;
+      color: var(--text-main);
+      font-family: var(--font-mono, monospace);
+      font-size: 0.95rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-align: center;
+      width: 120px;
+      outline: none;
+      text-transform: uppercase;
+    }
+
+    .g-copy-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 4px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      transition: all 0.15s ease;
+    }
+
+    .g-copy-btn:hover {
+      color: var(--text-main);
+      background: var(--secondary);
+    }
+
+    [data-theme="dark"] .g-copy-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    /* 3 Color Breakdown Chips (RGB, CMYK, HSV) */
+    .g-values-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .g-val-chip {
+      background: var(--card-bg, #ffffff);
+      border: 1px solid var(--card-border, #e5e7eb);
+      border-radius: 6px;
+      padding: 5px 7px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+      box-sizing: border-box;
+    }
+
+    [data-theme="dark"] .g-val-chip {
+      background: #141414;
+      border-color: #383838;
+    }
+
+    .g-val-label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .g-val-data {
+      font-size: 0.72rem;
+      font-family: var(--font-mono, monospace);
+      color: var(--text-main);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .cat-preview-box {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--card-shadow);
+      pointer-events: none;
+    }
+
+    /* CONFLICT BANNER */
+    .modal-conflict-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 14px;
+      margin-bottom: 14px;
+      background: rgba(234, 179, 8, 0.12);
+      border: 1px solid rgba(234, 179, 8, 0.35);
+      border-radius: 8px;
+      font-size: 0.83rem;
+      color: var(--text-main);
+    }
+
+    /* ARCHIVED CATEGORIES MODAL & SCROLLABLE LIST */
+    .modal-archived-content {
+      max-width: 680px;
+      width: 92%;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .modal-header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .modal-close-icon {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-muted);
+      padding: 4px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.15s, background 0.15s;
+    }
+
+    .modal-close-icon:hover {
+      color: var(--text-main);
+      background: var(--bg-tertiary);
+    }
+
+    .modal-archived-body {
+      padding: 18px 24px;
+      overflow-y: auto;
+      max-height: 520px;
+      flex: 1;
+    }
+
+    .archived-modal-subtext {
+      font-size: 0.83rem;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+      line-height: 1.45;
+    }
+
+    .archived-scroll-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .archived-cat-group {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .archived-cat-group-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      background: var(--bg-tertiary);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .archived-cat-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .archived-cat-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 9px;
+      border-radius: 6px;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .archived-cat-pill-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .archived-cat-task-count {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .archived-cat-tasks-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .archived-task-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border-color);
+      opacity: 0.75;
+      transition: opacity 0.15s;
+    }
+
+    .archived-task-item:last-child {
+      border-bottom: none;
+    }
+
+    .archived-task-item:hover {
+      opacity: 0.95;
+    }
+
+    .archived-task-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .archived-task-text {
+      font-size: 0.86rem;
+      color: var(--text-muted);
+      text-decoration: line-through;
+      word-break: break-word;
+    }
+
+    .archived-task-date {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .btn-restore-cat {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      border-radius: 6px;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn-restore-cat:hover {
+      background: var(--btn-primary-bg, #005fa3);
+      color: #fff;
+      border-color: transparent;
+    }
+
+    .empty-archived-message {
+      text-align: center;
+      padding: 36px 16px;
+      color: var(--text-muted);
+      font-size: 0.9rem;
     }
 
     /* TOAST NOTIFICATION */
@@ -824,6 +1453,9 @@
         <button id="btn-toggle-view" class="btn btn-secondary" title="Switch between Active and Archived tasks">
           View Archive
         </button>
+        <button id="btn-view-archived-categories" class="btn btn-secondary" style="display: none;" title="View archived categories and their tasks">
+          Archived Categories <span id="archived-cat-badge" class="cat-count-badge" style="margin-left: 5px; font-size: 0.72rem; padding: 2px 6px;">0</span>
+        </button>
         <button id="btn-archive-completed" class="btn btn-warning" title="Move all crossed-out items to archive right now">
           Archive Completed
         </button>
@@ -833,8 +1465,8 @@
         <button id="btn-delete-all" class="btn btn-danger" title="Delete all tasks in current view">
           Delete All
         </button>
-        <button id="btn-add-modal" class="btn btn-primary" title="Create a new task">
-          + New Task
+        <button id="btn-add-category" class="btn btn-primary" title="Create a new category">
+          + New Category
         </button>
       </div>
     </div>
@@ -847,11 +1479,16 @@
           <rect x="1" y="3" width="22" height="5"></rect>
           <line x1="10" y1="12" x2="14" y2="12"></line>
         </svg>
-        <strong>Archive View Active:</strong> Showing archived tasks per category. Archived items can be restored back to the active board anytime.
+        <strong>Archive View Active:</strong> Showing active categories and their archived tasks.
       </div>
-      <button id="btn-exit-archive" class="btn btn-primary btn-sm">
-        Return to Active Board
-      </button>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <button id="btn-banner-archived-categories" class="btn btn-secondary btn-sm" style="display: none;" title="View archived categories and their tasks">
+          📦 Archived Categories <span id="banner-archived-cat-badge" class="cat-count-badge" style="margin-left: 4px; font-size: 0.72rem; padding: 2px 6px;">0</span>
+        </button>
+        <button id="btn-exit-archive" class="btn btn-primary btn-sm">
+          Return to Active Board
+        </button>
+      </div>
     </div>
 
     <!-- CATEGORIES GRID -->
@@ -861,27 +1498,150 @@
 
   </div>
 
-  <!-- ADD TASK MODAL -->
-  <div id="modal-add-task" class="modal-overlay">
+  <!-- ADD / EDIT CATEGORY MODAL -->
+  <div id="modal-add-category" class="modal-overlay">
     <div class="modal-content">
       <div class="modal-title">
-        <span>+ Add New Task</span>
+        <span id="modal-cat-title-text">+ Add New Category</span>
       </div>
       <div class="modal-body">
+        <!-- CONFLICT / RESTORE ALERT BANNER -->
+        <div id="modal-cat-conflict" class="modal-conflict-banner" style="display: none;">
+          <span id="modal-cat-conflict-text">Category is currently archived.</span>
+          <button type="button" id="btn-conflict-restore" class="btn btn-sm btn-primary">Restore Category</button>
+        </div>
+
         <div class="form-group">
-          <label class="form-label" for="modal-task-category">Category</label>
-          <select id="modal-task-category" class="form-control">
-            <!-- Populated dynamically -->
-          </select>
+          <label class="form-label" for="modal-cat-name">Category Name</label>
+          <input type="text" id="modal-cat-name" class="form-control" placeholder="e.g. Work, Personal, Marketing..." maxlength="50" autofocus />
         </div>
         <div class="form-group">
-          <label class="form-label" for="modal-task-text">Task Description</label>
-          <input type="text" id="modal-task-text" class="form-control" placeholder="What needs to be done?" autofocus />
+          <div class="color-header-row">
+            <label class="form-label" style="margin-bottom: 0;">Category Color</label>
+            <button type="button" id="btn-toggle-advanced-picker" class="btn-advanced-toggle" title="Open custom Google-style color picker">
+              <span>🎨</span>
+              <span id="advanced-toggle-text">Advanced</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+          </div>
+          <div class="color-picker-container">
+            <!-- PRESETS CONTAINER (Hidden in Advanced Mode) -->
+            <div id="modal-cat-presets-wrap">
+              <div class="color-swatches" id="modal-cat-swatches">
+                <!-- Rendered dynamically -->
+              </div>
+            </div>
+
+            <!-- ADVANCED GOOGLE-STYLE COLOR PICKER (Collapsible) -->
+            <div id="advanced-picker-panel" class="g-color-picker-card" style="display: none;">
+              <div class="g-picker-topbar">
+                <span>Color picker</span>
+                <span class="g-picker-subtitle">Drag to fine-tune</span>
+              </div>
+
+              <!-- Visual row: Current Swatch on left, 2D Saturation/Value surface on right -->
+              <div class="g-visual-area">
+                <div class="g-current-swatch" id="g-cur-swatch" title="Active color preview"></div>
+                <div class="g-gradient-surface" id="g-gradient-surface" title="Click or drag to pick saturation & brightness">
+                  <div class="g-surface-handle" id="g-surface-handle"></div>
+                </div>
+              </div>
+
+              <!-- Rainbow Hue Slider -->
+              <div class="g-hue-slider" id="g-hue-slider" title="Click or drag to adjust hue">
+                <div class="g-hue-handle" id="g-hue-handle"></div>
+              </div>
+
+              <!-- HEX Box with Copy -->
+              <div class="g-hex-box">
+                <span class="g-hex-tag">HEX</span>
+                <input type="text" id="g-hex-input" class="g-hex-input" value="#005FA3" maxlength="7" spellcheck="false" title="Direct Hex code entry" />
+                <button type="button" id="g-copy-hex" class="g-copy-btn" title="Copy HEX to clipboard">
+                  <svg id="copy-icon-svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                  </svg>
+                </button>
+              </div>
+
+              <!-- 3 Color Breakdown Chips -->
+              <div class="g-values-grid">
+                <div class="g-val-chip" title="Red, Green, Blue">
+                  <div class="g-val-label">RGB</div>
+                  <div class="g-val-data" id="g-val-rgb">0, 95, 163</div>
+                </div>
+                <div class="g-val-chip" title="Cyan, Magenta, Yellow, Key">
+                  <div class="g-val-label">CMYK</div>
+                  <div class="g-val-data" id="g-val-cmyk">100%, 42%, 0%, 36%</div>
+                </div>
+                <div class="g-val-chip" title="Hue, Saturation, Value">
+                  <div class="g-val-label">HSV</div>
+                  <div class="g-val-data" id="g-val-hsv">205°, 100%, 64%</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Live Card Preview</label>
+          <div class="cat-preview-box" id="modal-cat-preview">
+            <div class="cat-accent-bar" id="preview-accent-bar" style="background-color: #005fa3;"></div>
+            <div class="cat-header">
+              <div class="cat-header-left">
+                <div class="cat-color-dot" id="preview-color-dot" style="background-color: #005fa3;"></div>
+                <div class="cat-title" id="preview-title">Category Name</div>
+              </div>
+              <span class="cat-count-badge">0</span>
+            </div>
+            <div class="cat-status-row">
+              <div class="cat-status-left">
+                <span class="cat-status-badge">Status</span>
+                <span class="cat-status-text empty">No status set</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
+        <div class="modal-footer-left" style="display: flex; gap: 8px; align-items: center;">
+          <button type="button" id="modal-cat-archive" class="btn btn-danger" style="display: none;" title="Archive this category and all its tasks">Archive Category</button>
+          <button type="button" id="modal-cat-archive-tasks" class="btn btn-warning" style="display: none;" title="Move all active tasks in this category to the archive">Archive All Tasks</button>
+          <button type="button" id="modal-cat-delete-tasks" class="btn btn-danger" style="display: none;" title="Permanently delete all archived tasks in this category">Delete All Tasks</button>
+        </div>
+        <div class="modal-footer-right" style="display: flex; gap: 8px; align-items: center; margin-left: auto;">
+          <button id="modal-cat-cancel" class="btn btn-secondary">Cancel</button>
+          <button id="modal-cat-submit" class="btn btn-primary">Create Category</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ARCHIVED CATEGORIES MODAL -->
+  <div id="modal-archived-categories" class="modal-overlay">
+    <div class="modal-content modal-archived-content">
+      <div class="modal-header-row">
+        <div class="modal-title" style="border-bottom: none; padding: 0;">
+          <span>📦 Archived Categories & Tasks</span>
+        </div>
+        <button type="button" id="btn-close-archived-categories" class="modal-close-icon" title="Close">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body modal-archived-body">
+        <div class="archived-modal-subtext">
+          Categories that have been archived are hidden from the active board. Restoring a category reactivates it on the active board while keeping its historical tasks archived.
+        </div>
+        <div id="archived-categories-list" class="archived-scroll-list">
+          <!-- Rendered dynamically -->
         </div>
       </div>
       <div class="modal-footer">
-        <button id="modal-add-cancel" class="btn btn-secondary">Cancel</button>
-        <button id="modal-add-submit" class="btn btn-primary">Add Task</button>
+        <button id="btn-close-archived-cat-footer" class="btn btn-secondary">Close</button>
       </div>
     </div>
   </div>
@@ -936,7 +1696,7 @@
     }
 
     // Confirmation Modal Helper
-    function showConfirmModal(title, message, confirmBtnClass, onConfirm) {
+    function showConfirmModal(title, message, confirmBtnClass, onConfirm, proceedText = 'Confirm') {
       const modal = document.getElementById('modal-confirm');
       const titleEl = document.getElementById('confirm-title');
       const msgEl = document.getElementById('confirm-message');
@@ -946,6 +1706,7 @@
       titleEl.textContent = title;
       msgEl.textContent = message;
       proceedBtn.className = `btn ${confirmBtnClass}`;
+      proceedBtn.textContent = proceedText;
 
       function cleanup() {
         modal.classList.remove('active');
@@ -971,6 +1732,7 @@
         tasks = data.tasks || [];
         renderBoard();
         populateCategorySelect();
+        loadArchivedCategoriesSummary();
       } catch (err) {
         console.error('Error loading tasks:', err);
         showToast('Error loading board data');
@@ -1031,6 +1793,7 @@
             </div>
             <span class="cat-count-badge">${catTasks.length}</span>
           </div>
+          <div class="cat-status-row" id="status-row-${escapeHtml(cat.name)}" data-category="${escapeHtml(cat.name)}"></div>
           <div class="task-list" id="list-${cat.id || cat.name}"></div>
           ${currentView === 'active' ? `
             <div class="cat-quick-add">
@@ -1041,6 +1804,23 @@
             </div>
           ` : ''}
         `;
+
+        const statusRowEl = catBox.querySelector('.cat-status-row');
+        if (statusRowEl) {
+          renderCategoryStatusRow(statusRowEl, cat);
+        }
+
+        const catHeaderEl = catBox.querySelector('.cat-header');
+        if (catHeaderEl) {
+          catHeaderEl.style.cursor = 'pointer';
+          catHeaderEl.setAttribute('title', currentView === 'active'
+            ? 'Double-click to edit name/color, archive category, or archive all tasks'
+            : 'Double-click to edit name/color or delete all archived tasks');
+          catHeaderEl.addEventListener('dblclick', (e) => {
+            e.stopPropagation();
+            openCategoryModal('edit', cat);
+          });
+        }
 
         const taskListEl = catBox.querySelector('.task-list');
 
@@ -1187,6 +1967,88 @@
         if (e.key === 'Enter') finishEdit();
         if (e.key === 'Escape') renderBoard();
       });
+    }
+
+    // Category Status Helpers
+    function renderCategoryStatusRow(statusRowEl, cat) {
+      statusRowEl.innerHTML = `
+        <div class="cat-status-left" title="Double click to edit status">
+          <span class="cat-status-badge">Status</span>
+          <span class="cat-status-text ${cat.status ? '' : 'empty'}">${escapeHtml(cat.status || 'No status set')}</span>
+        </div>
+      `;
+
+      statusRowEl.ondblclick = () => makeCategoryStatusEditable(statusRowEl, cat);
+    }
+
+    function makeCategoryStatusEditable(statusRowEl, cat) {
+      const currentStatus = cat.status || '';
+      statusRowEl.ondblclick = null;
+      statusRowEl.innerHTML = `
+        <div class="cat-status-edit-wrap">
+          <span class="cat-status-badge">Status</span>
+          <input type="text" class="edit-status-input" value="${escapeHtml(currentStatus)}" placeholder="Set category status..." />
+        </div>
+      `;
+
+      const input = statusRowEl.querySelector('.edit-status-input');
+      input.focus();
+      input.select();
+
+      let isFinished = false;
+
+      const finishEdit = async () => {
+        if (isFinished) return;
+        isFinished = true;
+        const newStatus = input.value.trim();
+        if (newStatus !== currentStatus) {
+          await handleUpdateCategoryStatus(cat.name, newStatus);
+        } else {
+          renderCategoryStatusRow(statusRowEl, cat);
+        }
+      };
+
+      input.addEventListener('blur', finishEdit);
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          finishEdit();
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          isFinished = true;
+          renderCategoryStatusRow(statusRowEl, cat);
+        }
+      });
+    }
+
+    async function handleUpdateCategoryStatus(categoryName, newStatus) {
+      try {
+        const res = await fetch('/api/todo/categories/status', {
+          method: 'PATCH',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({category: categoryName, status: newStatus})
+        });
+        if (!res.ok) throw new Error('Failed to update category status');
+        const data = await res.json();
+
+        // Update local categories array
+        const foundCat = categories.find(c => c.name.toLowerCase() === categoryName.toLowerCase());
+        if (foundCat) {
+          foundCat.status = newStatus;
+        }
+
+        const rowEl = document.getElementById(`status-row-${categoryName}`);
+        if (rowEl && foundCat) {
+          renderCategoryStatusRow(rowEl, foundCat);
+        } else {
+          renderBoard();
+        }
+        showToast(`Status updated for ${categoryName}`);
+      } catch (err) {
+        console.error('Error updating category status:', err);
+        showToast('Error updating status');
+        await loadBoardData();
+      }
     }
 
     // Drag and Drop Logic
@@ -1533,42 +2395,744 @@
       loadBoardData();
     });
 
-    // Add Task Modal
-    const modalAdd = document.getElementById('modal-add-task');
-    const inputModalText = document.getElementById('modal-task-text');
-    const selectModalCat = document.getElementById('modal-task-category');
+    // Add Category Modal & Color Picker Logic
+    const PRESET_COLORS = [
+      '#005fa3', '#55b080', '#a479b1', '#e7ba51', '#bc2b2e',
+      '#f294e9', '#e0963c', '#3b82f6', '#06b6d4', '#10b981',
+      '#f59e0b', '#ec4899'
+    ];
 
-    document.getElementById('btn-add-modal').addEventListener('click', () => {
-      modalAdd.classList.add('active');
-      inputModalText.value = '';
-      inputModalText.focus();
-    });
+    const modalAddCat = document.getElementById('modal-add-category');
+    const inputCatName = document.getElementById('modal-cat-name');
+    const swatchesContainer = document.getElementById('modal-cat-swatches');
+    const previewAccentBar = document.getElementById('preview-accent-bar');
+    const previewColorDot = document.getElementById('preview-color-dot');
+    const previewTitle = document.getElementById('preview-title');
+    const btnOpenAddCat = document.getElementById('btn-add-category');
+    const btnCancelAddCat = document.getElementById('modal-cat-cancel');
+    const btnSubmitAddCat = document.getElementById('modal-cat-submit');
 
-    document.getElementById('modal-add-cancel').addEventListener('click', () => {
-      modalAdd.classList.remove('active');
-    });
+    // Advanced Google-Style Picker Elements
+    const btnToggleAdvanced = document.getElementById('btn-toggle-advanced-picker');
+    const advancedPickerPanel = document.getElementById('advanced-picker-panel');
+    const gCurSwatch = document.getElementById('g-cur-swatch');
+    const gGradientSurface = document.getElementById('g-gradient-surface');
+    const gSurfaceHandle = document.getElementById('g-surface-handle');
+    const gHueSlider = document.getElementById('g-hue-slider');
+    const gHueHandle = document.getElementById('g-hue-handle');
+    const gHexInput = document.getElementById('g-hex-input');
+    const gCopyHex = document.getElementById('g-copy-hex');
+    const gValRgb = document.getElementById('g-val-rgb');
+    const gValCmyk = document.getElementById('g-val-cmyk');
+    const gValHsv = document.getElementById('g-val-hsv');
+    const presetsWrap = document.getElementById('modal-cat-presets-wrap');
+    const advancedToggleText = document.getElementById('advanced-toggle-text');
 
-    document.getElementById('modal-add-submit').addEventListener('click', async () => {
-      const text = inputModalText.value.trim();
-      const cat = selectModalCat.value;
-      if (!text) {
-        inputModalText.focus();
+    let currentColorHex = '#005FA3';
+    let currentHSV = { h: 205, s: 1.0, v: 0.64 };
+    let isAdvancedOpen = false;
+
+    // Color conversion math
+    function hsvToRgb(h, s, v) {
+      let c = v * s;
+      let x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+      let m = v - c;
+      let r1 = 0, g1 = 0, b1 = 0;
+      if (h >= 0 && h < 60) { r1 = c; g1 = x; b1 = 0; }
+      else if (h >= 60 && h < 120) { r1 = x; g1 = c; b1 = 0; }
+      else if (h >= 120 && h < 180) { r1 = 0; g1 = c; b1 = x; }
+      else if (h >= 180 && h < 240) { r1 = 0; g1 = x; b1 = c; }
+      else if (h >= 240 && h < 300) { r1 = x; g1 = 0; b1 = c; }
+      else { r1 = c; g1 = 0; b1 = x; }
+      return {
+        r: Math.round((r1 + m) * 255),
+        g: Math.round((g1 + m) * 255),
+        b: Math.round((b1 + m) * 255)
+      };
+    }
+
+    function rgbToHex(r, g, b) {
+      return '#' + [r, g, b].map(x => {
+        const hex = Math.max(0, Math.min(255, Math.round(x))).toString(16);
+        return hex.length === 1 ? '0' + hex : hex;
+      }).join('').toUpperCase();
+    }
+
+    function hexToRgb(hex) {
+      hex = hex.replace(/^#/, '');
+      if (hex.length === 3) {
+        hex = hex.split('').map(c => c + c).join('');
+      }
+      if (hex.length !== 6) return null;
+      const num = parseInt(hex, 16);
+      if (isNaN(num)) return null;
+      return {
+        r: (num >> 16) & 255,
+        g: (num >> 8) & 255,
+        b: num & 255
+      };
+    }
+
+    function rgbToHsv(r, g, b) {
+      r /= 255; g /= 255; b /= 255;
+      let max = Math.max(r, g, b), min = Math.min(r, g, b);
+      let d = max - min;
+      let h = 0;
+      let s = max === 0 ? 0 : d / max;
+      let v = max;
+      if (max !== min) {
+        switch (max) {
+          case r: h = ((g - b) / d + (g < b ? 6 : 0)); break;
+          case g: h = ((b - r) / d + 2); break;
+          case b: h = ((r - g) / d + 4); break;
+        }
+        h *= 60;
+      }
+      return { h: (h + 360) % 360, s, v };
+    }
+
+    function rgbToCmyk(r, g, b) {
+      let r1 = r / 255, g1 = g / 255, b1 = b / 255;
+      let k = 1 - Math.max(r1, g1, b1);
+      if (k >= 1) return { c: 0, m: 0, y: 0, k: 100 };
+      let c = (1 - r1 - k) / (1 - k);
+      let m = (1 - g1 - k) / (1 - k);
+      let y = (1 - b1 - k) / (1 - k);
+      return {
+        c: Math.round(c * 100),
+        m: Math.round(m * 100),
+        y: Math.round(y * 100),
+        k: Math.round(k * 100)
+      };
+    }
+
+    function initColorPicker() {
+      if (!swatchesContainer) return;
+      swatchesContainer.innerHTML = '';
+      PRESET_COLORS.forEach(color => {
+        const swatch = document.createElement('button');
+        swatch.type = 'button';
+        swatch.className = `color-swatch ${color.toLowerCase() === currentColorHex.toLowerCase() ? 'active' : ''}`;
+        swatch.style.backgroundColor = color;
+        swatch.title = color;
+        swatch.addEventListener('click', () => {
+          setColor(color);
+        });
+        swatchesContainer.appendChild(swatch);
+      });
+    }
+
+    function syncAdvancedPicker() {
+      if (!gGradientSurface || !gHueSlider) return;
+      gGradientSurface.style.backgroundColor = `hsl(${currentHSV.h}, 100%, 50%)`;
+      if (gSurfaceHandle) {
+        gSurfaceHandle.style.left = `${Math.min(100, Math.max(0, currentHSV.s * 100))}%`;
+        gSurfaceHandle.style.top = `${Math.min(100, Math.max(0, (1 - currentHSV.v) * 100))}%`;
+      }
+      if (gHueHandle) {
+        gHueHandle.style.left = `${Math.min(100, Math.max(0, (currentHSV.h / 360) * 100))}%`;
+        gHueHandle.style.backgroundColor = `hsl(${currentHSV.h}, 100%, 50%)`;
+      }
+      if (gCurSwatch) {
+        gCurSwatch.style.backgroundColor = currentColorHex;
+      }
+      if (gHexInput && document.activeElement !== gHexInput) {
+        gHexInput.value = currentColorHex.toUpperCase();
+      }
+
+      const rgb = hsvToRgb(currentHSV.h, currentHSV.s, currentHSV.v);
+      const cmyk = rgbToCmyk(rgb.r, rgb.g, rgb.b);
+
+      if (gValRgb) gValRgb.textContent = `${rgb.r}, ${rgb.g}, ${rgb.b}`;
+      if (gValCmyk) gValCmyk.textContent = `${cmyk.c}%, ${cmyk.m}%, ${cmyk.y}%, ${cmyk.k}%`;
+      if (gValHsv) gValHsv.textContent = `${Math.round(currentHSV.h)}°, ${Math.round(currentHSV.s * 100)}%, ${Math.round(currentHSV.v * 100)}%`;
+    }
+
+    function setColor(colorHex, source = 'direct') {
+      if (!colorHex) return;
+      let hex = colorHex.trim();
+      if (!hex.startsWith('#')) hex = '#' + hex;
+      if (!/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(hex)) return;
+
+      const rgb = hexToRgb(hex);
+      if (!rgb) return;
+
+      currentColorHex = rgbToHex(rgb.r, rgb.g, rgb.b);
+
+      if (source !== 'surface' && source !== 'hue') {
+        currentHSV = rgbToHsv(rgb.r, rgb.g, rgb.b);
+      }
+
+      if (previewAccentBar) previewAccentBar.style.backgroundColor = currentColorHex;
+      if (previewColorDot) previewColorDot.style.backgroundColor = currentColorHex;
+
+      if (swatchesContainer) {
+        swatchesContainer.querySelectorAll('.color-swatch').forEach(s => {
+          s.classList.toggle('active', s.title.toLowerCase() === currentColorHex.toLowerCase());
+        });
+      }
+
+      syncAdvancedPicker();
+    }
+
+    function updatePreviewName() {
+      if (!inputCatName || !previewTitle) return;
+      const val = inputCatName.value.trim();
+      previewTitle.textContent = val || 'Category Name';
+    }
+
+    // Surface interaction (drag / click)
+    let isDraggingSurface = false;
+    function handleSurfaceEvent(e) {
+      if (!gGradientSurface) return;
+      const rect = gGradientSurface.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) return;
+      const clientX = e.clientX;
+      const clientY = e.clientY;
+      const x = Math.max(0, Math.min(rect.width, clientX - rect.left));
+      const y = Math.max(0, Math.min(rect.height, clientY - rect.top));
+      currentHSV.s = x / rect.width;
+      currentHSV.v = 1 - (y / rect.height);
+      const rgb = hsvToRgb(currentHSV.h, currentHSV.s, currentHSV.v);
+      const hex = rgbToHex(rgb.r, rgb.g, rgb.b);
+      setColor(hex, 'surface');
+    }
+
+    if (gGradientSurface) {
+      gGradientSurface.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        isDraggingSurface = true;
+        try { gGradientSurface.setPointerCapture(e.pointerId); } catch (_) {}
+        handleSurfaceEvent(e);
+      });
+      gGradientSurface.addEventListener('pointermove', (e) => {
+        if (!isDraggingSurface) return;
+        handleSurfaceEvent(e);
+      });
+      gGradientSurface.addEventListener('pointerup', (e) => {
+        isDraggingSurface = false;
+        try { gGradientSurface.releasePointerCapture(e.pointerId); } catch (_) {}
+      });
+      gGradientSurface.addEventListener('pointercancel', () => {
+        isDraggingSurface = false;
+      });
+    }
+
+    // Hue Slider interaction (drag / click)
+    let isDraggingHue = false;
+    function handleHueEvent(e) {
+      if (!gHueSlider) return;
+      const rect = gHueSlider.getBoundingClientRect();
+      if (rect.width <= 0) return;
+      const clientX = e.clientX;
+      const x = Math.max(0, Math.min(rect.width, clientX - rect.left));
+      currentHSV.h = (x / rect.width) * 360;
+      if (currentHSV.h >= 360) currentHSV.h = 359.9;
+      const rgb = hsvToRgb(currentHSV.h, currentHSV.s, currentHSV.v);
+      const hex = rgbToHex(rgb.r, rgb.g, rgb.b);
+      setColor(hex, 'hue');
+    }
+
+    if (gHueSlider) {
+      gHueSlider.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        isDraggingHue = true;
+        try { gHueSlider.setPointerCapture(e.pointerId); } catch (_) {}
+        handleHueEvent(e);
+      });
+      gHueSlider.addEventListener('pointermove', (e) => {
+        if (!isDraggingHue) return;
+        handleHueEvent(e);
+      });
+      gHueSlider.addEventListener('pointerup', (e) => {
+        isDraggingHue = false;
+        try { gHueSlider.releasePointerCapture(e.pointerId); } catch (_) {}
+      });
+      gHueSlider.addEventListener('pointercancel', () => {
+        isDraggingHue = false;
+      });
+    }
+
+    // HEX Direct Input
+    if (gHexInput) {
+      gHexInput.addEventListener('input', (e) => {
+        const val = e.target.value.trim();
+        if (/^#?([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(val)) {
+          setColor(val, 'hex_input');
+        }
+      });
+      gHexInput.addEventListener('blur', () => {
+        gHexInput.value = currentColorHex.toUpperCase();
+      });
+    }
+
+    // Copy HEX button
+    if (gCopyHex) {
+      gCopyHex.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(currentColorHex.toUpperCase());
+          const origHTML = gCopyHex.innerHTML;
+          gCopyHex.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+          showToast(`Copied ${currentColorHex.toUpperCase()} to clipboard`);
+          setTimeout(() => {
+            gCopyHex.innerHTML = origHTML;
+          }, 1500);
+        } catch (_) {
+          showToast(`Color: ${currentColorHex.toUpperCase()}`);
+        }
+      });
+    }
+
+    // Toggle Advanced Picker
+    if (btnToggleAdvanced && advancedPickerPanel) {
+      btnToggleAdvanced.addEventListener('click', () => {
+        isAdvancedOpen = !isAdvancedOpen;
+        advancedPickerPanel.style.display = isAdvancedOpen ? 'flex' : 'none';
+        if (presetsWrap) presetsWrap.style.display = isAdvancedOpen ? 'none' : 'block';
+        if (advancedToggleText) advancedToggleText.textContent = isAdvancedOpen ? 'Presets' : 'Advanced';
+        btnToggleAdvanced.classList.toggle('active', isAdvancedOpen);
+        if (isAdvancedOpen) {
+          requestAnimationFrame(() => {
+            syncAdvancedPicker();
+          });
+        }
+      });
+    }
+
+    if (inputCatName) {
+      inputCatName.addEventListener('input', updatePreviewName);
+    }
+
+    let editingCategoryId = null;
+    let editingCategoryName = '';
+    let conflictingCatId = null;
+    let archivedCategories = [];
+
+    const btnArchiveCat = document.getElementById('modal-cat-archive');
+    const btnArchiveAllTasks = document.getElementById('modal-cat-archive-tasks');
+    const btnDeleteAllTasks = document.getElementById('modal-cat-delete-tasks');
+    const modalConflictBanner = document.getElementById('modal-cat-conflict');
+    const modalConflictText = document.getElementById('modal-cat-conflict-text');
+    const btnConflictRestore = document.getElementById('btn-conflict-restore');
+    const modalArchivedCat = document.getElementById('modal-archived-categories');
+    const archivedListContainer = document.getElementById('archived-categories-list');
+    const btnCloseArchivedCat = document.getElementById('btn-close-archived-categories');
+    const btnCloseArchivedCatFooter = document.getElementById('btn-close-archived-cat-footer');
+    const btnViewArchivedCat = document.getElementById('btn-view-archived-categories');
+    const btnBannerArchivedCat = document.getElementById('btn-banner-archived-categories');
+
+    function openCategoryModal(mode, cat = null) {
+      if (!modalAddCat) return;
+      const titleEl = document.getElementById('modal-cat-title-text');
+      if (modalConflictBanner) modalConflictBanner.style.display = 'none';
+      conflictingCatId = null;
+
+      if (mode === 'edit' && cat) {
+        editingCategoryId = cat.id;
+        editingCategoryName = cat.name;
+        if (titleEl) titleEl.textContent = `Edit Category: ${cat.name}`;
+        if (btnSubmitAddCat) btnSubmitAddCat.textContent = 'Save Changes';
+        if (currentView === 'active') {
+          if (btnArchiveCat) btnArchiveCat.style.display = 'inline-flex';
+          if (btnArchiveAllTasks) btnArchiveAllTasks.style.display = 'inline-flex';
+          if (btnDeleteAllTasks) btnDeleteAllTasks.style.display = 'none';
+        } else {
+          if (btnArchiveCat) btnArchiveCat.style.display = 'none';
+          if (btnArchiveAllTasks) btnArchiveAllTasks.style.display = 'none';
+          if (btnDeleteAllTasks) btnDeleteAllTasks.style.display = 'inline-flex';
+        }
+        inputCatName.value = cat.name;
+        updatePreviewName();
+        setColor(cat.color || '#005fa3');
+      } else {
+        editingCategoryId = null;
+        editingCategoryName = '';
+        if (titleEl) titleEl.textContent = '+ Add New Category';
+        if (btnSubmitAddCat) btnSubmitAddCat.textContent = 'Create Category';
+        if (btnArchiveCat) btnArchiveCat.style.display = 'none';
+        if (btnArchiveAllTasks) btnArchiveAllTasks.style.display = 'none';
+        if (btnDeleteAllTasks) btnDeleteAllTasks.style.display = 'none';
+        inputCatName.value = '';
+        updatePreviewName();
+        const nextColor = PRESET_COLORS[categories.length % PRESET_COLORS.length] || '#005fa3';
+        setColor(nextColor);
+      }
+
+      isAdvancedOpen = false;
+      if (advancedPickerPanel) advancedPickerPanel.style.display = 'none';
+      if (presetsWrap) presetsWrap.style.display = 'block';
+      if (advancedToggleText) advancedToggleText.textContent = 'Advanced';
+      if (btnToggleAdvanced) btnToggleAdvanced.classList.remove('active');
+
+      modalAddCat.classList.add('active');
+      inputCatName.focus();
+    }
+
+    if (btnOpenAddCat) {
+      btnOpenAddCat.addEventListener('click', () => {
+        openCategoryModal('add');
+      });
+    }
+
+    if (btnCancelAddCat) {
+      btnCancelAddCat.addEventListener('click', () => {
+        modalAddCat.classList.remove('active');
+      });
+    }
+
+    // Archive Category Button in Edit Modal with Warning Confirmation (Active View)
+    if (btnArchiveCat) {
+      btnArchiveCat.addEventListener('click', () => {
+        if (!editingCategoryId) return;
+        const catName = editingCategoryName || 'this category';
+        showConfirmModal(
+          'Archive Category',
+          `Are you sure you want to archive "${catName}"? All of its active tasks will automatically be moved to the archive.`,
+          'btn-danger',
+          async () => {
+            try {
+              const res = await fetch(`/api/todo/categories/${editingCategoryId}/archive`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'}
+              });
+              const data = await res.json();
+              if (!res.ok) {
+                showToast(data.error || 'Failed to archive category');
+                return;
+              }
+              modalAddCat.classList.remove('active');
+              showToast(`Category "${catName}" and ${data.tasks_archived} tasks moved to archive`);
+              await loadBoardData();
+            } catch (err) {
+              console.error('Error archiving category:', err);
+              showToast('Error archiving category');
+            }
+          },
+          'Archive Category'
+        );
+      });
+    }
+
+    // Archive All Tasks in Category (Active View)
+    if (btnArchiveAllTasks) {
+      btnArchiveAllTasks.addEventListener('click', () => {
+        if (!editingCategoryName) return;
+        const catName = editingCategoryName;
+        showConfirmModal(
+          'Archive All Tasks',
+          `Are you sure you want to archive all active tasks in "${catName}"? The category itself will remain active on the board.`,
+          'btn-warning',
+          async () => {
+            try {
+              const res = await fetch('/api/todo/archive-all', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ category: catName })
+              });
+              const data = await res.json();
+              if (!res.ok) {
+                showToast(data.error || 'Failed to archive tasks');
+                return;
+              }
+              modalAddCat.classList.remove('active');
+              showToast(`Archived ${data.archived_count} tasks in "${catName}"`);
+              await loadBoardData();
+            } catch (err) {
+              console.error('Error archiving tasks:', err);
+              showToast('Error archiving tasks');
+            }
+          },
+          'Archive All Tasks'
+        );
+      });
+    }
+
+    // Delete All Tasks in Category (Archived View)
+    if (btnDeleteAllTasks) {
+      btnDeleteAllTasks.addEventListener('click', () => {
+        if (!editingCategoryName) return;
+        const catName = editingCategoryName;
+        showConfirmModal(
+          'Delete All Archived Tasks',
+          `Are you sure you want to permanently delete all archived tasks in "${catName}"? This action cannot be undone.`,
+          'btn-danger',
+          async () => {
+            try {
+              const res = await fetch('/api/todo/delete-all', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ status: 'archived', category: catName })
+              });
+              const data = await res.json();
+              if (!res.ok) {
+                showToast(data.error || 'Failed to delete tasks');
+                return;
+              }
+              modalAddCat.classList.remove('active');
+              showToast(`Deleted ${data.deleted_count} archived tasks in "${catName}"`);
+              await loadBoardData();
+            } catch (err) {
+              console.error('Error deleting tasks:', err);
+              showToast('Error deleting tasks');
+            }
+          },
+          'Delete All Tasks'
+        );
+      });
+    }
+
+    // Conflict Restore Action
+    if (btnConflictRestore) {
+      btnConflictRestore.addEventListener('click', async () => {
+        if (!conflictingCatId) return;
+        const color = currentColorHex || undefined;
+        try {
+          const res = await fetch(`/api/todo/categories/${conflictingCatId}/restore`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ color })
+          });
+          const data = await res.json();
+          if (!res.ok) {
+            showToast(data.error || 'Failed to restore category');
+            return;
+          }
+          modalAddCat.classList.remove('active');
+          showToast(`Category restored! Previous tasks remain archived.`);
+          await loadBoardData();
+        } catch (err) {
+          console.error('Error restoring category:', err);
+          showToast('Error restoring category');
+        }
+      });
+    }
+
+    // Submit Category (Add or Edit)
+    if (btnSubmitAddCat) {
+      btnSubmitAddCat.addEventListener('click', async () => {
+        const name = inputCatName.value.trim();
+        const color = currentColorHex || '#5b95cb';
+        if (!name) {
+          showToast('Please enter a category name');
+          inputCatName.focus();
+          return;
+        }
+
+        if (editingCategoryId) {
+          // Update Category Name and/or Color
+          try {
+            const res = await fetch(`/api/todo/categories/${editingCategoryId}`, {
+              method: 'PATCH',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({ name, color })
+            });
+            const data = await res.json();
+            if (!res.ok) {
+              showToast(data.error || 'Failed to update category');
+              return;
+            }
+            modalAddCat.classList.remove('active');
+            showToast(`Category "${name}" updated`);
+            await loadBoardData();
+          } catch (err) {
+            console.error('Error updating category:', err);
+            showToast('Error updating category');
+          }
+        } else {
+          // Create New Category
+          try {
+            const res = await fetch('/api/todo/categories', {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({ name, color })
+            });
+            const data = await res.json();
+
+            if (res.status === 409) {
+              // Collides with an archived category
+              conflictingCatId = data.category ? data.category.id : null;
+              if (modalConflictBanner && modalConflictText) {
+                modalConflictText.textContent = `Category "${name}" is currently archived. Would you like to restore it?`;
+                modalConflictBanner.style.display = 'flex';
+              }
+              showToast(`Category "${name}" is currently archived.`);
+              return;
+            }
+
+            if (!res.ok) {
+              showToast(data.error || 'Failed to create category');
+              return;
+            }
+
+            modalAddCat.classList.remove('active');
+            showToast(`Category "${name}" created`);
+            await loadBoardData();
+          } catch (err) {
+            console.error('Error creating category:', err);
+            showToast('Error creating category');
+          }
+        }
+      });
+    }
+
+    if (inputCatName) {
+      inputCatName.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          btnSubmitAddCat.click();
+        }
+      });
+    }
+
+    // Sync Archived Categories Count & Toolbar/Banner Buttons
+    async function loadArchivedCategoriesSummary() {
+      try {
+        const res = await fetch('/api/todo/categories/archived-summary');
+        if (!res.ok) return;
+        const data = await res.json();
+        archivedCategories = data.archived_categories || [];
+
+        const badgeToolbar = document.getElementById('archived-cat-badge');
+        const badgeBanner = document.getElementById('banner-archived-cat-badge');
+        const count = archivedCategories.length;
+
+        if (badgeToolbar) badgeToolbar.textContent = count;
+        if (badgeBanner) badgeBanner.textContent = count;
+
+        if (btnViewArchivedCat) {
+          btnViewArchivedCat.style.display = count > 0 ? 'inline-flex' : 'none';
+        }
+        if (btnBannerArchivedCat) {
+          btnBannerArchivedCat.style.display = count > 0 ? 'inline-flex' : 'none';
+        }
+      } catch (err) {
+        console.error('Error fetching archived categories summary:', err);
+      }
+    }
+
+    // Open Archived Categories Modal
+    async function openArchivedCategoriesModal() {
+      try {
+        const res = await fetch('/api/todo/categories/archived-summary');
+        if (!res.ok) throw new Error('Failed to fetch archived categories');
+        const data = await res.json();
+        archivedCategories = data.archived_categories || [];
+
+        renderArchivedCategoriesList();
+        if (modalArchivedCat) modalArchivedCat.classList.add('active');
+      } catch (err) {
+        console.error('Error opening archived categories modal:', err);
+        showToast('Error loading archived categories');
+      }
+    }
+
+    function closeArchivedCategoriesModal() {
+      if (modalArchivedCat) modalArchivedCat.classList.remove('active');
+    }
+
+    function renderArchivedCategoriesList() {
+      if (!archivedListContainer) return;
+      archivedListContainer.innerHTML = '';
+
+      if (archivedCategories.length === 0) {
+        archivedListContainer.innerHTML = `<div class="empty-archived-message">No archived categories exist at this time.</div>`;
         return;
       }
-      modalAdd.classList.remove('active');
-      await handleAddTask(text, cat);
-    });
 
-    inputModalText.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        document.getElementById('modal-add-submit').click();
-      }
-    });
+      archivedCategories.forEach(cat => {
+        const groupEl = document.createElement('div');
+        groupEl.className = 'archived-cat-group';
+
+        const catTasks = cat.tasks || [];
+
+        let tasksHtml = '';
+        if (catTasks.length === 0) {
+          tasksHtml = `<div class="empty-archived-message" style="padding: 14px; font-size: 0.82rem;">No archived tasks in this category.</div>`;
+        } else {
+          tasksHtml = `
+            <ul class="archived-cat-tasks-list">
+              ${catTasks.map(t => `
+                <li class="archived-task-item">
+                  <div class="archived-task-left">
+                    <span class="archived-cat-pill">
+                      <span class="archived-cat-pill-dot" style="background-color: ${escapeHtml(cat.color)};"></span>
+                      ${escapeHtml(cat.name)}
+                    </span>
+                    <span class="archived-task-text">${escapeHtml(t.text)}</span>
+                  </div>
+                  <span class="archived-task-date">Archived</span>
+                </li>
+              `).join('')}
+            </ul>
+          `;
+        }
+
+        groupEl.innerHTML = `
+          <div class="archived-cat-group-header">
+            <div class="archived-cat-title-wrap">
+              <span class="archived-cat-pill" style="font-size: 0.88rem;">
+                <span class="archived-cat-pill-dot" style="background-color: ${escapeHtml(cat.color)};"></span>
+                ${escapeHtml(cat.name)}
+              </span>
+              <span class="archived-cat-task-count">(${catTasks.length} ${catTasks.length === 1 ? 'task' : 'tasks'})</span>
+            </div>
+            <button type="button" class="btn-restore-cat" data-cat-id="${cat.id}" data-cat-name="${escapeHtml(cat.name)}" title="Restore category to active board (tasks remain archived)">
+              <span>↩️</span> Restore Category
+            </button>
+          </div>
+          ${tasksHtml}
+        `;
+
+        // Attach Restore button listener
+        const restoreBtn = groupEl.querySelector('.btn-restore-cat');
+        if (restoreBtn) {
+          restoreBtn.addEventListener('click', async () => {
+            const catId = restoreBtn.dataset.catId;
+            const catName = restoreBtn.dataset.catName;
+            try {
+              const res = await fetch(`/api/todo/categories/${catId}/restore`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'}
+              });
+              const data = await res.json();
+              if (!res.ok) {
+                showToast(data.error || 'Failed to restore category');
+                return;
+              }
+              showToast(`Category "${catName}" restored to active board`);
+              await loadBoardData();
+              await openArchivedCategoriesModal(); // re-render modal
+              if (archivedCategories.length === 0) {
+                closeArchivedCategoriesModal();
+              }
+            } catch (err) {
+              console.error('Error restoring category:', err);
+              showToast('Error restoring category');
+            }
+          });
+        }
+
+        archivedListContainer.appendChild(groupEl);
+      });
+    }
+
+    if (btnViewArchivedCat) {
+      btnViewArchivedCat.addEventListener('click', openArchivedCategoriesModal);
+    }
+    if (btnBannerArchivedCat) {
+      btnBannerArchivedCat.addEventListener('click', openArchivedCategoriesModal);
+    }
+    if (btnCloseArchivedCat) {
+      btnCloseArchivedCat.addEventListener('click', closeArchivedCategoriesModal);
+    }
+    if (btnCloseArchivedCatFooter) {
+      btnCloseArchivedCatFooter.addEventListener('click', closeArchivedCategoriesModal);
+    }
 
     // Escape key closes modals
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
-        modalAdd.classList.remove('active');
+        if (modalAddCat) modalAddCat.classList.remove('active');
+        if (modalArchivedCat) modalArchivedCat.classList.remove('active');
         document.getElementById('modal-confirm').classList.remove('active');
       }
     });
@@ -1590,6 +3154,7 @@
     // Initialize
     window.addEventListener('DOMContentLoaded', () => {
       initTheme();
+      initColorPicker();
       loadBoardData();
     });
   </script>
