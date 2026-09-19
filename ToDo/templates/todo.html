@@ -1598,7 +1598,7 @@
             <div class="cat-status-row">
               <div class="cat-status-left">
                 <span class="cat-status-badge">Status</span>
-                <span class="cat-status-text empty">No status set</span>
+                <span class="cat-status-text empty" id="preview-status-text">No status set</span>
               </div>
             </div>
           </div>
@@ -1971,10 +1971,11 @@
 
     // Category Status Helpers
     function renderCategoryStatusRow(statusRowEl, cat) {
+      const statusVal = cat.custom_status || cat.status_text || '';
       statusRowEl.innerHTML = `
         <div class="cat-status-left" title="Double click to edit status">
           <span class="cat-status-badge">Status</span>
-          <span class="cat-status-text ${cat.status ? '' : 'empty'}">${escapeHtml(cat.status || 'No status set')}</span>
+          <span class="cat-status-text ${statusVal ? '' : 'empty'}">${escapeHtml(statusVal || 'No status set')}</span>
         </div>
       `;
 
@@ -1982,7 +1983,7 @@
     }
 
     function makeCategoryStatusEditable(statusRowEl, cat) {
-      const currentStatus = cat.status || '';
+      const currentStatus = cat.custom_status || cat.status_text || '';
       statusRowEl.ondblclick = null;
       statusRowEl.innerHTML = `
         <div class="cat-status-edit-wrap">
@@ -2034,7 +2035,8 @@
         // Update local categories array
         const foundCat = categories.find(c => c.name.toLowerCase() === categoryName.toLowerCase());
         if (foundCat) {
-          foundCat.status = newStatus;
+          foundCat.custom_status = newStatus;
+          foundCat.status_text = newStatus;
         }
 
         const rowEl = document.getElementById(`status-row-${categoryName}`);
@@ -2756,6 +2758,13 @@
         updatePreviewName();
         const nextColor = PRESET_COLORS[categories.length % PRESET_COLORS.length] || '#005fa3';
         setColor(nextColor);
+      }
+
+      const previewStatusEl = document.getElementById('preview-status-text');
+      if (previewStatusEl) {
+        const st = cat ? (cat.custom_status || cat.status_text || '') : '';
+        previewStatusEl.textContent = st || 'No status set';
+        previewStatusEl.className = `cat-status-text ${st ? '' : 'empty'}`;
       }
 
       isAdvancedOpen = false;
