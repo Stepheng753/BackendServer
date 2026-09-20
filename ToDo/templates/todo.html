@@ -1794,7 +1794,7 @@
             <span class="cat-count-badge">${catTasks.length}</span>
           </div>
           <div class="cat-status-row" id="status-row-${escapeHtml(cat.name)}" data-category="${escapeHtml(cat.name)}"></div>
-          <div class="task-list" id="list-${cat.id || cat.name}"></div>
+          <div class="task-list" id="list-${cat.name}" data-category="${escapeHtml(cat.name)}"></div>
           ${currentView === 'active' ? `
             <div class="cat-quick-add">
               <div class="quick-add-input-wrap">
@@ -2066,6 +2066,8 @@
       this.classList.remove('dragging');
       document.querySelectorAll('.category-box').forEach(b => b.classList.remove('drag-over-box'));
       document.querySelectorAll('.task-list').forEach(l => l.classList.remove('drag-over-list'));
+      draggedTaskId = null;
+      draggedSourceCategory = null;
     }
 
     function onDragOver(e) {
@@ -2103,13 +2105,18 @@
       if (!draggedTaskId) return;
 
       // Calculate new ordering for all tasks in the destination list
-      const targetListEl = document.getElementById(`list-${targetCategory}`);
+      const targetListEl = e.currentTarget?.classList?.contains('task-list')
+        ? e.currentTarget
+        : (e.currentTarget?.querySelector?.('.task-list')
+          || document.getElementById(`list-${targetCategory}`)
+          || document.querySelector(`.category-box[data-category="${CSS.escape(targetCategory)}"] .task-list`));
       if (!targetListEl) return;
 
       const itemEls = Array.from(targetListEl.querySelectorAll('.task-item'));
       const reorderPayload = [];
 
       itemEls.forEach((el, index) => {
+        el.dataset.category = targetCategory;
         reorderPayload.push({
           id: parseInt(el.dataset.id),
           display_order: index + 1,
@@ -2118,15 +2125,21 @@
       });
 
       try {
-        await fetch('/api/todo/reorder', {
+        const res = await fetch('/api/todo/reorder', {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
           body: JSON.stringify({items: reorderPayload})
         });
+        if (!res.ok) throw new Error('Failed to update task order');
         await loadBoardData();
         showToast('Task order updated');
       } catch (err) {
         console.error('Reorder error:', err);
+        showToast('Error updating task order');
+        await loadBoardData();
+      } finally {
+        draggedTaskId = null;
+        draggedSourceCategory = null;
       }
     }
 
