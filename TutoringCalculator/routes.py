@@ -286,6 +286,7 @@ def run_calc_orchestration():
 
 
 @tutoring_bp.route("/tutoring/run-send-texts", methods=["POST"])
+@tutoring_bp.route("/run-send-texts", methods=["POST"])
 @tutoring_bp.route("/send-texts", methods=["POST"])
 def send_texts_route():
     """

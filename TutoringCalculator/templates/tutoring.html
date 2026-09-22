@@ -903,7 +903,10 @@
   <div class="modal-overlay" id="modal-calc">
     <div class="modal-content">
       <div class="modal-header">
-        <h3>Pay Calculation Results</h3>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <h3>Pay Calculation Results</h3>
+          <span id="calc-email-badge" class="status-badge badge-blue">Email Skipped (Manual Run)</span>
+        </div>
         <button class="modal-close" onclick="closeModal('modal-calc')">&times;</button>
       </div>
       <div class="modal-body">
@@ -1192,18 +1195,27 @@
 
         if (res.ok && data.status === 'success') {
           // Populate Modal
-          document.getElementById('calc-total-earned').textContent = data.total_balance || '$0.00';
-          document.getElementById('calc-modal-sheet-name').textContent = data.sheet_title || 'Google Sheet';
-          document.getElementById('calc-modal-sheet-link').href = data.sheet_url;
-          if (data.email_status === 'sent') {
-            document.getElementById('calc-email-badge').textContent = 'Notification Sent';
-            document.getElementById('calc-email-badge').className = 'status-badge badge-nominal';
-          } else if (data.email_status === 'skipped') {
-            document.getElementById('calc-email-badge').textContent = 'Email Skipped (Manual Run)';
-            document.getElementById('calc-email-badge').className = 'status-badge badge-blue';
-          } else {
-            document.getElementById('calc-email-badge').textContent = 'Email Skipped/Failed';
-            document.getElementById('calc-email-badge').className = 'status-badge badge-warning';
+          const totalEarned = document.getElementById('calc-total-earned');
+          if (totalEarned) totalEarned.textContent = data.total_balance || '$0.00';
+
+          const sheetName = document.getElementById('calc-modal-sheet-name');
+          if (sheetName) sheetName.textContent = data.sheet_title || 'Google Sheet';
+
+          const sheetLink = document.getElementById('calc-modal-sheet-link');
+          if (sheetLink) sheetLink.href = data.sheet_url || '#';
+
+          const emailBadge = document.getElementById('calc-email-badge');
+          if (emailBadge) {
+            if (data.email_status === 'sent') {
+              emailBadge.textContent = 'Notification Sent';
+              emailBadge.className = 'status-badge badge-nominal';
+            } else if (data.email_status === 'skipped') {
+              emailBadge.textContent = 'Email Skipped (Manual Run)';
+              emailBadge.className = 'status-badge badge-blue';
+            } else {
+              emailBadge.textContent = 'Email Skipped/Failed';
+              emailBadge.className = 'status-badge badge-warning';
+            }
           }
 
           const rowsContainer = document.getElementById('calc-students-table');

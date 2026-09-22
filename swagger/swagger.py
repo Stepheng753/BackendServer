@@ -249,6 +249,93 @@ OPENAPI_SPEC = {
                 }
             }
         },
+        "/run-calc": {
+            "post": {
+                "tags": ["Tutoring Calculator"],
+                "summary": "Run Weekly Pay Calculation (Full Orchestration)",
+                "description": "Executes full weekly pay run (scheduled Mondays at 4:00 AM PST, or callable via /run-calc or /tutoring/run-calc): copies master template into year folder named 'MM.DD.YY - MM.DD.YY CALCULATED', extracts Google Calendar hours, retrieves prior unpaid balances, populates spreadsheet, and sends email summary (unless send_email=false).",
+                "parameters": [
+                    {
+                        "name": "start_date",
+                        "in": "query",
+                        "required": False,
+                        "description": "Billing start date (MM.DD.YY). Automatically computed if omitted.",
+                        "schema": {"type": "string", "example": "09.14.26"}
+                    },
+                    {
+                        "name": "end_date",
+                        "in": "query",
+                        "required": False,
+                        "description": "Billing end date (MM.DD.YY). Automatically computed if omitted.",
+                        "schema": {"type": "string", "example": "09.20.26"}
+                    },
+                    {
+                        "name": "send_email",
+                        "in": "query",
+                        "required": False,
+                        "description": "Whether to send notification email. Defaults to true (automatic for cron jobs). Set to false to omit email (used by dashboard button).",
+                        "schema": {"type": "boolean", "default": True}
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Weekly pay calculation completed successfully.",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "status": "success",
+                                    "message": "Successfully calculated tutoring billing for 09.14.26 - 09.20.26. Email notification sent.",
+                                    "sheet_id": "1S5f5pKJZAvEW49sOrv-mbA7bqZs9_93WbcUNCNMHJBA",
+                                    "sheet_url": "https://docs.google.com/spreadsheets/d/1S5f5pKJZAvEW49sOrv-mbA7bqZs9_93WbcUNCNMHJBA/edit",
+                                    "sheet_title": "09.14.26 - 09.20.26 CALCULATED",
+                                    "total_balance": "$480.00",
+                                    "send_email": True,
+                                    "email_status": "sent"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Calculation or Google API error."
+                    }
+                }
+            }
+        },
+        "/run-send-texts": {
+            "post": {
+                "tags": ["Tutoring Calculator"],
+                "summary": "Run SMS Payment Reminders Guarded by Approval",
+                "description": "Dispatches Twilio SMS reminders to parents (scheduled Mondays at 12:00 PM PST, or callable via /run-send-texts, /tutoring/run-send-texts, or /send-texts). Aborts if sheet title still contains 'CALCULATED'. If approved, sends SMS reminders to students with Total Balance > 0 and blank status, updates status to 'Need to Pay', and logs to text_messages.log.",
+                "parameters": [
+                    {
+                        "name": "sheet_id",
+                        "in": "query",
+                        "required": False,
+                        "description": "Google Sheet ID (optional; auto-locates current week's sheet if omitted)",
+                        "schema": {"type": "string"}
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "SMS dispatch completed or skipped due to CALCULATED guard.",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "status": "success",
+                                    "sent_count": 5,
+                                    "messages": [
+                                        {"student": "Elijah Dinh", "phone": "+19512190584", "status": "sent"}
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Multiple sheets found or invalid request."
+                    }
+                }
+            }
+        },
         "/send-texts": {
             "post": {
                 "tags": ["Tutoring Calculator"],
