@@ -512,8 +512,8 @@ def get_pending_text_recipients(creds, sheet_id):
     }
 
 
-def find_current_week_sheet(creds, start_date_str, end_date_str):
-    """Finds the existing Google Sheet matching the week date range inside the year folder."""
+def find_current_week_sheets(creds, start_date_str, end_date_str):
+    """Finds all existing Google Sheets matching the week date range inside the year folder."""
     drive_service = get_drive_service(creds)
     start_date = parse_date_string(start_date_str)
     end_date = parse_date_string(end_date_str)
@@ -527,6 +527,12 @@ def find_current_week_sheet(creds, start_date_str, end_date_str):
         f"'{year_folder_id}' in parents"
     )
     res = drive_service.files().list(q=query, spaces='drive', fields='files(id, name, webViewLink)').execute()
-    files = res.get('files', [])
+    return res.get('files', [])
+
+
+def find_current_week_sheet(creds, start_date_str, end_date_str):
+    """Finds the first existing Google Sheet matching the week date range inside the year folder."""
+    files = find_current_week_sheets(creds, start_date_str, end_date_str)
     return files[0] if files else None
+
 

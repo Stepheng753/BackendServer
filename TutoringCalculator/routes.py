@@ -16,6 +16,7 @@ from .apis.drive_sheets_api import (
     get_pending_text_recipients,
     get_sheet_details,
     find_current_week_sheet,
+    find_current_week_sheets,
     get_or_create_year_folder,
     get_drive_service
 )
@@ -143,20 +144,28 @@ def tutoring_status():
 
     check_sheet = request.args.get('check_sheet', '0') == '1'
     current_sheet = None
+    current_sheets = []
+    has_multiple_sheets = False
     if is_authenticated and check_sheet:
         try:
-            sheet_file = find_current_week_sheet(creds, dates['start_date'], dates['end_date'])
-            if sheet_file:
-                sheet_id = sheet_file['id']
-                sheet_name = sheet_file['name']
-                is_pending = "CALCULATED" in sheet_name
-                current_sheet = {
-                    "id": sheet_id,
-                    "name": sheet_name,
-                    "sheet_url": f"https://docs.google.com/spreadsheets/d/{sheet_id}/edit",
+            sheet_files = find_current_week_sheets(creds, dates['start_date'], dates['end_date'])
+            for sf in sheet_files:
+                s_id = sf['id']
+                s_name = sf['name']
+                is_pending = "CALCULATED" in s_name.upper()
+                current_sheets.append({
+                    "id": s_id,
+                    "name": s_name,
+                    "sheet_url": f"https://docs.google.com/spreadsheets/d/{s_id}/edit",
                     "is_pending_review": is_pending,
                     "status_label": "Pending Review (CALCULATED)" if is_pending else "Approved"
-                }
+                })
+
+            if len(current_sheets) == 1:
+                current_sheet = current_sheets[0]
+            elif len(current_sheets) > 1:
+                has_multiple_sheets = True
+                current_sheet = current_sheets[0]
         except Exception as e:
             current_sheet = {"error": str(e)}
 
@@ -168,7 +177,9 @@ def tutoring_status():
         "pay_parent_folder_url": pay_folder_url,
         "current_year": current_year,
         "year_folder_url": year_folder_url or pay_folder_url,
-        "current_sheet": current_sheet
+        "current_sheet": current_sheet,
+        "current_sheets": current_sheets,
+        "has_multiple_sheets": has_multiple_sheets
     }), 200
 
 
@@ -194,6 +205,13 @@ def run_calc_orchestration():
     start_date = request.args.get('start_date') or req_data.get('start_date')
     end_date = request.args.get('end_date') or req_data.get('end_date')
 
+    # send_email parameter: defaults to True so cron jobs without parameters automatically send emails
+    send_email_raw = request.args.get('send_email') if 'send_email' in request.args else req_data.get('send_email', True)
+    if isinstance(send_email_raw, str):
+        send_email = send_email_raw.strip().lower() not in ('false', '0', 'no', 'none', 'off')
+    else:
+        send_email = bool(send_email_raw)
+
     if not start_date or not end_date:
         calc_dates = calculate_billing_dates()
         start_date = start_date or calc_dates['start_date']
@@ -217,28 +235,34 @@ def run_calc_orchestration():
         # 4. Update Sheet with Hours and Balances
         update_res = update_sheet_hours_and_balances(creds, sheet_id, hours_by_student, prev_balances)
 
-        # 5. Send Notification Email
-        if not year_folder_id:
-            sheet_meta = get_sheet_details(creds, sheet_id)
-            year_folder_id = sheet_meta.get('parents', [''])[0]
+        # 5. Send Notification Email (if enabled)
+        if send_email:
+            if not year_folder_id:
+                sheet_meta = get_sheet_details(creds, sheet_id)
+                year_folder_id = sheet_meta.get('parents', [''])[0]
 
-        email_res = send_calculation_email(
-            creds=creds,
-            sheet_id=sheet_id,
-            sheet_url=sheet_url,
-            year_folder_id=year_folder_id,
-            start_date_str=start_date,
-            end_date_str=end_date,
-            updated_students=update_res.get('updated_students'),
-            total_balance=update_res.get('total_balance')
-        )
+            email_res = send_calculation_email(
+                creds=creds,
+                sheet_id=sheet_id,
+                sheet_url=sheet_url,
+                year_folder_id=year_folder_id,
+                start_date_str=start_date,
+                end_date_str=end_date,
+                updated_students=update_res.get('updated_students'),
+                total_balance=update_res.get('total_balance')
+            )
+        else:
+            email_res = {
+                "status": "skipped",
+                "message": "Email sending skipped via send_email=false parameter."
+            }
 
         year_folder_url = f"https://drive.google.com/drive/folders/{year_folder_id}" if year_folder_id else None
         pay_folder_url = f"https://drive.google.com/drive/folders/{PAY_PARENT_FOLDER_ID}" if PAY_PARENT_FOLDER_ID else None
 
         return jsonify({
             "status": "success",
-            "message": f"Successfully calculated tutoring billing for {start_date} - {end_date}.",
+            "message": f"Successfully calculated tutoring billing for {start_date} - {end_date}." + (" Email notification sent." if send_email and email_res.get('status') == 'sent' else (" Email skipped." if not send_email else "")),
             "sheet_id": sheet_id,
             "sheet_url": sheet_url,
             "sheet_title": copy_res.get('title'),
@@ -251,6 +275,7 @@ def run_calc_orchestration():
             "year_folder_id": year_folder_id,
             "year_folder_url": year_folder_url,
             "pay_parent_folder_url": pay_folder_url,
+            "send_email": send_email,
             "email_status": email_res.get('status'),
             "email_id": email_res.get('email_id'),
             "email_error": email_res.get('message') if email_res.get('status') == 'error' else None
@@ -282,13 +307,21 @@ def send_texts_route():
         # If sheet_id is not explicitly provided, auto-locate current week's sheet
         if not sheet_id:
             dates = calculate_billing_dates()
-            sheet_file = find_current_week_sheet(creds, dates['start_date'], dates['end_date'])
-            if not sheet_file:
+            sheet_files = find_current_week_sheets(creds, dates['start_date'], dates['end_date'])
+            if not sheet_files:
                 return jsonify({
                     "status": "error",
                     "message": f"No Google Sheet found for the current billing week ({dates['start_date']} - {dates['end_date']}). Please run calculations first."
                 }), 404
-            sheet_id = sheet_file['id']
+            if len(sheet_files) > 1:
+                names_str = ", ".join(f"'{f.get('name')}'" for f in sheet_files)
+                return jsonify({
+                    "status": "error",
+                    "has_multiple_sheets": True,
+                    "message": f"Multiple Google Sheets ({len(sheet_files)}) found for billing week {dates['start_date']} - {dates['end_date']} ({names_str}). SMS sending is disabled until duplicate sheets are resolved in Google Drive.",
+                    "files": sheet_files
+                }), 400
+            sheet_id = sheet_files[0]['id']
 
         pending_data = get_pending_text_recipients(creds, sheet_id)
         sheet_title = pending_data.get('title', 'Google Sheet')
@@ -460,20 +493,28 @@ def update_sheet():
 
             res = update_sheet_hours_and_balances(creds, sheet_id, hours_by_student, prev_balances)
 
-            sheet_meta = get_sheet_details(creds, sheet_id)
-            year_folder_id = sheet_meta.get('parents', [''])[0]
-            send_calculation_email(
-                creds=creds,
-                sheet_id=sheet_id,
-                sheet_url=res.get('sheet_url'),
-                year_folder_id=year_folder_id,
-                start_date_str=start_date,
-                end_date_str=end_date,
-                updated_students=res.get('updated_students'),
-                total_balance=res.get('total_balance')
-            )
+            send_email_raw = request.args.get('send_email') if 'send_email' in request.args else req_data.get('send_email', True)
+            if isinstance(send_email_raw, str):
+                send_email = send_email_raw.strip().lower() not in ('false', '0', 'no', 'none', 'off')
+            else:
+                send_email = bool(send_email_raw)
+
+            if send_email:
+                sheet_meta = get_sheet_details(creds, sheet_id)
+                year_folder_id = sheet_meta.get('parents', [''])[0]
+                send_calculation_email(
+                    creds=creds,
+                    sheet_id=sheet_id,
+                    sheet_url=res.get('sheet_url'),
+                    year_folder_id=year_folder_id,
+                    start_date_str=start_date,
+                    end_date_str=end_date,
+                    updated_students=res.get('updated_students'),
+                    total_balance=res.get('total_balance')
+                )
 
             res["action"] = "update_hours"
+            res["send_email"] = send_email
             return jsonify(res), 200
 
         except Exception as e:

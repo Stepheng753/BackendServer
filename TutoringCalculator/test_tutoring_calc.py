@@ -217,6 +217,80 @@ class TestTutoringCalculator(unittest.TestCase):
             self.assertEqual(week2_hours.get('Ellie Hoang'), 1.5)
             self.assertEqual(week2_hours.get('Ellie'), 1.5)
 
+    def test_multiple_sheets_detection_and_blocking(self):
+        """Verifies that finding multiple sheets is detected and blocks send-texts."""
+        from TutoringCalculator.apis.drive_sheets_api import find_current_week_sheets, find_current_week_sheet
+        mock_creds = MagicMock()
+        mock_drive_svc = MagicMock()
+
+        file1 = {'id': 'sheet_1', 'name': '09.14.26 - 09.20.26 CALCULATED'}
+        file2 = {'id': 'sheet_2', 'name': '09.14.26 - 09.20.26'}
+
+        with patch('TutoringCalculator.apis.drive_sheets_api.get_drive_service', return_value=mock_drive_svc), \
+             patch('TutoringCalculator.apis.drive_sheets_api.get_or_create_year_folder', return_value='folder_123'):
+
+            mock_drive_svc.files().list().execute.return_value = {
+                'files': [file1, file2]
+            }
+
+            all_sheets = find_current_week_sheets(mock_creds, "09.14.26", "09.20.26")
+            self.assertEqual(len(all_sheets), 2)
+            self.assertEqual(all_sheets[0]['name'], '09.14.26 - 09.20.26 CALCULATED')
+            self.assertEqual(all_sheets[1]['name'], '09.14.26 - 09.20.26')
+
+            first_sheet = find_current_week_sheet(mock_creds, "09.14.26", "09.20.26")
+            self.assertEqual(first_sheet['id'], 'sheet_1')
+
+    def test_run_calc_orchestration_send_email_default_true(self):
+        """Verifies run_calc_orchestration defaults to sending email when send_email is not passed (cron mode)."""
+        from flask import Flask
+        from TutoringCalculator.routes import run_calc_orchestration
+
+        app = Flask(__name__)
+        mock_creds = MagicMock()
+
+        with app.test_request_context('/tutoring/run-calc', method='POST'), \
+             patch('TutoringCalculator.routes.require_google_creds', return_value=(mock_creds, None, None)), \
+             patch('TutoringCalculator.routes.copy_template_sheet', return_value={'sheet_id': 's1', 'sheet_url': 'http://sheet', 'year_folder_id': 'y1'}), \
+             patch('TutoringCalculator.apis.drive_sheets_api.get_student_names_from_sheet', return_value=['Elijah']), \
+             patch('TutoringCalculator.routes.calculate_tutoring_hours', return_value={'Elijah': 2.0}), \
+             patch('TutoringCalculator.routes.fetch_previous_balances', return_value={}), \
+             patch('TutoringCalculator.routes.update_sheet_hours_and_balances', return_value={'status': 'success', 'updated_students': [], 'total_balance': '$120.00'}), \
+             patch('TutoringCalculator.routes.send_calculation_email', return_value={'status': 'sent', 'email_id': 'msg_123'}) as mock_email:
+
+            resp, code = run_calc_orchestration()
+            self.assertEqual(code, 200)
+            data = resp.get_json()
+            self.assertTrue(data['send_email'])
+            self.assertEqual(data['email_status'], 'sent')
+            mock_email.assert_called_once()
+
+    def test_run_calc_orchestration_send_email_false(self):
+        """Verifies run_calc_orchestration skips sending email when send_email=false is passed (UI mode)."""
+        from flask import Flask
+        from TutoringCalculator.routes import run_calc_orchestration
+
+        app = Flask(__name__)
+        mock_creds = MagicMock()
+
+        with app.test_request_context('/tutoring/run-calc?send_email=false', method='POST'), \
+             patch('TutoringCalculator.routes.require_google_creds', return_value=(mock_creds, None, None)), \
+             patch('TutoringCalculator.routes.copy_template_sheet', return_value={'sheet_id': 's1', 'sheet_url': 'http://sheet', 'year_folder_id': 'y1'}), \
+             patch('TutoringCalculator.apis.drive_sheets_api.get_student_names_from_sheet', return_value=['Elijah']), \
+             patch('TutoringCalculator.routes.calculate_tutoring_hours', return_value={'Elijah': 2.0}), \
+             patch('TutoringCalculator.routes.fetch_previous_balances', return_value={}), \
+             patch('TutoringCalculator.routes.update_sheet_hours_and_balances', return_value={'status': 'success', 'updated_students': [], 'total_balance': '$120.00'}), \
+             patch('TutoringCalculator.routes.send_calculation_email') as mock_email:
+
+            resp, code = run_calc_orchestration()
+            self.assertEqual(code, 200)
+            data = resp.get_json()
+            self.assertFalse(data['send_email'])
+            self.assertEqual(data['email_status'], 'skipped')
+            mock_email.assert_not_called()
+
 
 if __name__ == '__main__':
     unittest.main()
+
+

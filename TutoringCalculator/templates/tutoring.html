@@ -802,6 +802,22 @@
         </a>
       </div>
 
+      <!-- Multiple Sheets Alert Banner -->
+      <div id="multiple-sheets-banner" style="display: none; padding: 16px 20px; border-radius: 10px; margin-top: 10px; background: #fff1f2; border: 1px solid #fecdd3; color: #9f1239;">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 8px;">
+          <div style="display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 0.95rem;">
+            <span>⚠️ Multiple Documents Found for Billing Period:</span>
+          </div>
+          <span class="status-badge badge-critical" id="multiple-sheets-count">Multiple Files</span>
+        </div>
+        <p style="font-size: 0.85rem; margin: 0 0 12px 0; color: #be123c; line-height: 1.45;">
+          Multiple spreadsheets were found matching this billing period in Google Drive. <strong>"Send Text Reminders" is disabled</strong> to prevent sending notices from the wrong sheet. Please delete or rename duplicate sheets in Google Drive so only one active sheet remains.
+        </p>
+        <div id="multiple-sheets-list" style="display: flex; flex-direction: column; gap: 8px;">
+          <!-- Dynamically populated with each matching sheet -->
+        </div>
+      </div>
+
       <!-- Auth Warning Banner -->
       <div id="auth-warning-banner" style="display: none; padding: 14px 18px; border-radius: 10px; margin-top: 6px; background: var(--yellow-bg); border: 1px solid var(--yellow-border); color: var(--yellow-text);">
         <strong>Google Authentication Required:</strong>
@@ -827,7 +843,7 @@
           </div>
           <div class="card-title" style="margin-bottom: 8px;">Run Pay Calculation</div>
           <p class="card-desc">
-            Clones master template into target year folder, parses Google Calendar hours, retrieves prior unpaid balances, populates spreadsheet, and sends notification email.
+            Clones master template into target year folder, parses Google Calendar hours, retrieves prior unpaid balances, and populates spreadsheet (email notification is sent automatically on cron runs, skipped on manual UI runs).
           </p>
           <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 20px;">
             Target sheet created as: <code>MM.DD.YY - MM.DD.YY CALCULATED</code>
@@ -852,6 +868,9 @@
           <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 20px;">
             <strong>Safeguard:</strong> Aborts immediately if sheet title still contains <code>CALCULATED</code>.
           </div>
+        </div>
+        <div id="texts-disabled-notice" style="display: none; padding: 8px 12px; background: #fee2e2; border: 1px solid #fca5a5; border-radius: 6px; color: #991b1b; font-size: 0.8rem; margin-bottom: 12px; font-weight: 600;">
+          ⚠️ Disabled: Multiple spreadsheets found for this billing period.
         </div>
         <button id="btn-send-texts" class="btn btn-green" style="width: 100%; padding: 12px 18px; font-size: 0.9rem;">
           <span>Run Send Text Messages</span>
@@ -1045,9 +1064,65 @@
           }
         }
 
-        // Active Sheet Banner
+        // Active Sheet Banner & Multiple Sheets Banner
         const sheetBanner = document.getElementById('active-sheet-banner');
-        if (data.current_sheet && data.current_sheet.id) {
+        const multiBanner = document.getElementById('multiple-sheets-banner');
+        const multiList = document.getElementById('multiple-sheets-list');
+        const multiCount = document.getElementById('multiple-sheets-count');
+        const sendBtn = document.getElementById('btn-send-texts');
+        const sendNotice = document.getElementById('texts-disabled-notice');
+
+        if (data.has_multiple_sheets && data.current_sheets && data.current_sheets.length > 1) {
+          // Multiple matching sheets found!
+          sheetBanner.style.display = 'none';
+          multiBanner.style.display = 'block';
+          multiCount.textContent = `${data.current_sheets.length} Documents Found`;
+
+          multiList.innerHTML = '';
+          data.current_sheets.forEach((sheet, idx) => {
+            const item = document.createElement('div');
+            item.style.display = 'flex';
+            item.style.alignItems = 'center';
+            item.style.justifyContent = 'space-between';
+            item.style.padding = '10px 14px';
+            item.style.background = '#ffffff';
+            item.style.border = '1px solid #fecdd3';
+            item.style.borderRadius = '8px';
+            item.style.flexWrap = 'wrap';
+            item.style.gap = '10px';
+
+            const statusClass = sheet.is_pending_review ? 'badge-warning' : 'badge-nominal';
+            const statusText = sheet.is_pending_review ? 'Pending Review (CALCULATED)' : 'Approved';
+
+            item.innerHTML = `
+              <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <span style="font-weight: 700; font-size: 0.85rem; color: #9f1239;">Document #${idx + 1}:</span>
+                <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: #0f172a; font-weight: 600;">${sheet.name}</span>
+                <span class="status-badge ${statusClass}">${statusText}</span>
+              </div>
+              <a href="${sheet.sheet_url}" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="padding: 5px 12px; font-size: 0.8rem;">
+                Open Google Sheet
+              </a>
+            `;
+            multiList.appendChild(item);
+          });
+
+          // Grey out and disable send texts button
+          sendBtn.disabled = true;
+          sendBtn.classList.add('btn-disabled-multiple');
+          sendBtn.style.opacity = '0.45';
+          sendBtn.style.cursor = 'not-allowed';
+          sendBtn.style.backgroundColor = '#9ca3af';
+          sendBtn.style.borderColor = '#9ca3af';
+          sendBtn.title = 'Disabled: Multiple spreadsheets found for this billing period.';
+          if (sendNotice) {
+            sendNotice.style.display = 'block';
+            sendNotice.textContent = `⚠️ Disabled: ${data.current_sheets.length} spreadsheets found for this billing period.`;
+          }
+
+        } else if (data.current_sheet && data.current_sheet.id) {
+          // Exactly one sheet found
+          multiBanner.style.display = 'none';
           sheetBanner.style.display = 'flex';
           document.getElementById('sheet-banner-name').textContent = data.current_sheet.name;
           const statusSpan = document.getElementById('sheet-banner-status');
@@ -1059,8 +1134,28 @@
             statusSpan.textContent = 'Approved';
           }
           document.getElementById('sheet-banner-link').href = data.current_sheet.sheet_url;
+
+          // Re-enable send texts button
+          sendBtn.disabled = false;
+          sendBtn.classList.remove('btn-disabled-multiple');
+          sendBtn.style.opacity = '';
+          sendBtn.style.cursor = '';
+          sendBtn.style.backgroundColor = '';
+          sendBtn.style.borderColor = '';
+          sendBtn.title = '';
+          if (sendNotice) sendNotice.style.display = 'none';
+
         } else {
           sheetBanner.style.display = 'none';
+          multiBanner.style.display = 'none';
+          sendBtn.disabled = false;
+          sendBtn.classList.remove('btn-disabled-multiple');
+          sendBtn.style.opacity = '';
+          sendBtn.style.cursor = '';
+          sendBtn.style.backgroundColor = '';
+          sendBtn.style.borderColor = '';
+          sendBtn.title = '';
+          if (sendNotice) sendNotice.style.display = 'none';
         }
 
       } catch (err) {
@@ -1092,7 +1187,7 @@
       btn.innerHTML = '<div class="spinner"></div> <span>Calculating Hours & Updating Sheet...</span>';
 
       try {
-        const res = await fetch('/tutoring/run-calc', { method: 'POST' });
+        const res = await fetch('/tutoring/run-calc?send_email=false', { method: 'POST' });
         const data = await res.json();
 
         if (res.ok && data.status === 'success') {
@@ -1100,32 +1195,31 @@
           document.getElementById('calc-total-earned').textContent = data.total_balance || '$0.00';
           document.getElementById('calc-modal-sheet-name').textContent = data.sheet_title || 'Google Sheet';
           document.getElementById('calc-modal-sheet-link').href = data.sheet_url;
-
-          // Render students table
-          const tbody = document.getElementById('calc-students-table');
-          tbody.innerHTML = '';
-          if (data.updated_students && data.updated_students.length > 0) {
-            data.updated_students.forEach(s => {
-              const studentName = s.student || s.name || s.first_name || 'Student';
-              const totalVal = s.total || s.total_due || (s.remaining_balance != null ? s.remaining_balance : '$0.00');
-              const hoursVal = s.hours != null ? `${s.hours} hrs` : '0 hrs';
-
-              const tr = document.createElement('tr');
-              tr.innerHTML = `
-                <td><strong>${studentName}</strong></td>
-                <td>${hoursVal}</td>
-                <td><strong style="color: var(--primary-blue);">${totalVal}</strong></td>
-              `;
-              tbody.appendChild(tr);
-            });
+          if (data.email_status === 'sent') {
+            document.getElementById('calc-email-badge').textContent = 'Notification Sent';
+            document.getElementById('calc-email-badge').className = 'status-badge badge-nominal';
+          } else if (data.email_status === 'skipped') {
+            document.getElementById('calc-email-badge').textContent = 'Email Skipped (Manual Run)';
+            document.getElementById('calc-email-badge').className = 'status-badge badge-blue';
           } else {
-            tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: var(--text-muted);">No student hours recorded</td></tr>';
+            document.getElementById('calc-email-badge').textContent = 'Email Skipped/Failed';
+            document.getElementById('calc-email-badge').className = 'status-badge badge-warning';
           }
 
-          // Update Year Folder link
-          if (data.year_folder_url) {
-            const yfBtn = document.getElementById('btn-year-folder');
-            if (yfBtn) yfBtn.href = data.year_folder_url;
+          const rowsContainer = document.getElementById('calc-students-table');
+          rowsContainer.innerHTML = '';
+          if (data.updated_students && data.updated_students.length > 0) {
+            data.updated_students.forEach(s => {
+              const tr = document.createElement('tr');
+              tr.innerHTML = `
+                <td><strong>${s.student || s.name || s.first_name || 'Student'}</strong></td>
+                <td>${s.hours} hrs</td>
+                <td style="font-weight: 600; color: #10b981;">${s.total}</td>
+              `;
+              rowsContainer.appendChild(tr);
+            });
+          } else {
+            rowsContainer.innerHTML = '<tr><td colspan="3" style="text-align: center; color: var(--text-muted);">No student records</td></tr>';
           }
 
           openModal('modal-calc');
@@ -1144,6 +1238,11 @@
     // --- RUN SEND TEXTS ACTION ---
     document.getElementById('btn-send-texts').addEventListener('click', async () => {
       const btn = document.getElementById('btn-send-texts');
+      if (btn.classList.contains('btn-disabled-multiple') || btn.disabled) {
+        alert('Sending SMS is disabled because multiple spreadsheets were found for this billing period. Please delete or rename duplicate sheets in Google Drive first.');
+        return;
+      }
+
       const originalHTML = btn.innerHTML;
       btn.disabled = true;
       btn.innerHTML = '<div class="spinner"></div> <span>Evaluating Safeguard & Sending SMS...</span>';
@@ -1186,8 +1285,10 @@
       } catch (err) {
         alert(`Network or Server Error: ${err.message}`);
       } finally {
-        btn.disabled = false;
         btn.innerHTML = originalHTML;
+        if (!btn.classList.contains('btn-disabled-multiple')) {
+          btn.disabled = false;
+        }
       }
     });
 

@@ -1,14 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>To-Do Board - Crossroads Backend & Services</title>
+  <title>To-Do Board - Flash Server Backend & Services</title>
   <link rel="icon" type="image/png" href="/static/flash.png" />
   <link rel="shortcut icon" type="image/png" href="/static/flash.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet" />
   <link rel="stylesheet" href="/css/shared.css" />
   <style>
     /* --------------------------------------------------------------------------
@@ -288,32 +291,39 @@
       body {
         padding: 16px 12px 40px 12px;
       }
+
       .top-nav {
         padding: 12px 14px;
         gap: 10px;
       }
+
       .nav-actions {
         gap: 8px;
       }
+
       .nav-btn {
         padding: 6px 10px !important;
         font-size: 12px !important;
       }
+
       .header-card {
         flex-direction: column;
         align-items: flex-start;
         gap: 16px;
         padding: 18px 16px;
       }
+
       .header-actions {
         width: 100%;
         justify-content: flex-start;
         gap: 8px;
       }
+
       .btn {
         padding: 7px 12px;
         font-size: 0.82rem;
       }
+
       .todo-grid {
         grid-template-columns: 1fr;
       }
@@ -329,7 +339,8 @@
       flex-direction: column;
       overflow: hidden;
       transition: box-shadow 0.2s ease, border-color 0.2s ease;
-      height: 440px; /* Accommodates status bar + ~5 one-line tasks */
+      height: 440px;
+      /* Accommodates status bar + ~5 one-line tasks */
     }
 
     .category-box:hover {
@@ -1037,14 +1048,13 @@
       height: 12px;
       border-radius: 6px;
       background: linear-gradient(to right,
-        #ff0000 0%,
-        #ffff00 17%,
-        #00ff00 33%,
-        #00ffff 50%,
-        #0000ff 67%,
-        #ff00ff 83%,
-        #ff0000 100%
-      );
+          #ff0000 0%,
+          #ffff00 17%,
+          #00ff00 33%,
+          #00ffff 50%,
+          #0000ff 67%,
+          #ff00ff 83%,
+          #ff0000 100%);
       cursor: pointer;
       touch-action: none;
       border: 1px solid var(--border);
@@ -1397,16 +1407,17 @@
     }
   </style>
 </head>
+
 <body>
   <div class="container">
-    
+
     <!-- TOP NAVIGATION BAR (Docs -> Tutoring Calc -> System Monitor -> To Do -> Theme) -->
     <nav class="top-nav">
       <a href="/todo" class="brand-left">
         <img src="/static/flash.png" alt="Flash Logo" />
         <div>
           <div class="brand-title">To-Do Console</div>
-          <div class="brand-subtitle">Crossroads Task Management & Archival</div>
+          <div class="brand-subtitle">Flash Server Task Management & Archival</div>
         </div>
       </a>
       <div class="nav-actions">
@@ -1422,7 +1433,8 @@
         <a href="/todo" class="nav-btn active" title="Crossroads To-Do Board">
           To Do
         </a>
-        <button id="theme-toggle" class="nav-btn" style="cursor: pointer;" aria-label="Toggle Theme" title="Toggle Theme">
+        <button id="theme-toggle" class="nav-btn" style="cursor: pointer;" aria-label="Toggle Theme"
+          title="Toggle Theme">
           <img src="/static/day-and-night.svg" alt="Theme" class="theme-icon" />
         </button>
       </div>
@@ -1432,7 +1444,8 @@
     <div class="header-card">
       <div class="header-left">
         <div class="pulse-icon-box">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+            stroke-linecap="round" stroke-linejoin="round">
             <path d="M9 11l3 3L22 4"></path>
             <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
           </svg>
@@ -1453,10 +1466,13 @@
         <button id="btn-toggle-view" class="btn btn-secondary" title="Switch between Active and Archived tasks">
           View Archive
         </button>
-        <button id="btn-view-archived-categories" class="btn btn-secondary" style="display: none;" title="View archived categories and their tasks">
-          Archived Categories <span id="archived-cat-badge" class="cat-count-badge" style="margin-left: 5px; font-size: 0.72rem; padding: 2px 6px;">0</span>
+        <button id="btn-view-archived-categories" class="btn btn-secondary" style="display: none;"
+          title="View archived categories and their tasks">
+          Archived Categories <span id="archived-cat-badge" class="cat-count-badge"
+            style="margin-left: 5px; font-size: 0.72rem; padding: 2px 6px;">0</span>
         </button>
-        <button id="btn-archive-completed" class="btn btn-warning" title="Move all crossed-out items to archive right now">
+        <button id="btn-archive-completed" class="btn btn-warning"
+          title="Move all crossed-out items to archive right now">
           Archive Completed
         </button>
         <button id="btn-archive-all" class="btn btn-secondary" title="Archive all tasks in current view">
@@ -1482,8 +1498,10 @@
         <strong>Archive View Active:</strong> Showing active categories and their archived tasks.
       </div>
       <div style="display: flex; align-items: center; gap: 8px;">
-        <button id="btn-banner-archived-categories" class="btn btn-secondary btn-sm" style="display: none;" title="View archived categories and their tasks">
-          📦 Archived Categories <span id="banner-archived-cat-badge" class="cat-count-badge" style="margin-left: 4px; font-size: 0.72rem; padding: 2px 6px;">0</span>
+        <button id="btn-banner-archived-categories" class="btn btn-secondary btn-sm" style="display: none;"
+          title="View archived categories and their tasks">
+          📦 Archived Categories <span id="banner-archived-cat-badge" class="cat-count-badge"
+            style="margin-left: 4px; font-size: 0.72rem; padding: 2px 6px;">0</span>
         </button>
         <button id="btn-exit-archive" class="btn btn-primary btn-sm">
           Return to Active Board
@@ -1513,12 +1531,14 @@
 
         <div class="form-group">
           <label class="form-label" for="modal-cat-name">Category Name</label>
-          <input type="text" id="modal-cat-name" class="form-control" placeholder="e.g. Work, Personal, Marketing..." maxlength="50" autofocus />
+          <input type="text" id="modal-cat-name" class="form-control" placeholder="e.g. Work, Personal, Marketing..."
+            maxlength="50" autofocus />
         </div>
         <div class="form-group">
           <div class="color-header-row">
             <label class="form-label" style="margin-bottom: 0;">Category Color</label>
-            <button type="button" id="btn-toggle-advanced-picker" class="btn-advanced-toggle" title="Open custom Google-style color picker">
+            <button type="button" id="btn-toggle-advanced-picker" class="btn-advanced-toggle"
+              title="Open custom Google-style color picker">
               <span>🎨</span>
               <span id="advanced-toggle-text">Advanced</span>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -1544,7 +1564,8 @@
               <!-- Visual row: Current Swatch on left, 2D Saturation/Value surface on right -->
               <div class="g-visual-area">
                 <div class="g-current-swatch" id="g-cur-swatch" title="Active color preview"></div>
-                <div class="g-gradient-surface" id="g-gradient-surface" title="Click or drag to pick saturation & brightness">
+                <div class="g-gradient-surface" id="g-gradient-surface"
+                  title="Click or drag to pick saturation & brightness">
                   <div class="g-surface-handle" id="g-surface-handle"></div>
                 </div>
               </div>
@@ -1557,9 +1578,11 @@
               <!-- HEX Box with Copy -->
               <div class="g-hex-box">
                 <span class="g-hex-tag">HEX</span>
-                <input type="text" id="g-hex-input" class="g-hex-input" value="#005FA3" maxlength="7" spellcheck="false" title="Direct Hex code entry" />
+                <input type="text" id="g-hex-input" class="g-hex-input" value="#005FA3" maxlength="7" spellcheck="false"
+                  title="Direct Hex code entry" />
                 <button type="button" id="g-copy-hex" class="g-copy-btn" title="Copy HEX to clipboard">
-                  <svg id="copy-icon-svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <svg id="copy-icon-svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2">
                     <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                     <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
                   </svg>
@@ -1604,11 +1627,15 @@
           </div>
         </div>
       </div>
-      <div class="modal-footer" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
+      <div class="modal-footer"
+        style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
         <div class="modal-footer-left" style="display: flex; gap: 8px; align-items: center;">
-          <button type="button" id="modal-cat-archive" class="btn btn-danger" style="display: none;" title="Archive this category and all its tasks">Archive Category</button>
-          <button type="button" id="modal-cat-archive-tasks" class="btn btn-warning" style="display: none;" title="Move all active tasks in this category to the archive">Archive All Tasks</button>
-          <button type="button" id="modal-cat-delete-tasks" class="btn btn-danger" style="display: none;" title="Permanently delete all archived tasks in this category">Delete All Tasks</button>
+          <button type="button" id="modal-cat-archive" class="btn btn-danger" style="display: none;"
+            title="Archive this category and all its tasks">Archive Category</button>
+          <button type="button" id="modal-cat-archive-tasks" class="btn btn-warning" style="display: none;"
+            title="Move all active tasks in this category to the archive">Archive All Tasks</button>
+          <button type="button" id="modal-cat-delete-tasks" class="btn btn-danger" style="display: none;"
+            title="Permanently delete all archived tasks in this category">Delete All Tasks</button>
         </div>
         <div class="modal-footer-right" style="display: flex; gap: 8px; align-items: center; margin-left: auto;">
           <button id="modal-cat-cancel" class="btn btn-secondary">Cancel</button>
@@ -1634,7 +1661,8 @@
       </div>
       <div class="modal-body modal-archived-body">
         <div class="archived-modal-subtext">
-          Categories that have been archived are hidden from the active board. Restoring a category reactivates it on the active board while keeping its historical tasks archived.
+          Categories that have been archived are hidden from the active board. Restoring a category reactivates it on
+          the active board while keeping its historical tasks archived.
         </div>
         <div id="archived-categories-list" class="archived-scroll-list">
           <!-- Rendered dynamically -->
@@ -2026,8 +2054,8 @@
       try {
         const res = await fetch('/api/todo/categories/status', {
           method: 'PATCH',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({category: categoryName, status: newStatus})
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ category: categoryName, status: newStatus })
         });
         if (!res.ok) throw new Error('Failed to update category status');
         const data = await res.json();
@@ -2127,8 +2155,8 @@
       try {
         const res = await fetch('/api/todo/reorder', {
           method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({items: reorderPayload})
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ items: reorderPayload })
         });
         if (!res.ok) throw new Error('Failed to update task order');
         await loadBoardData();
@@ -2161,8 +2189,8 @@
       try {
         const res = await fetch('/api/todo/items', {
           method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({text, category})
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text, category })
         });
         if (!res.ok) throw new Error('Failed to create task');
         showToast('Task added');
@@ -2261,13 +2289,13 @@
           await Promise.all([
             fetch(`/api/todo/items/${id}`, {
               method: 'PATCH',
-              headers: {'Content-Type': 'application/json'},
-              body: JSON.stringify({completed: true})
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ completed: true })
             }),
             fetch('/api/todo/reorder', {
               method: 'POST',
-              headers: {'Content-Type': 'application/json'},
-              body: JSON.stringify({items: reorderPayload})
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ items: reorderPayload })
             })
           ]);
           showToast('Task crossed out (archiving Mon 2 AM)');
@@ -2286,8 +2314,8 @@
         try {
           await fetch(`/api/todo/items/${id}`, {
             method: 'PATCH',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({completed: false})
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ completed: false })
           });
           showToast('Task marked active');
         } catch (err) {
@@ -2301,8 +2329,8 @@
       try {
         await fetch(`/api/todo/items/${id}`, {
           method: 'PATCH',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({text})
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text })
         });
         await loadBoardData();
         showToast('Task updated');
@@ -2363,7 +2391,7 @@
           try {
             const res = await fetch('/api/todo/archive-all', {
               method: 'POST',
-              headers: {'Content-Type': 'application/json'},
+              headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({})
             });
             const data = await res.json();
@@ -2386,8 +2414,8 @@
           try {
             const res = await fetch('/api/todo/delete-all', {
               method: 'POST',
-              headers: {'Content-Type': 'application/json'},
-              body: JSON.stringify({status: currentView})
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ status: currentView })
             });
             const data = await res.json();
             showToast(`Deleted ${data.deleted_count} tasks`);
@@ -2617,7 +2645,7 @@
       gGradientSurface.addEventListener('pointerdown', (e) => {
         e.preventDefault();
         isDraggingSurface = true;
-        try { gGradientSurface.setPointerCapture(e.pointerId); } catch (_) {}
+        try { gGradientSurface.setPointerCapture(e.pointerId); } catch (_) { }
         handleSurfaceEvent(e);
       });
       gGradientSurface.addEventListener('pointermove', (e) => {
@@ -2626,7 +2654,7 @@
       });
       gGradientSurface.addEventListener('pointerup', (e) => {
         isDraggingSurface = false;
-        try { gGradientSurface.releasePointerCapture(e.pointerId); } catch (_) {}
+        try { gGradientSurface.releasePointerCapture(e.pointerId); } catch (_) { }
       });
       gGradientSurface.addEventListener('pointercancel', () => {
         isDraggingSurface = false;
@@ -2652,7 +2680,7 @@
       gHueSlider.addEventListener('pointerdown', (e) => {
         e.preventDefault();
         isDraggingHue = true;
-        try { gHueSlider.setPointerCapture(e.pointerId); } catch (_) {}
+        try { gHueSlider.setPointerCapture(e.pointerId); } catch (_) { }
         handleHueEvent(e);
       });
       gHueSlider.addEventListener('pointermove', (e) => {
@@ -2661,7 +2689,7 @@
       });
       gHueSlider.addEventListener('pointerup', (e) => {
         isDraggingHue = false;
-        try { gHueSlider.releasePointerCapture(e.pointerId); } catch (_) {}
+        try { gHueSlider.releasePointerCapture(e.pointerId); } catch (_) { }
       });
       gHueSlider.addEventListener('pointercancel', () => {
         isDraggingHue = false;
@@ -2815,7 +2843,7 @@
             try {
               const res = await fetch(`/api/todo/categories/${editingCategoryId}/archive`, {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'}
+                headers: { 'Content-Type': 'application/json' }
               });
               const data = await res.json();
               if (!res.ok) {
@@ -2848,7 +2876,7 @@
             try {
               const res = await fetch('/api/todo/archive-all', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ category: catName })
               });
               const data = await res.json();
@@ -2882,7 +2910,7 @@
             try {
               const res = await fetch('/api/todo/delete-all', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ status: 'archived', category: catName })
               });
               const data = await res.json();
@@ -2911,7 +2939,7 @@
         try {
           const res = await fetch(`/api/todo/categories/${conflictingCatId}/restore`, {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ color })
           });
           const data = await res.json();
@@ -2945,7 +2973,7 @@
           try {
             const res = await fetch(`/api/todo/categories/${editingCategoryId}`, {
               method: 'PATCH',
-              headers: {'Content-Type': 'application/json'},
+              headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ name, color })
             });
             const data = await res.json();
@@ -2965,7 +2993,7 @@
           try {
             const res = await fetch('/api/todo/categories', {
               method: 'POST',
-              headers: {'Content-Type': 'application/json'},
+              headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ name, color })
             });
             const data = await res.json();
@@ -3113,7 +3141,7 @@
             try {
               const res = await fetch(`/api/todo/categories/${catId}/restore`, {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'}
+                headers: { 'Content-Type': 'application/json' }
               });
               const data = await res.json();
               if (!res.ok) {
@@ -3181,4 +3209,5 @@
     });
   </script>
 </body>
+
 </html>
