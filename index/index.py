@@ -50,6 +50,10 @@ def check_auth():
     if request.path.startswith('/static/') or request.path.startswith('/css/') or request.path == '/favicon.ico':
         return None
 
+    # Allow public access to the Privacy Policy for Google OAuth app publishing and direct link access
+    if request.path.rstrip('/') in ['/privacy', '/TutoringCalculator/privacy']:
+        return None
+
     auth_header = request.headers.get('Authorization')
     if not auth_header or not auth_header.startswith('Basic '):
         return make_response('Could not verify!', 401, {'WWW-Authenticate': 'Basic realm="Login Required"'})

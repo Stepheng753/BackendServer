@@ -175,6 +175,11 @@ def calculate_tutoring_hours(creds, start_date_str, end_date_str, sheet_student_
     events = events_result.get('items', [])
     hours_by_student = {}
 
+    start_date = parse_date_string(start_date_str)
+    end_date = parse_date_string(end_date_str)
+    range_start_dt = PST.localize(datetime.datetime.combine(start_date, datetime.time.min))
+    range_end_dt = PST.localize(datetime.datetime.combine(end_date, datetime.time.max))
+
     for event in events:
         summary = event.get('summary', '').strip()
         words = summary.split()
@@ -203,6 +208,16 @@ def calculate_tutoring_hours(creds, start_date_str, end_date_str, sheet_student_
             start_dt = datetime.datetime.fromisoformat(start_raw.replace('Z', '+00:00'))
             end_dt = datetime.datetime.fromisoformat(end_raw.replace('Z', '+00:00'))
 
+        # Ensure event start time is in PST for range comparison
+        if start_dt.tzinfo is None:
+            event_start_pst = PST.localize(start_dt)
+        else:
+            event_start_pst = start_dt.astimezone(PST)
+
+        # Only include events whose START TIME falls within the target date range [range_start_dt, range_end_dt]
+        if not (range_start_dt <= event_start_pst <= range_end_dt):
+            continue
+
         duration_hours = (end_dt - start_dt).total_seconds() / 3600.0
 
         # Match against actual student names from the Google Sheet
@@ -218,5 +233,6 @@ def calculate_tutoring_hours(creds, start_date_str, end_date_str, sheet_student_
             )
 
     return hours_by_student
+
 
 

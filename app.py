@@ -3,7 +3,7 @@ import os
 
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
-from flask import Flask
+from flask import Flask, render_template
 from flask_cors import CORS
 from index.index import check_auth
 from swagger.swagger import swagger_bp
@@ -40,6 +40,12 @@ def auth():
 @app.route("/test")
 def test():
     return {"status": "success", "message": "Hello, World!"}
+
+
+@app.route("/privacy", methods=["GET"])
+def privacy():
+    return render_template("privacy.html")
+
 
 
 @app.route("/css/<path:filename>")

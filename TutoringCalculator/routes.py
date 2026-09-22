@@ -57,6 +57,13 @@ def require_google_creds():
     return creds, None, None
 
 
+# --- PRIVACY POLICY ROUTE ---
+@tutoring_bp.route("/privacy")
+def privacy_route():
+    from flask import render_template
+    return render_template("privacy.html")
+
+
 # --- OAUTH ROUTES ---
 
 @tutoring_bp.route("/login_oauth")

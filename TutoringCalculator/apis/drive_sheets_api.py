@@ -26,6 +26,20 @@ def parse_currency(val):
         return 0.0
 
 
+def parse_hours(val):
+    """Parses numeric hours string like '1.5' or 2 into a float."""
+    if val is None:
+        return 0.0
+    if isinstance(val, (int, float)):
+        return float(val)
+    cleaned = re.sub(r'[^\d.-]', '', str(val).strip())
+    try:
+        return float(cleaned) if cleaned else 0.0
+    except ValueError:
+        return 0.0
+
+
+
 def is_valid_student_name(val):
     """
     Validates if a cell in Column C represents an active student name.
@@ -187,7 +201,7 @@ def get_previous_balances(creds, current_start_str, current_end_str):
 
         total_balance_raw = row[6] if len(row) > 6 else 0
 
-        if status.lower() == 'need to pay' and student_name:
+        if status.lower() in ['need to pay', 'not paid'] and student_name:
             first_name = student_name.split()[0].capitalize()
             bal = parse_currency(total_balance_raw)
             balances[student_name] = bal
@@ -237,20 +251,23 @@ def update_sheet_hours_and_balances(creds, sheet_id, hours_by_student, previous_
 
     result = sheets_service.spreadsheets().values().get(
         spreadsheetId=sheet_id,
-        range='C5:C'
+        range='B5:C'
     ).execute()
     student_rows = result.get('values', [])
 
     hours_data = []
     balance_data = []
     raw_students = []
+    status_clear_updates = []
 
     for idx, row in enumerate(student_rows, start=5):
-        if not row or not row[0].strip():
+        if not row:
             break
 
-        full_name = row[0].strip()
-        if not is_valid_student_name(full_name):
+        status = row[0].strip() if len(row) > 0 else ''
+        full_name = row[1].strip() if len(row) > 1 else ''
+
+        if not full_name or not is_valid_student_name(full_name):
             break
 
         first_name = full_name.split()[0].capitalize()
@@ -268,20 +285,28 @@ def update_sheet_hours_and_balances(creds, sheet_id, hours_by_student, previous_
             "remaining_balance": rem_balance
         })
 
+        # If hours = 0, do not mark status as Need to Pay / Not Paid; clear it if already set
+        if hrs <= 0 and status.lower() in ['need to pay', 'not paid']:
+            status_clear_updates.append({"range": f"B{idx}", "values": [[""]]})
+
     total_rows = len(raw_students)
     if total_rows > 0:
+        batch_data = [
+            {
+                "range": f"D5:D{4 + total_rows}",
+                "values": hours_data
+            },
+            {
+                "range": f"G5:G{4 + total_rows}",
+                "values": balance_data
+            }
+        ]
+        if status_clear_updates:
+            batch_data.extend(status_clear_updates)
+
         batch_body = {
             "valueInputOption": "USER_ENTERED",
-            "data": [
-                {
-                    "range": f"D5:D{4 + total_rows}",
-                    "values": hours_data
-                },
-                {
-                    "range": f"G5:G{4 + total_rows}",
-                    "values": balance_data
-                }
-            ]
+            "data": batch_data
         }
         sheets_service.spreadsheets().values().batchUpdate(
             spreadsheetId=sheet_id,
@@ -369,12 +394,17 @@ def update_sheet_hours_and_balances(creds, sheet_id, hours_by_student, previous_
 
 
 def update_sheet_pay_status(creds, sheet_id):
-    """Converts blank student statuses in Column B to 'Need to Pay' for active students."""
+    """
+    Converts blank student statuses in Column B to 'Need to Pay' for active students
+    who have hours > 0.
+    If hours == 0, does not mark the status as 'Need to Pay' / 'Not Paid',
+    and clears any existing 'Need to Pay' / 'Not Paid' status.
+    """
     sheets_service = get_sheets_service(creds)
 
     result = sheets_service.spreadsheets().values().get(
         spreadsheetId=sheet_id,
-        range='B5:C'
+        range='B5:D'
     ).execute()
     rows = result.get('values', [])
 
@@ -384,13 +414,20 @@ def update_sheet_pay_status(creds, sheet_id):
     for idx, row in enumerate(rows, start=5):
         status = row[0].strip() if len(row) > 0 else ''
         student_name = row[1].strip() if len(row) > 1 else ''
+        hours_raw = row[2] if len(row) > 2 else 0
 
         if not is_valid_student_name(student_name):
             break
 
-        if student_name and not status:
-            status_updates.append({"range": f"B{idx}", "values": [["Need to Pay"]]})
-            updated_count += 1
+        hrs = parse_hours(hours_raw)
+
+        if student_name:
+            if hrs > 0 and not status:
+                status_updates.append({"range": f"B{idx}", "values": [["Need to Pay"]]})
+                updated_count += 1
+            elif hrs <= 0 and status.lower() in ['need to pay', 'not paid']:
+                # If hours are 0, do not mark as Not Paid / Need to Pay; clear if set
+                status_updates.append({"range": f"B{idx}", "values": [[""]]})
 
     if status_updates:
         batch_body = {
