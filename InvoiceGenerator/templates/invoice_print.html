@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,13 +8,16 @@
   <link rel="icon" type="image/png" href="/static/flash.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet" />
   <style>
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
+
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background-color: #f3f4f6;
@@ -34,14 +38,16 @@
       background: #ffffff;
       padding: 12px 20px;
       border-radius: 8px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
       border: 1px solid #e5e7eb;
     }
+
     .top-actions-left {
       display: flex;
       align-items: center;
       gap: 12px;
     }
+
     .back-btn {
       display: inline-flex;
       align-items: center;
@@ -56,9 +62,11 @@
       background: #ffffff;
       transition: background 0.15s;
     }
+
     .back-btn:hover {
       background: #f9fafb;
     }
+
     .btn-action {
       display: inline-flex;
       align-items: center;
@@ -72,18 +80,22 @@
       text-decoration: none;
       transition: all 0.15s;
     }
+
     .btn-primary {
       background: #2563eb;
       color: #ffffff;
     }
+
     .btn-primary:hover {
       background: #1d4ed8;
     }
+
     .btn-secondary {
       background: #f3f4f6;
       color: #374151;
       border: 1px solid #d1d5db;
     }
+
     .btn-secondary:hover {
       background: #e5e7eb;
     }
@@ -95,7 +107,7 @@
       background: #ffffff;
       padding: 48px;
       border-radius: 8px;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
       border: 1px solid #e5e7eb;
     }
 
@@ -108,12 +120,14 @@
       padding-bottom: 24px;
       margin-bottom: 24px;
     }
+
     .sender-box h1 {
       font-size: 1.5rem;
       font-weight: 700;
       color: #2d567c;
       margin-bottom: 6px;
     }
+
     .sender-box p {
       font-size: 0.88rem;
       color: #4b5563;
@@ -123,6 +137,7 @@
     .meta-box {
       text-align: right;
     }
+
     .meta-box h2 {
       font-size: 2rem;
       font-weight: 800;
@@ -130,11 +145,13 @@
       color: #2d567c;
       margin-bottom: 6px;
     }
+
     .meta-row {
       font-size: 0.9rem;
       margin-bottom: 4px;
       color: #4b5563;
     }
+
     .meta-row strong {
       color: #111827;
       margin-left: 6px;
@@ -149,11 +166,31 @@
       border-radius: 9999px;
       letter-spacing: 0.05em;
     }
-    .badge-paid { background: #d1fae5; color: #065f46; }
-    .badge-sent { background: #dbeafe; color: #1e40af; }
-    .badge-draft { background: #fef3c7; color: #92400e; }
-    .badge-overdue { background: #fee2e2; color: #991b1b; }
-    .badge-void { background: #f3f4f6; color: #4b5563; }
+
+    .badge-paid {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .badge-sent {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    .badge-draft {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .badge-overdue {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .badge-void {
+      background: #f3f4f6;
+      color: #4b5563;
+    }
 
     /* BILL TO */
     .bill-to-card {
@@ -163,6 +200,7 @@
       padding: 16px 20px;
       margin-bottom: 28px;
     }
+
     .bill-to-title {
       font-size: 0.75rem;
       font-weight: 700;
@@ -171,12 +209,14 @@
       color: #2d567c;
       margin-bottom: 6px;
     }
+
     .bill-to-name {
       font-size: 1.05rem;
       font-weight: 700;
       color: #111827;
       margin-bottom: 4px;
     }
+
     .bill-to-details {
       font-size: 0.88rem;
       color: #4b5563;
@@ -189,6 +229,7 @@
       border-collapse: collapse;
       margin-bottom: 24px;
     }
+
     .items-table th {
       background: #2d567c;
       color: #ffffff;
@@ -198,18 +239,22 @@
       text-transform: uppercase;
       letter-spacing: 0.03em;
     }
+
     .items-table td {
       padding: 12px 14px;
       font-size: 0.9rem;
       border-bottom: 1px solid #e5e7eb;
       color: #1f2937;
     }
+
     .items-table tr:nth-child(even) td {
       background: #f8fafc;
     }
+
     .text-right {
       text-align: right;
     }
+
     .text-center {
       text-align: center;
     }
@@ -220,9 +265,11 @@
       justify-content: flex-end;
       margin-bottom: 30px;
     }
+
     .totals-box {
       width: 280px;
     }
+
     .totals-row {
       display: flex;
       justify-content: space-between;
@@ -230,6 +277,7 @@
       font-size: 0.92rem;
       color: #4b5563;
     }
+
     .totals-row.grand-total {
       border-top: 2px solid #2d567c;
       margin-top: 6px;
@@ -247,6 +295,7 @@
       padding: 16px 20px;
       margin-bottom: 16px;
     }
+
     .info-card-title {
       font-size: 0.75rem;
       font-weight: 700;
@@ -255,6 +304,7 @@
       color: #2d567c;
       margin-bottom: 6px;
     }
+
     .info-card-body {
       font-size: 0.88rem;
       color: #374151;
@@ -279,9 +329,11 @@
         padding: 0;
         color: #000000;
       }
+
       .top-actions-bar {
         display: none !important;
       }
+
       .invoice-sheet {
         box-shadow: none;
         border: none;
@@ -291,6 +343,7 @@
     }
   </style>
 </head>
+
 <body>
 
   <!-- TOP ACTIONS BAR (Hidden on print) -->
@@ -327,24 +380,24 @@
 
   <!-- PRINTABLE INVOICE SHEET -->
   <div class="invoice-sheet">
-    
+
     <!-- HEADER -->
     <div class="sheet-header">
       <div class="sender-box">
         <h1>{{ invoice.sender_name_snapshot }}</h1>
         {% if invoice.sender_info.address %}
-          <p>{{ invoice.sender_info.address | replace('\n', '<br>') | safe }}</p>
+        <p>{{ invoice.sender_info.address | replace('\n', '<br>') | safe }}</p>
         {% endif %}
         {% if invoice.sender_info.email %}
-          <p>{{ invoice.sender_info.email }}</p>
+        <p>{{ invoice.sender_info.email }}</p>
         {% endif %}
         {% if invoice.sender_info.formatted_phone %}
-          <p>{{ invoice.sender_info.formatted_phone }}</p>
+        <p>{{ invoice.sender_info.formatted_phone }}</p>
         {% elif invoice.sender_info.phone %}
-          <p>{{ invoice.sender_info.phone }}</p>
+        <p>{{ invoice.sender_info.phone }}</p>
         {% endif %}
         {% if invoice.sender_info.website %}
-          <p>{{ invoice.sender_info.website }}</p>
+        <p>{{ invoice.sender_info.website }}</p>
         {% endif %}
       </div>
 
@@ -365,15 +418,15 @@
       <div class="bill-to-name">{{ invoice.client_name_snapshot }}</div>
       <div class="bill-to-details">
         {% if invoice.client_info.address %}
-          <div>{{ invoice.client_info.address | replace('\n', '<br>') | safe }}</div>
+        <div>{{ invoice.client_info.address | replace('\n', '<br>') | safe }}</div>
         {% endif %}
         {% if invoice.client_info.email %}
-          <div>{{ invoice.client_info.email }}</div>
+        <div>{{ invoice.client_info.email }}</div>
         {% endif %}
         {% if invoice.client_info.formatted_phone %}
-          <div>{{ invoice.client_info.formatted_phone }}</div>
+        <div>{{ invoice.client_info.formatted_phone }}</div>
         {% elif invoice.client_info.phone %}
-          <div>{{ invoice.client_info.phone }}</div>
+        <div>{{ invoice.client_info.phone }}</div>
         {% endif %}
       </div>
     </div>
@@ -448,10 +501,11 @@
 
     <!-- FOOTER -->
     <div class="sheet-footer">
-      Thank you for your business! Generated on-demand by Stephen Giang's Flash Server.
+      Thank you for your Business!
     </div>
 
   </div>
 
 </body>
+
 </html>

@@ -124,3 +124,42 @@ python3 TutoringCalculator/scripts/run_send_texts.py
 # Or supply a specific sheet ID:
 python3 TutoringCalculator/scripts/run_send_texts.py <SHEET_ID>
 ```
+
+---
+
+## 4. Package Structure
+
+```
+TutoringCalculator/
+├── __init__.py                # Blueprint export (tutoring_bp)
+├── config.py                  # Twilio, Google, and PST timezone configurations
+├── routes.py                  # Web & REST API endpoints
+├── apis/                      # Service client integrations
+│   ├── __init__.py
+│   ├── calendar_api.py        # Google Calendar scraper for tutoring events
+│   ├── drive_sheets_api.py    # Google Sheets template cloning, hours, and status updates
+│   ├── gmail_api.py           # Email notifications
+│   ├── oauth.py               # Google OAuth 2.0 flow & token management
+│   └── twilio_api.py          # Twilio SMS dispatch & logging
+├── scripts/
+│   ├── run_calc.py            # CLI script for Monday morning calculations
+│   └── run_send_texts.py      # CLI script for Monday noon SMS dispatches
+├── templates/
+│   └── tutoring.html          # Interactive HTML console & dark mode
+├── tests/
+│   ├── __init__.py            # Test package marker
+│   └── test_tutoring_calc.py  # Unit tests for hours parsing, balances, and safeguards
+└── README.md                  # Module technical reference
+```
+
+---
+
+## 5. Automated Testing
+
+Run all unit tests for the Tutoring Calculator:
+
+```bash
+# From repository root
+.venv/bin/python -m unittest discover -s TutoringCalculator/tests -p "test_*.py"
+```
+

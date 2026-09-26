@@ -1,7 +1,14 @@
+import os
+import sys
 import unittest
 from unittest.mock import MagicMock, patch
 import datetime
 import pytz
+
+# Add repo root to sys.path
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+if BASE_DIR not in sys.path:
+    sys.path.insert(0, BASE_DIR)
 
 from TutoringCalculator.apis.drive_sheets_api import (
     parse_hours,

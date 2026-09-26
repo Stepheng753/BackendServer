@@ -6,8 +6,8 @@
 [![Status](https://img.shields.io/badge/Status-Active-success?style=for-the-badge)](/)
 [![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![Flask](https://img.shields.io/badge/Flask-3.0-000000?style=for-the-badge&logo=flask&logoColor=white)](https://flask.palletsprojects.com/)
+[![ReportLab](https://img.shields.io/badge/ReportLab-4.4-FF6F00?style=for-the-badge&logo=python&logoColor=white)](https://www.reportlab.com/)
 [![Swagger](https://img.shields.io/badge/OpenAPI-3.0-85EA2D?style=for-the-badge&logo=swagger&logoColor=black)](http://localhost:5000/docs)
-[![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
 [![Tailscale](https://img.shields.io/badge/Tailscale-Mesh-4E5EE4?style=for-the-badge&logo=tailscale&logoColor=white)](https://tailscale.com/)
 
 *BackendServer is the production API engine, system telemetry monitor, and automation hub for Stephen Giang's infrastructure (`flash-server` at `dev.stepheng753.com`).*
@@ -23,6 +23,9 @@
 - [🏗️ Repository Structure](#️-repository-structure)
 - [🖥️ System Monitoring Module](#️-system-monitoring-module)
 - [🎓 Tutoring Calculator Automation](#-tutoring-calculator-automation)
+- [📝 To-Do Task Management Module](#-to-do-task-management-module)
+- [📄 Vector Invoice Generator Module](#-vector-invoice-generator-module)
+- [🧪 Testing & Quality Assurance](#-testing--quality-assurance)
 - [📚 Project Documentation](#-project-documentation)
 - [🔗 Internal Module References](#-internal-module-references)
 - [🔐 Configuration & Secrets](#-configuration--secrets)
@@ -48,16 +51,24 @@
                        [Gunicorn WSGI / Flask]
                                    │
          ┌─────────────────────────┼─────────────────────────┐
+         │                         │                         │
          ▼                         ▼                         ▼
   [Monitoring BP]           [Tutoring Calc BP]         [Swagger / OpenAPI]
   - Host Telemetry          - Calendar Scraper         - Interactive UI
   - Process Matrix          - Google Sheets Invoicing  - Basic Auth Security
   - 11-Service Probes       - Twilio SMS Reminders     - API Documentation
+         │                         │
+         ▼                         ▼
+   [ToDo Board BP]          [Invoice Generator BP]
+   - Categorized Board      - Pure-Python Vector PDFs
+   - Drag-and-Drop Order    - Multi-Sender Profiles
+   - Monday 2 AM Archive    - Client Presets & History
 ```
 
 ### 💼 Operational Philosophy
 - **Lightweight & High-Performance:** Pure Python 3.12 with minimal dependencies; non-blocking telemetry collectors prevent event loop stalls.
 - **Fail-Safe Business Logic:** Financial invoicing utilizes human-in-the-loop validation (`CALCULATED` title safeguard) before dispatching client notifications.
+- **Zero Disk Leakage for PDFs:** Pure-Python vector PDF generation streamed in-memory via `io.BytesIO`. Zero PDF files are stored on disk.
 - **Zero Polling & Thread Safety:** Concurrent threaded socket probes evaluate service uptime in parallel with 0.5s tight timeouts.
 - **Secure Encrypted Transport:** Tailscale mesh network for automated CI/CD deployments and internal administration.
 
@@ -68,10 +79,11 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.12"/>
   <img src="https://img.shields.io/badge/Flask-000000?style=for-the-badge&logo=flask&logoColor=white" alt="Flask"/>
+  <img src="https://img.shields.io/badge/ReportLab-FF6F00?style=for-the-badge&logo=python&logoColor=white" alt="ReportLab"/>
+  <img src="https://img.shields.io/badge/SQLite3-003B57?style=for-the-badge&logo=sqlite&logoColor=white" alt="SQLite3 WAL"/>
   <img src="https://img.shields.io/badge/Gunicorn-499848?style=for-the-badge&logo=gunicorn&logoColor=white" alt="Gunicorn"/>
   <img src="https://img.shields.io/badge/Nginx-009639?style=for-the-badge&logo=nginx&logoColor=white" alt="Nginx"/>
   <img src="https://img.shields.io/badge/Let's_Encrypt-003A70?style=for-the-badge&logo=letsencrypt&logoColor=white" alt="Certbot"/>
-  <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker CE"/>
   <img src="https://img.shields.io/badge/Google_Cloud-4285F4?style=for-the-badge&logo=googlecloud&logoColor=white" alt="Google Cloud APIs"/>
   <img src="https://img.shields.io/badge/Twilio-F22F46?style=for-the-badge&logo=twilio&logoColor=white" alt="Twilio SMS"/>
   <img src="https://img.shields.io/badge/Tailscale-4E5EE4?style=for-the-badge&logo=tailscale&logoColor=white" alt="Tailscale"/>
@@ -81,8 +93,9 @@
 ### Key Capabilities
 1. **Host & Container Telemetry:** Real-time metrics on 12-thread CPU loads, package thermals, DDR4 RAM utilization, NVMe & 32TB HDD array storage pools, and top processes.
 2. **Automated Weekly Billing Pipeline:** Parses Google Calendar events for tutoring hours, computes rollover balances, generates structured Google Sheets invoices, and dispatches customized SMS payment texts via Twilio.
-3. **Interactive Developer Experience:** Built-in Swagger UI conforming to OpenAPI 3.0 specifications with HTTP Basic Authentication.
-4. **Hardened Web Infrastructure:** Nginx reverse-proxy deployment with automated Let's Encrypt certificate renewal and dynamic DNS tracking.
+3. **Task Management & Automated Archival:** Eisenhower-categorized To-Do board with drag-and-drop reordering, SQLite WAL persistence, and a background daemon that archives completed tasks Mondays @ 2:00 AM PST.
+4. **Vector PDF Invoice Generator:** Full multi-profile invoice creator with in-memory ReportLab Platypus rendering, client service presets, dynamic filter metrics, and phone normalization.
+5. **Interactive Developer Experience:** Built-in Swagger UI conforming to OpenAPI 3.0 specifications with HTTP Basic Authentication.
 
 ---
 
@@ -93,9 +106,12 @@
 | **[`app.py`](./app.py)** | Main Flask application entry point with blueprint registrations. | `localhost:5000` / Unix Socket |
 | **[`Monitoring/`](./Monitoring/)** | System telemetry collectors (`collectors/`), process monitors, service probes, and HTML dashboard. | `/monitoring` |
 | **[`TutoringCalculator/`](./TutoringCalculator/)** | Weekly invoicing engine, web dashboard (`/tutoring`), Google APIs integration, and Twilio SMS client. | `/tutoring`, `/dates`, etc. |
+| **[`ToDo/`](./ToDo/)** | Categorized task board, drag-and-drop reordering, and Monday 2:00 AM PST auto-archive scheduler. | `/todo`, `/api/tasks`, `/api/categories` |
+| **[`InvoiceGenerator/`](./InvoiceGenerator/)** | In-memory vector PDF invoice builder, client presets, multi-sender directory, and history tracker. | `/invoices`, `/api/invoices/*` |
 | **[`swagger/`](./swagger/)** | Interactive OpenAPI 3.0 Swagger documentation console and JSON spec generator. | `/`, `/docs`, `/openapi.json` |
 | **[`index/`](./index/)** | HTTP Basic Auth middleware, security checkers, and route protection decorators. | Application middleware |
-| **[`config/`](./config/)** | Environment configuration files and secrets schemas (`config.json`, `secrets.json`). | Application configuration |
+| **[`config/`](./config/)** | Environment configuration files, database files (`todo.db`, `invoices.db`), and secret schemas. | Application configuration |
+| **[`css/`](./css/)** | Shared global design system (`shared.css`) with synchronized light/dark palette and navigation tokens. | Global stylesheets |
 | **[`static/`](./static/)** | Static brand assets (`flash.png`, `flash.gif`, favicon). | Web assets |
 | **[`docs/`](./docs/)** | Comprehensive setup runbooks, monitoring architecture, and billing guides. | Documentation repository |
 
@@ -123,7 +139,7 @@ Accessible at `http://localhost:5000/monitoring` (or `https://dev.stepheng753.co
 
 ---
 
-## 🎓 Tutoring Calculator Automation & Web Dashboard
+## 🎓 Tutoring Calculator Automation
 
 Accessible at `http://localhost:5000/tutoring` (or `https://dev.stepheng753.com/tutoring`), the web console provides one-click triggers, Google Sheet links, earnings modal summaries, text message audit logs, and direct access to the Google Drive Pay folder.
 
@@ -155,6 +171,109 @@ Monday 12:00 PM PST ───> curl -u "$USER:$PASS" -X POST /tutoring/run-send-
 
 ---
 
+## 📝 To-Do Task Management Module
+
+Accessible at `http://localhost:5000/todo`, the To-Do module provides category-based task organization with drag-and-drop sequencing and automated weekly archival.
+
+* **Eisenhower Categories**: Dynamic, color-accented category cards with live task counters.
+* **Drag-and-Drop Reordering**: Immediate DOM reordering with background persistence to SQLite sort indices.
+* **Monday 2:00 AM PST Archival Scheduler**: A background daemon thread archives all completed tasks weekly, keeping active boards focused while preserving full historical records.
+* **Archival Management**: One-click "Archive Completed", full category archival, and conflict-checked restoration.
+
+### To-Do Endpoints
+| Endpoint | Method | Description |
+| :--- | :--- | :--- |
+| `/todo` | `GET` | Interactive To-Do board interface. |
+| `GET /api/tasks` | `GET` | Fetches active or archived tasks (`?status=active|archived`). |
+| `POST /api/tasks` | `POST` | Adds a task to a category (automatically placed above completed items). |
+| `PUT /api/tasks/<id>` | `PUT` | Updates task text, category, priority, due date, or completion state. |
+| `DELETE /api/tasks/<id>` | `DELETE`| Permanently deletes an individual task. |
+| `POST /api/tasks/reorder` | `POST` | Persists reordered task order within a category. |
+| `POST /api/tasks/archive-completed` | `POST`| Archives all completed tasks immediately. |
+| `POST /api/tasks/<id>/restore` | `POST`| Restores an archived task back to the active board. |
+| `GET /api/categories` | `GET` | Lists all active categories with task counts. |
+| `POST /api/categories` | `POST` | Creates a new category with duplicate-name detection. |
+| `PUT /api/categories/<id>` | `PUT` | Updates category name, color theme, or sort order. |
+| `DELETE /api/categories/<id>` | `DELETE`| Deletes category and cascades deletion to tasks. |
+| `POST /api/categories/<id>/archive` | `POST`| Archives category and all associated tasks. |
+| `POST /api/categories/<id>/restore` | `POST`| Restores an archived category and its tasks. |
+
+---
+
+## 📄 Vector Invoice Generator Module
+
+Accessible at `http://localhost:5000/invoices` (or `/InvoiceGenerator/invoices`), the Invoice Generator produces professional, vector-sharp PDFs rendered on-demand in pure Python without writing files to disk.
+
+* **In-Memory ReportLab Platypus Generation**: Fast, pure-Python PDF rendering (`io.BytesIO`). Zero disk files created.
+* **PDF Title & Phone Normalization**: Automatically sets the internal PDF `/Title` metadata to `Invoice# - {Client Name}` and normalizes phone numbers to `+1 (XXX) XXX-XXXX`.
+* **Selective Status Display**: The PDF header only displays the status if marked **`paid`** (in emerald green). Draft, sent, overdue, and void invoices remain clean for clients.
+* **Client Service Presets**: Save line items, default due date offsets, discount amounts, tax rates, payment instructions, and terms for any client, and apply them with one click.
+* **Live History Filter Metrics**: Real-time summary cards (Total Invoiced, Outstanding Balance, Total Collected, Total Clients) update immediately when changing filters.
+* **Print Preview**: Dedicated print page (`/invoices/<id>/preview`) with `@media print` CSS, native print dialog, and direct PDF download.
+
+### Invoice Generator Endpoints
+| Endpoint | Method | Description |
+| :--- | :--- | :--- |
+| `/invoices` | `GET` | Main invoice application dashboard. |
+| `/invoices/<id>/preview` | `GET` | Print-ready HTML preview page with print toolbar. |
+| `GET /api/invoices/summary` | `GET` | Dynamic summary metrics filtered by `status`, `client_id`, `sender_id`, `search`, etc. |
+| `GET /api/invoices/next-number` | `GET` | Next sequential invoice number (`INV-YYYY-001`). |
+| `GET /api/invoices` | `GET` | Lists invoices matching active filters. |
+| `POST /api/invoices` | `POST` | Creates a new invoice with itemized line items. |
+| `GET /api/invoices/<id>` | `GET` | Returns full invoice details and line items. |
+| `PUT /api/invoices/<id>` | `PUT` | Updates an existing invoice. |
+| `PATCH /api/invoices/<id>/status` | `PATCH` | Updates status (`draft`, `sent`, `paid`, `overdue`, `void`). |
+| `POST /api/invoices/<id>/duplicate`| `POST` | Clones an invoice with a new invoice number in draft status. |
+| `DELETE /api/invoices/<id>` | `DELETE`| Deletes an invoice and cascades to line items. |
+| `GET /api/invoices/<id>/pdf` | `GET` | Streams the vector PDF directly to the browser. |
+| `GET /api/invoices/senders` | `GET` | Lists all sender profiles. |
+| `POST /api/invoices/senders` | `POST` | Creates a sender profile. |
+| `GET /api/invoices/clients` | `GET` | Lists all clients. |
+| `POST /api/invoices/clients` | `POST` | Creates a new client profile. |
+| `GET /api/invoices/clients/<id>/presets` | `GET`| Retrieves saved service presets for a client. |
+| `POST /api/invoices/presets` | `POST` | Saves a new preset with line items, invoice details, and terms. |
+
+---
+
+## 🧪 Testing & Quality Assurance
+
+All test suites are organized into dedicated `tests/` directories within each module:
+
+```
+├── InvoiceGenerator/tests/
+│   ├── test_invoices.py       # DB, CRUD, calculations, and vector PDF bytes
+│   └── test_integration.py    # Flask route registration and OpenAPI verification
+├── ToDo/tests/
+│   └── test_todo.py           # Task/category CRUD, reordering, and Monday auto-archive
+├── TutoringCalculator/tests/
+│   └── test_tutoring_calc.py  # Hours parsing, calendar scraping, and safeguards
+└── Monitoring/tests/
+    └── test_monitoring.py     # Hardware telemetry collectors and diagnostics
+```
+
+### Run All Tests Across the Repository
+```bash
+# Discover and run all 36+ automated tests
+.venv/bin/python -m unittest discover -s . -p "test_*.py"
+```
+
+### Run Tests for a Specific Module
+```bash
+# Invoice Generator
+.venv/bin/python -m unittest discover -s InvoiceGenerator/tests -p "test_*.py"
+
+# To-Do Board
+.venv/bin/python -m unittest discover -s ToDo/tests -p "test_*.py"
+
+# Tutoring Calculator
+.venv/bin/python -m unittest discover -s TutoringCalculator/tests -p "test_*.py"
+
+# Monitoring
+.venv/bin/python -m unittest discover -s Monitoring/tests -p "test_*.py"
+```
+
+---
+
 ## 📚 Project Documentation
 
 Explore the following modular documentation files for end-to-end setup and architecture details:
@@ -180,9 +299,13 @@ Explore the following modular documentation files for end-to-end setup and archi
 
 ## 🔗 Internal Module References
 
-For module-specific developer documentation and code architecture, refer to:
-* **[Monitoring Module Documentation](Monitoring/README.md)** — Deep dive into the telemetry package, collector functions, and UI template.
-* **[Tutoring Calculator Documentation](TutoringCalculator/README.md)** — Internal script details, API helpers, and logging structure.
+Each package maintains its own internal technical README:
+* **[Invoice Generator Documentation](InvoiceGenerator/README.md)** — Vector PDF Platypus architecture, database schema, presets, and route reference.
+* **[To-Do Module Documentation](ToDo/README.md)** — Category schema, Eisenhower sorting, drag-and-drop indexing, and the Monday 2 AM auto-archive daemon.
+* **[Tutoring Calculator Documentation](TutoringCalculator/README.md)** — Google Drive/Sheets integration, calendar hour parsing, Twilio SMS safeguards, and CLI scripts.
+* **[Monitoring Module Documentation](Monitoring/README.md)** — Telemetry package, collector functions, process table sort controls, and UI templates.
+* **[Swagger & OpenAPI Documentation](swagger/README.md)** — OpenAPI 3.0 specification generator, Swagger UI console, and schema definitions.
+* **[Index & Security Documentation](index/README.md)** — HTTP Basic Authentication middleware, secret credentials resolution, and path whitelist rules.
 
 ---
 
@@ -199,6 +322,8 @@ Configuration parameters and secret credentials are kept strictly isolated:
    * Client secret credentials file downloaded from Google Cloud Console.
 4. **`TutoringCalculator/keys/token.pickle`** *(Ignored by Git)*:
    * Serialized Google OAuth 2.0 offline access token and auto-refresh token.
+5. **`config/todo.db` & `config/invoices.db`** *(Ignored by Git)*:
+   * Local SQLite Write-Ahead Logging databases for task management and invoice tracking.
 
 ---
 
@@ -227,6 +352,8 @@ python3 app.py
 * Open `http://localhost:5000/docs` to view the interactive Swagger UI.
 * Open `http://localhost:5000/monitoring` to view the real-time hardware telemetry dashboard.
 * Open `http://localhost:5000/tutoring` to view the interactive Crossroads Tutoring Console.
+* Open `http://localhost:5000/todo` to view the interactive To-Do Board.
+* Open `http://localhost:5000/invoices` to view the Vector Invoice Generator.
 
 ---
 
@@ -253,7 +380,6 @@ On `flash-server`, schedule the automated billing workflow via `crontab -e`:
 # 2. Text Message Dispatch Guarded by Approval: Monday 12:00 PM (Noon) PST
 0 12 * * 1 curl -sS -u "$USERNAME:$PASSWORD" -X POST https://dev.stepheng753.com/tutoring/run-send-texts >> /home/flash-server/Development/BackendServer/TutoringCalculator/logs/cron.log 2>&1
 ```
-*(Or target the local socket directly: `curl -sS -u "$USERNAME:$PASSWORD" --unix-socket /tmp/dev_stepheng753_com_api.sock -X POST http://localhost/tutoring/run-calc ...`)*
 
 ---
 

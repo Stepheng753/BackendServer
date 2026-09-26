@@ -1,7 +1,14 @@
 import io
 import unittest
 import os
+import sys
 import json
+
+# Add repo root to sys.path
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+if BASE_DIR not in sys.path:
+    sys.path.insert(0, BASE_DIR)
+
 from flask import Flask
 from InvoiceGenerator.db import (
     init_db,

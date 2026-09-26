@@ -198,6 +198,21 @@ Monitoring/
 │   └── service_checker.py     # Concurrent multi-threaded socket probes & diagnostics
 ├── templates/
 │   └── monitoring.html        # Swagger-styled HTML dashboard with dark mode & modals
+├── tests/
+│   ├── __init__.py            # Test package marker
+│   └── test_monitoring.py     # Unit tests for collectors, processes, and diagnostics
 └── README.md                  # Package technical reference
 ```
+
+---
+
+## 6. Automated Testing
+
+Run all unit tests for the Monitoring module:
+
+```bash
+# From repository root
+.venv/bin/python -m unittest discover -s Monitoring/tests -p "test_*.py"
+```
+
 
