@@ -381,6 +381,12 @@ On `flash-server`, schedule the automated billing workflow via `crontab -e`:
 0 12 * * 1 curl -sS -u "$USERNAME:$PASSWORD" -X POST https://dev.stepheng753.com/tutoring/run-send-texts >> /home/flash-server/Development/BackendServer/TutoringCalculator/logs/cron.log 2>&1
 ```
 
+### Daily Recurring Invoices Crontab
+Schedule the recurring invoices generator to check and generate scheduled invoices every day at 5:00 AM PST:
+```bash
+0 5 * * * curl -sS -u "$USERNAME:$PASSWORD" -X POST https://dev.stepheng753.com/api/invoices/recurring/run >> /home/flash-server/Development/BackendServer/InvoiceGenerator/logs/cron.log 2>&1
+```
+
 ---
 
 <div align="center">

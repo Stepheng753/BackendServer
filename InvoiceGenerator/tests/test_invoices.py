@@ -25,6 +25,8 @@ from InvoiceGenerator.db import (
     delete_client,
     add_preset,
     get_presets_by_client,
+    get_recurring_presets,
+    process_recurring_invoices,
     delete_preset,
     generate_next_invoice_number,
     create_invoice,
@@ -247,6 +249,95 @@ class InvoiceGeneratorTestCase(unittest.TestCase):
         self.assertIn(b"+1 (858) 555-1234", resp.data)
         self.assertIn(b"Preview item", resp.data)
         delete_invoice(inv_id)
+
+    def test_06_recurring_invoices_and_cron_endpoint(self):
+        # 1. Setup client
+        client_id = add_client("Recurring Test Corp", "recurring@corp.com", "8585559999", "123 Recurring Way")
+
+        # 2. Add monthly recurring preset (e.g. 1st of every month)
+        preset_id = add_preset(
+            client_id=client_id,
+            preset_name="Monthly Retainer 1st",
+            default_due_days=14,
+            items=[{"description": "Monthly Retainer", "quantity": 1, "unit_price": 1200.0}],
+            notes="Recurring monthly invoice",
+            is_recurring=1,
+            recurrence_type="monthly",
+            recurrence_day=1,
+            recurrence_start_date="2026-10-01",
+            auto_status="draft"
+        )
+        self.assertGreater(preset_id, 0)
+
+        # 3. Add biweekly recurring preset (Every other Friday starting 2026-10-02)
+        # 2026-10-02 is a Friday
+        biweekly_id = add_preset(
+            client_id=client_id,
+            preset_name="Biweekly Tutoring",
+            default_due_days=7,
+            items=[{"description": "Biweekly Lessons", "quantity": 4, "unit_price": 80.0}],
+            is_recurring=1,
+            recurrence_type="biweekly",
+            recurrence_day=4, # Friday
+            recurrence_start_date="2026-10-02",
+            auto_status="sent"
+        )
+        self.assertGreater(biweekly_id, 0)
+
+        # 4. Verify get_recurring_presets
+        recurring_presets = get_recurring_presets()
+        self.assertTrue(any(p["id"] == preset_id for p in recurring_presets))
+        self.assertTrue(any(p["id"] == biweekly_id for p in recurring_presets))
+
+        # 5. Process recurring invoices on a day that should NOT match (2026-10-03 = Saturday)
+        result_off_day = process_recurring_invoices(target_date="2026-10-03")
+        self.assertTrue(result_off_day["success"])
+        self.assertEqual(result_off_day["created_count"], 0)
+
+        # 6. Process recurring invoices on 2026-10-01 (1st of month - matches monthly preset)
+        result_first = process_recurring_invoices(target_date="2026-10-01")
+        self.assertTrue(result_first["success"])
+        self.assertEqual(result_first["created_count"], 1)
+        created_monthly = result_first["invoices"][0]
+        self.assertEqual(created_monthly["preset_name"], "Monthly Retainer 1st")
+        self.assertEqual(created_monthly["issue_date"], "2026-10-01")
+        self.assertEqual(created_monthly["status"], "draft")
+
+        # 7. Running again on the same day should NOT duplicate (idempotency check)
+        result_dup = process_recurring_invoices(target_date="2026-10-01")
+        self.assertEqual(result_dup["created_count"], 0)
+
+        # 8. Test Bi-weekly on first recurrence date 2026-10-02 (Friday)
+        result_biweekly_1 = process_recurring_invoices(target_date="2026-10-02")
+        self.assertEqual(result_biweekly_1["created_count"], 1)
+        self.assertEqual(result_biweekly_1["invoices"][0]["preset_name"], "Biweekly Tutoring")
+        self.assertEqual(result_biweekly_1["invoices"][0]["status"], "sent")
+
+        # Next Friday (2026-10-09) is the "off" week for bi-weekly: should NOT trigger
+        result_biweekly_off = process_recurring_invoices(target_date="2026-10-09")
+        self.assertEqual(result_biweekly_off["created_count"], 0)
+
+        # Second Friday (2026-10-16, 14 days later): SHOULD trigger
+        result_biweekly_2 = process_recurring_invoices(target_date="2026-10-16")
+        self.assertEqual(result_biweekly_2["created_count"], 1)
+
+        # 9. Test API endpoint GET /api/invoices/recurring
+        resp_list = self.client.get("/api/invoices/recurring")
+        self.assertEqual(resp_list.status_code, 200)
+        self.assertTrue(any(p["id"] == preset_id for p in resp_list.get_json()))
+
+        # 10. Test API endpoint POST /api/invoices/recurring/run with query date
+        resp_run = self.client.post("/api/invoices/recurring/run?date=2026-10-01")
+        self.assertEqual(resp_run.status_code, 200)
+        data_run = resp_run.get_json()
+        self.assertTrue(data_run["success"])
+
+        # Clean up created invoices and presets
+        for inv_info in result_first["invoices"] + result_biweekly_1["invoices"] + result_biweekly_2["invoices"]:
+            delete_invoice(inv_info["id"])
+        delete_preset(preset_id)
+        delete_preset(biweekly_id)
+        delete_client(client_id)
 
 
 if __name__ == "__main__":

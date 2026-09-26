@@ -1101,7 +1101,7 @@ OPENAPI_SPEC = {
             "post": {
                 "tags": ["Invoices"],
                 "summary": "Create Client Preset",
-                "description": "Saves recurring line items as a template for a client.",
+                "description": "Saves reusable line items and optional recurring schedule as a template for a client.",
                 "requestBody": {
                     "content": {
                         "application/json": {
@@ -1113,7 +1113,16 @@ OPENAPI_SPEC = {
                                     "preset_name": {"type": "string"},
                                     "default_due_days": {"type": "integer"},
                                     "items": {"type": "array", "items": {"type": "object"}},
-                                    "notes": {"type": "string"}
+                                    "notes": {"type": "string"},
+                                    "discount_amount": {"type": "number"},
+                                    "tax_rate": {"type": "number"},
+                                    "payment_instructions": {"type": "string"},
+                                    "is_recurring": {"type": "boolean"},
+                                    "recurrence_type": {"type": "string", "enum": ["monthly", "biweekly", "weekly"]},
+                                    "recurrence_day": {"type": "integer"},
+                                    "recurrence_start_date": {"type": "string"},
+                                    "sender_id": {"type": "integer"},
+                                    "auto_status": {"type": "string", "enum": ["draft", "sent"]}
                                 }
                             }
                         }
@@ -1121,6 +1130,29 @@ OPENAPI_SPEC = {
                 },
                 "responses": {
                     "201": {"description": "Preset created."}
+                }
+            }
+        },
+        "/api/invoices/recurring": {
+            "get": {
+                "tags": ["Invoices"],
+                "summary": "List Recurring Presets",
+                "description": "Lists all active recurring invoice templates and rules across clients.",
+                "responses": {
+                    "200": {"description": "List of active recurring templates."}
+                }
+            }
+        },
+        "/api/invoices/recurring/run": {
+            "post": {
+                "tags": ["Invoices"],
+                "summary": "Trigger Daily Recurring Invoices Check",
+                "description": "Evaluates recurring preset schedules for a given date (defaults to today in PST) and generates invoices.",
+                "parameters": [
+                    {"name": "date", "in": "query", "required": False, "schema": {"type": "string"}, "description": "Target date (YYYY-MM-DD) to evaluate against."}
+                ],
+                "responses": {
+                    "200": {"description": "Recurring run summary and list of created invoices."}
                 }
             }
         },

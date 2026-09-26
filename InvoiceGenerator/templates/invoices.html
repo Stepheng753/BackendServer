@@ -268,7 +268,7 @@
     }
 
     .filter-select {
-      padding: 9px 36px 9px 12px;
+      padding: 9px 38px 9px 12px;
       font-size: 0.88rem;
       border: 1px solid var(--input);
       border-radius: var(--radius);
@@ -558,9 +558,10 @@
       transition: border-color 0.15s ease;
     }
 
+    select,
     .form-select {
       width: 100%;
-      padding: 9px 36px 9px 12px;
+      padding: 9px 38px 9px 12px;
       font-size: 0.88rem;
       border: 1px solid var(--input);
       border-radius: var(--radius);
@@ -581,13 +582,20 @@
 
     .form-input:focus,
     .form-textarea:focus,
+    select:focus,
     .form-select:focus {
       border-color: var(--primary-blue);
     }
 
     input[type="date"]::-webkit-calendar-picker-indicator {
       cursor: pointer;
-      margin-right: 4px;
+      margin-right: 8px;
+    }
+
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      cursor: pointer;
+      margin-right: 6px;
     }
 
     .form-row-2 {
@@ -950,6 +958,14 @@
           <button id="btn-reset-filters" class="btn btn-secondary btn-sm" title="Clear all filters">
             Reset
           </button>
+          <button id="btn-run-recurring" class="btn btn-secondary btn-sm" title="Check & generate recurring invoices due today" style="display: inline-flex; align-items: center; gap: 5px;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="23 4 23 10 17 10"></polyline>
+              <polyline points="1 20 1 14 7 14"></polyline>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg>
+            Run Recurring Check
+          </button>
         </div>
 
         <div class="filter-row">
@@ -1044,6 +1060,7 @@
               </div>
               <div style="display: flex; align-items: flex-end; gap: 8px;">
                 <button type="button" id="btn-apply-preset" class="btn btn-secondary btn-sm">Apply Preset</button>
+                <button type="button" id="btn-delete-preset" class="btn btn-secondary btn-sm" style="color: var(--danger-color, #ef4444); border-color: rgba(239, 68, 68, 0.25);" title="Delete selected preset">Delete</button>
                 <button type="button" id="btn-save-as-preset" class="btn btn-secondary btn-sm" title="Save current line items as template for this client">+ Save as Preset</button>
               </div>
             </div>
@@ -1382,12 +1399,34 @@
                 <select id="modal-preset-recurrence-day-month" class="form-select">
                   <option value="1" selected>Every 1st of the month</option>
                   <option value="2">Every 2nd of the month</option>
+                  <option value="3">Every 3rd of the month</option>
+                  <option value="4">Every 4th of the month</option>
                   <option value="5">Every 5th of the month</option>
+                  <option value="6">Every 6th of the month</option>
+                  <option value="7">Every 7th of the month</option>
+                  <option value="8">Every 8th of the month</option>
+                  <option value="9">Every 9th of the month</option>
                   <option value="10">Every 10th of the month</option>
+                  <option value="11">Every 11th of the month</option>
+                  <option value="12">Every 12th of the month</option>
+                  <option value="13">Every 13th of the month</option>
+                  <option value="14">Every 14th of the month</option>
                   <option value="15">Every 15th of the month</option>
+                  <option value="16">Every 16th of the month</option>
+                  <option value="17">Every 17th of the month</option>
+                  <option value="18">Every 18th of the month</option>
+                  <option value="19">Every 19th of the month</option>
                   <option value="20">Every 20th of the month</option>
+                  <option value="21">Every 21st of the month</option>
+                  <option value="22">Every 22nd of the month</option>
+                  <option value="23">Every 23rd of the month</option>
+                  <option value="24">Every 24th of the month</option>
                   <option value="25">Every 25th of the month</option>
+                  <option value="26">Every 26th of the month</option>
+                  <option value="27">Every 27th of the month</option>
                   <option value="28">Every 28th of the month</option>
+                  <option value="29">Every 29th of the month</option>
+                  <option value="30">Every 30th of the month</option>
                   <option value="31">Last day of the month</option>
                 </select>
                 <!-- For Weekly / Bi-weekly -->
@@ -1703,7 +1742,20 @@
             presets.forEach(p => {
               const opt = document.createElement('option');
               opt.value = JSON.stringify(p);
-              opt.textContent = `${p.preset_name} (${p.items ? p.items.length : 0} items)`;
+              let recBadge = '';
+              if (p.is_recurring) {
+                if (p.recurrence_type === 'monthly') {
+                  const d = parseInt(p.recurrence_day) || 1;
+                  recBadge = d === 31 ? ' [🔁 Monthly Last Day]' : ` [🔁 Monthly on the ${d}${getOrdinalSuffix(d)}]`;
+                } else if (p.recurrence_type === 'biweekly') {
+                  const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                  recBadge = ` [🔁 Every Other ${dayNames[p.recurrence_day] || 'Fri'}]`;
+                } else if (p.recurrence_type === 'weekly') {
+                  const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                  recBadge = ` [🔁 Every ${dayNames[p.recurrence_day] || 'Fri'}]`;
+                }
+              }
+              opt.textContent = `${p.preset_name}${recBadge} (${p.items ? p.items.length : 0} items)`;
               presetSelect.appendChild(opt);
             });
             presetBar.style.display = 'flex';
@@ -1714,6 +1766,17 @@
         } catch (e) {
           console.error('Error fetching client presets:', e);
         }
+      }
+    }
+
+    function getOrdinalSuffix(n) {
+      const num = parseInt(n) || 1;
+      if (num > 3 && num < 21) return 'th';
+      switch (num % 10) {
+        case 1:  return 'st';
+        case 2:  return 'nd';
+        case 3:  return 'rd';
+        default: return 'th';
       }
     }
 
@@ -1740,6 +1803,13 @@
         if (p.notes) {
           document.getElementById('builder-notes').value = p.notes;
         }
+        if (p.sender_id) {
+          const senderSelect = document.getElementById('builder-sender-id');
+          if (senderSelect && Array.from(senderSelect.options).some(o => o.value == p.sender_id)) {
+            senderSelect.value = p.sender_id;
+            updateSenderPreview();
+          }
+        }
         if (p.items && p.items.length > 0) {
           clearItemRows();
           p.items.forEach(it => addItemRow(it.description, it.quantity, it.unit_price));
@@ -1750,6 +1820,30 @@
         console.error('Failed to parse preset:', e);
       }
     });
+
+    function updateRecurrenceInputs() {
+      const type = document.getElementById('modal-preset-recurrence-type').value;
+      const dayMonthSelect = document.getElementById('modal-preset-recurrence-day-month');
+      const dayWeekSelect = document.getElementById('modal-preset-recurrence-day-week');
+      if (type === 'monthly') {
+        dayMonthSelect.style.display = 'block';
+        dayWeekSelect.style.display = 'none';
+      } else {
+        dayMonthSelect.style.display = 'none';
+        dayWeekSelect.style.display = 'block';
+        const isBiweekly = type === 'biweekly';
+        const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        Array.from(dayWeekSelect.options).forEach((opt, idx) => {
+          opt.textContent = isBiweekly ? `Every other ${dayNames[idx]}` : `Every ${dayNames[idx]}`;
+        });
+      }
+    }
+
+    document.getElementById('modal-preset-is-recurring').addEventListener('change', (e) => {
+      document.getElementById('modal-preset-recurring-options').style.display = e.target.checked ? 'block' : 'none';
+    });
+
+    document.getElementById('modal-preset-recurrence-type').addEventListener('change', updateRecurrenceInputs);
 
     // Save as Preset button
     document.getElementById('btn-save-as-preset').addEventListener('click', () => {
@@ -1777,7 +1871,107 @@
       document.getElementById('modal-preset-payment').value = document.getElementById('builder-payment-instructions').value || '';
       document.getElementById('modal-preset-notes').value = document.getElementById('builder-notes').value || '';
 
+      // Check if a preset is currently chosen in builder-client-presets to prefill
+      const presetSelectVal = document.getElementById('builder-client-presets').value;
+      let curP = null;
+      if (presetSelectVal) {
+        try { curP = JSON.parse(presetSelectVal); } catch(e){}
+      }
+
+      if (curP) {
+        document.getElementById('modal-preset-name').value = curP.preset_name || '';
+        document.getElementById('modal-preset-due').value = curP.default_due_days || diffDays;
+        if (curP.is_recurring) {
+          document.getElementById('modal-preset-is-recurring').checked = true;
+          document.getElementById('modal-preset-recurring-options').style.display = 'block';
+          document.getElementById('modal-preset-recurrence-type').value = curP.recurrence_type || 'monthly';
+          updateRecurrenceInputs();
+          if (curP.recurrence_type === 'monthly') {
+            document.getElementById('modal-preset-recurrence-day-month').value = String(curP.recurrence_day || 1);
+          } else {
+            document.getElementById('modal-preset-recurrence-day-week').value = String(curP.recurrence_day || 4);
+          }
+          document.getElementById('modal-preset-start-date').value = curP.recurrence_start_date || document.getElementById('builder-issue-date').value || new Date().toISOString().split('T')[0];
+          document.getElementById('modal-preset-auto-status').value = curP.auto_status || 'draft';
+        } else {
+          document.getElementById('modal-preset-is-recurring').checked = false;
+          document.getElementById('modal-preset-recurring-options').style.display = 'none';
+          document.getElementById('modal-preset-recurrence-type').value = 'monthly';
+          updateRecurrenceInputs();
+          document.getElementById('modal-preset-recurrence-day-month').value = '1';
+          document.getElementById('modal-preset-recurrence-day-week').value = '4';
+          document.getElementById('modal-preset-start-date').value = document.getElementById('builder-issue-date').value || new Date().toISOString().split('T')[0];
+          document.getElementById('modal-preset-auto-status').value = 'draft';
+        }
+      } else {
+        document.getElementById('modal-preset-is-recurring').checked = false;
+        document.getElementById('modal-preset-recurring-options').style.display = 'none';
+        document.getElementById('modal-preset-recurrence-type').value = 'monthly';
+        updateRecurrenceInputs();
+        document.getElementById('modal-preset-recurrence-day-month').value = '1';
+        document.getElementById('modal-preset-recurrence-day-week').value = '4';
+        document.getElementById('modal-preset-start-date').value = document.getElementById('builder-issue-date').value || new Date().toISOString().split('T')[0];
+        document.getElementById('modal-preset-auto-status').value = 'draft';
+      }
+
       openModal('modal-preset');
+    });
+
+    // Delete Preset button
+    document.getElementById('btn-delete-preset').addEventListener('click', async () => {
+      const presetSelect = document.getElementById('builder-client-presets');
+      const val = presetSelect.value;
+      if (!val) {
+        showToast('Please select a preset from the dropdown first to delete it.', 'error');
+        return;
+      }
+      try {
+        const p = JSON.parse(val);
+        if (!confirm(`Are you sure you want to delete the preset "${p.preset_name}"?`)) return;
+        const res = await fetch(`/api/invoices/presets/${p.id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+          showToast(`Preset "${p.preset_name}" deleted.`);
+          handleClientSelectChange();
+        } else {
+          showToast(data.error || 'Failed to delete preset', 'error');
+        }
+      } catch (err) {
+        showToast('Error deleting preset', 'error');
+      }
+    });
+
+    // Run Recurring Check button
+    document.getElementById('btn-run-recurring').addEventListener('click', async () => {
+      const btn = document.getElementById('btn-run-recurring');
+      const originalHtml = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = `
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="animation: spin 1s linear infinite;">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg> Checking...
+      `;
+      try {
+        const res = await fetch('/api/invoices/recurring/run', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          if (data.created_count > 0) {
+            showToast(`Generated ${data.created_count} recurring invoice(s) for ${data.date}!`);
+            loadInvoices();
+            loadSummary();
+          } else {
+            showToast(`Recurring check ran for ${data.date}: No scheduled invoices due (${data.active_recurring_presets} active templates).`);
+          }
+        } else {
+          showToast(data.error || 'Failed to execute recurring check', 'error');
+        }
+      } catch (e) {
+        showToast('Error executing recurring invoices check', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
+      }
     });
 
     // INVOICES TABLE RENDERING
@@ -2415,6 +2609,15 @@
         }
       });
 
+      const isRecurring = document.getElementById('modal-preset-is-recurring').checked;
+      const recType = document.getElementById('modal-preset-recurrence-type').value;
+      const recDay = recType === 'monthly'
+        ? parseInt(document.getElementById('modal-preset-recurrence-day-month').value) || 1
+        : parseInt(document.getElementById('modal-preset-recurrence-day-week').value) || 0;
+      const recStartDate = document.getElementById('modal-preset-start-date').value || '';
+      const autoStatus = document.getElementById('modal-preset-auto-status').value || 'draft';
+      const senderId = document.getElementById('builder-sender-id').value;
+
       const payload = {
         client_id: parseInt(clientId),
         preset_name: document.getElementById('modal-preset-name').value.trim(),
@@ -2423,8 +2626,16 @@
         tax_rate: parseFloat(document.getElementById('modal-preset-tax-rate').value) || 0,
         payment_instructions: document.getElementById('modal-preset-payment').value.trim(),
         notes: document.getElementById('modal-preset-notes').value.trim(),
-        items: items
+        items: items,
+        is_recurring: isRecurring,
+        recurrence_type: recType,
+        recurrence_day: recDay,
+        recurrence_start_date: recStartDate,
+        auto_status: autoStatus
       };
+      if (senderId) {
+        payload.sender_id = parseInt(senderId);
+      }
 
       try {
         const res = await fetch('/api/invoices/presets', {
@@ -2434,7 +2645,7 @@
         });
         const data = await res.json();
         if (data.success) {
-          showToast('Preset saved with invoice details and remittance/terms!');
+          showToast(isRecurring ? `Recurring schedule saved for "${payload.preset_name}"!` : `Preset "${payload.preset_name}" saved!`);
           closeModal('modal-preset');
           handleClientSelectChange();
         } else {

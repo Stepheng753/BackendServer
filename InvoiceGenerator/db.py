@@ -529,8 +529,9 @@ def process_recurring_invoices(target_date=None):
                 # Every other week on rec_day weekday starting from start_date
                 if eval_date.weekday() == rec_day:
                     if start_date:
-                        delta = (eval_date - start_date).days
-                        if delta >= 0 and delta % 14 == 0:
+                        days_ahead = (rec_day - start_date.weekday()) % 7
+                        first_due = start_date + timedelta(days=days_ahead)
+                        if eval_date >= first_due and (eval_date - first_due).days % 14 == 0:
                             is_due = True
                     else:
                         is_due = True

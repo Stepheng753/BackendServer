@@ -52,38 +52,69 @@ All endpoints require HTTP Basic Authentication.
 | `PUT /api/invoices/clients/<id>` | `PUT` | Updates an existing client profile. |
 | `DELETE /api/invoices/clients/<id>` | `DELETE`| Deletes a client profile. |
 | `GET /api/invoices/clients/<id>/presets` | `GET` | Retrieves saved service presets for a specific client. |
-| `POST /api/invoices/presets` | `POST` | Creates a preset saving line items, invoice details, and remittance/terms. |
+| `POST /api/invoices/presets` | `POST` | Creates a preset saving line items, invoice details, remittance/terms, and recurring schedule. |
 | `DELETE /api/invoices/presets/<id>` | `DELETE`| Deletes a saved preset. |
+| `GET /api/invoices/recurring` | `GET` | Lists all active recurring presets across clients. |
+| `POST /api/invoices/recurring/run` | `POST` | Daily cron endpoint: evaluates recurring presets for a target date (defaults to today) and auto-generates invoices. |
 
 ---
 
-## 3. Database Schema
+## 3. Recurring Invoices & Daily Crontab
+
+Invoices can be automatically generated on a recurring schedule based on saved presets:
+* **Monthly**: Auto-generates on a specific calendar day (e.g. 1st of every month, 15th, or last day).
+* **Weekly**: Auto-generates every week on the specified weekday (e.g. Every Friday).
+* **Bi-Weekly**: Auto-generates every other week starting from a reference date (e.g. Every other Friday starting 2026-10-02).
+* **Sequential Numbering**: Auto-generated invoices receive the next sequential number in the active year (`INV-YYYY-XXX`).
+* **Idempotency Safeguard**: Each recurring preset records `last_generated_date` to ensure invoices are never duplicate-generated if the cron triggers multiple times in the same day.
+
+### Crontab Setup on Linux Production Server (`flash-server`)
+
+On `flash-server` (or local crontab), schedule the recurring invoice check to run every morning at 5:00 AM PST via `crontab -e`:
+
+```bash
+0 5 * * * curl -sS -u "$USERNAME:$PASSWORD" -X POST https://dev.stepheng753.com/api/invoices/recurring/run >> /home/flash-server/Development/BackendServer/InvoiceGenerator/logs/cron.log 2>&1
+```
+
+*Or via unix socket / localhost if running internally:*
+```bash
+0 5 * * * curl -sS -u "$USERNAME:$PASSWORD" -X POST http://localhost:5000/api/invoices/recurring/run >> /home/flash-server/Development/BackendServer/InvoiceGenerator/logs/cron.log 2>&1
+```
+
+Manual trigger / testing for a specific date:
+```bash
+curl -u "$USERNAME:$PASSWORD" -X POST "https://dev.stepheng753.com/api/invoices/recurring/run?date=2026-10-01"
+```
+
+## 4. Database Schema
 
 The SQLite database (`config/invoices.db`) comprises 5 relational tables:
 
 ```
-  ┌───────────────────────┐           ┌───────────────────────┐
-  │    sender_profiles    │           │        clients        │
-  ├───────────────────────┤           ├───────────────────────┤
-  │ id (PK)               │           │ id (PK)               │
-  │ name, address, email  │           │ name, address, email  │
-  │ phone, website        │           │ phone                 │
-  │ is_default (INTEGER)  │           └───────────┬───────────┘
-  └───────────────────────┘                       │ 1:N
-                                                  ▼
-                                      ┌───────────────────────┐
-                                      │    client_presets     │
-                                      ├───────────────────────┤
-                                      │ id (PK)               │
-                                      │ client_id (FK)        │
-                                      │ preset_name           │
-                                      │ default_due_days      │
-                                      │ discount_amount       │
-                                      │ tax_rate              │
-                                      │ payment_instructions  │
-                                      │ notes                 │
-                                      │ items_json            │
-                                      └───────────────────────┘
+  ┌───────────────────────┐           ┌──────────────────────────────────────────┐
+  │    sender_profiles    │           │                 clients                  │
+  ├───────────────────────┤           ├──────────────────────────────────────────┤
+  │ id (PK)               │           │ id (PK)                                  │
+  │ name, address, email  │           │ name, address, email                     │
+  │ phone, website        │           │ phone                                    │
+  │ is_default (INTEGER)  │           └────────────────────┬─────────────────────┘
+  └───────────────────────┘                                │ 1:N
+                                                           ▼
+                                      ┌──────────────────────────────────────────┐
+                                      │              client_presets              │
+                                      ├──────────────────────────────────────────┤
+                                      │ id (PK)                                  │
+                                      │ client_id (FK), sender_id (FK)           │
+                                      │ preset_name                              │
+                                      │ default_due_days, items_json             │
+                                      │ discount_amount, tax_rate                │
+                                      │ payment_instructions, notes              │
+                                      │ is_recurring (0 | 1)                     │
+                                      │ recurrence_type ('monthly'|'biweekly'...)│
+                                      │ recurrence_day, recurrence_start_date    │
+                                      │ auto_status ('draft' | 'sent')           │
+                                      │ last_generated_date                      │
+                                      └──────────────────────────────────────────┘
 
   ┌───────────────────────────────────────────────────────────┐
   │                         invoices                          │
@@ -111,7 +142,7 @@ The SQLite database (`config/invoices.db`) comprises 5 relational tables:
 
 ---
 
-## 4. Package Structure
+## 5. Package Structure
 
 ```
 InvoiceGenerator/
@@ -126,12 +157,13 @@ InvoiceGenerator/
 │   ├── __init__.py            # Test package marker
 │   ├── test_invoices.py       # Unit tests for CRUD, DB, and vector PDF bytes
 │   └── test_integration.py    # Flask route integration & OpenAPI validation
+├── logs/                      # Directory for cron execution logs
 └── README.md                  # Module technical reference
 ```
 
 ---
 
-## 5. Automated Testing
+## 6. Automated Testing
 
 Run all unit and integration tests for the Invoice Generator:
 
