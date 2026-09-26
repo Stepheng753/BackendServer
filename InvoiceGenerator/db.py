@@ -1,8 +1,21 @@
 import json
 import os
+import re
 import sqlite3
 from datetime import datetime
 from .config import DB_PATH, APP_TIMEZONE, DEFAULT_SENDER, DEFAULT_DUE_DAYS
+
+
+def format_phone(phone):
+    """Formats phone number to +1 (XXX) XXX-XXXX if 10 or 11 digits."""
+    if not phone:
+        return ""
+    digits = re.sub(r"\D", "", str(phone))
+    if len(digits) == 11 and digits.startswith("1"):
+        digits = digits[1:]
+    if len(digits) == 10:
+        return f"+1 ({digits[:3]}) {digits[3:6]}-{digits[6:]}"
+    return str(phone).strip()
 
 
 def get_connection():
@@ -61,9 +74,22 @@ def init_db():
                 default_due_days INTEGER DEFAULT 14,
                 items_json TEXT NOT NULL,
                 notes TEXT,
+                discount_amount REAL DEFAULT 0.0,
+                tax_rate REAL DEFAULT 0.0,
+                payment_instructions TEXT DEFAULT '',
                 created_at TEXT NOT NULL
             );
         """)
+
+        # Ensure client_presets columns exist
+        cursor.execute("PRAGMA table_info(client_presets);")
+        preset_cols = [r["name"] for r in cursor.fetchall()]
+        if "discount_amount" not in preset_cols:
+            cursor.execute("ALTER TABLE client_presets ADD COLUMN discount_amount REAL DEFAULT 0.0;")
+        if "tax_rate" not in preset_cols:
+            cursor.execute("ALTER TABLE client_presets ADD COLUMN tax_rate REAL DEFAULT 0.0;")
+        if "payment_instructions" not in preset_cols:
+            cursor.execute("ALTER TABLE client_presets ADD COLUMN payment_instructions TEXT DEFAULT '';")
 
         # 4. Invoices
         cursor.execute("""
@@ -181,7 +207,7 @@ def add_sender(name, email="", phone="", address="", website="",
         """, (
             name.strip(),
             email.strip(),
-            phone.strip(),
+            format_phone(phone),
             address.strip(),
             website.strip(),
             payment_instructions.strip(),
@@ -217,7 +243,7 @@ def update_sender(sender_id, name, email="", phone="", address="", website="",
         """, (
             name.strip(),
             email.strip(),
-            phone.strip(),
+            format_phone(phone),
             address.strip(),
             website.strip(),
             payment_instructions.strip(),
@@ -281,7 +307,7 @@ def add_client(name, email="", phone="", address="", notes=""):
         """, (
             name.strip(),
             email.strip(),
-            phone.strip(),
+            format_phone(phone),
             address.strip(),
             notes.strip(),
             now_iso,
@@ -308,7 +334,7 @@ def update_client(client_id, name, email="", phone="", address="", notes=""):
         """, (
             name.strip(),
             email.strip(),
-            phone.strip(),
+            format_phone(phone),
             address.strip(),
             notes.strip(),
             now_iso,
@@ -352,8 +378,9 @@ def get_presets_by_client(client_id):
         return result
 
 
-def add_preset(client_id, preset_name, default_due_days=14, items=None, notes=""):
-    """Saves a recurring line-item preset for a client."""
+def add_preset(client_id, preset_name, default_due_days=14, items=None, notes="",
+               discount_amount=0.0, tax_rate=0.0, payment_instructions=""):
+    """Saves a recurring line-item preset for a client including invoice details, remittance, and terms."""
     if items is None:
         items = []
     now_iso = datetime.now(APP_TIMEZONE).isoformat()
@@ -362,14 +389,18 @@ def add_preset(client_id, preset_name, default_due_days=14, items=None, notes=""
         cursor = conn.cursor()
         cursor.execute("""
             INSERT INTO client_presets (
-                client_id, preset_name, default_due_days, items_json, notes, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?);
+                client_id, preset_name, default_due_days, items_json, notes,
+                discount_amount, tax_rate, payment_instructions, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
         """, (
             client_id,
             preset_name.strip(),
             int(default_due_days),
             items_json,
             notes.strip(),
+            float(discount_amount or 0.0),
+            float(tax_rate or 0.0),
+            (payment_instructions or "").strip(),
             now_iso
         ))
         conn.commit()
@@ -574,7 +605,7 @@ def create_invoice(data):
     sender_info_snapshot = json.dumps({
         "name": sender_row.get("name", ""),
         "email": sender_row.get("email", ""),
-        "phone": sender_row.get("phone", ""),
+        "phone": format_phone(sender_row.get("phone", "")),
         "address": sender_row.get("address", ""),
         "website": sender_row.get("website", ""),
         "payment_instructions": sender_row.get("payment_instructions", "")
@@ -588,7 +619,7 @@ def create_invoice(data):
 
     client_name = data.get("client_name") or (client_row.get("name") if client_row else "") or "Valued Client"
     client_email = data.get("client_email") or (client_row.get("email") if client_row else "")
-    client_phone = data.get("client_phone") or (client_row.get("phone") if client_row else "")
+    client_phone = format_phone(data.get("client_phone") or (client_row.get("phone") if client_row else ""))
     client_address = data.get("client_address") or (client_row.get("address") if client_row else "")
 
     client_info_snapshot = json.dumps({
@@ -717,7 +748,7 @@ def update_invoice(invoice_id, data):
     sender_info_snapshot = json.dumps({
         "name": sender_row.get("name", ""),
         "email": sender_row.get("email", ""),
-        "phone": sender_row.get("phone", ""),
+        "phone": format_phone(sender_row.get("phone", "")),
         "address": sender_row.get("address", ""),
         "website": sender_row.get("website", ""),
         "payment_instructions": sender_row.get("payment_instructions", "")
@@ -729,7 +760,7 @@ def update_invoice(invoice_id, data):
     client_info_snapshot = json.dumps({
         "name": client_name,
         "email": data.get("client_email") or (client_row["email"] if client_row else ""),
-        "phone": data.get("client_phone") or (client_row["phone"] if client_row else ""),
+        "phone": format_phone(data.get("client_phone") or (client_row["phone"] if client_row else "")),
         "address": data.get("client_address") or (client_row["address"] if client_row else "")
     })
 
@@ -912,53 +943,100 @@ def delete_invoice(invoice_id):
         return cursor.rowcount > 0
 
 
-def get_invoices_summary():
+def get_invoices_summary(status=None, client_id=None, sender_id=None, search=None,
+                         start_date=None, end_date=None):
     """
-    Computes dashboard summary statistics:
-    - Total Invoiced (non-void)
+    Computes dashboard summary statistics matching optional filter criteria:
+    - Total Invoiced (non-void, or void sum if status='void')
     - Outstanding (sent + overdue)
     - Paid (paid)
-    - Total Clients (count of distinct client records)
-    - Total Drafts
-    - Total Void
+    - Total Clients (count of distinct client records among filtered invoices)
     """
+    today_str = datetime.now(APP_TIMEZONE).strftime("%Y-%m-%d")
+
+    # Auto-flag overdue invoices first
+    with get_connection() as conn:
+        conn.execute("""
+            UPDATE invoices
+            SET status = 'overdue', updated_at = ?
+            WHERE status IN ('draft', 'sent') AND due_date < ?;
+        """, (datetime.now(APP_TIMEZONE).isoformat(), today_str))
+        conn.commit()
+
+    query = "SELECT * FROM invoices WHERE 1=1"
+    params = []
+
+    if status and status.lower() != "all":
+        query += " AND status = ?"
+        params.append(status.lower())
+
+    if client_id:
+        query += " AND client_id = ?"
+        params.append(int(client_id))
+
+    if sender_id:
+        query += " AND sender_id = ?"
+        params.append(int(sender_id))
+
+    if start_date:
+        query += " AND issue_date >= ?"
+        params.append(start_date)
+
+    if end_date:
+        query += " AND issue_date <= ?"
+        params.append(end_date)
+
+    if search:
+        search_term = f"%{search.strip()}%"
+        query += """ AND (
+            invoice_number LIKE ? OR
+            client_name_snapshot LIKE ? OR
+            sender_name_snapshot LIKE ? OR
+            notes LIKE ?
+        )"""
+        params.extend([search_term, search_term, search_term, search_term])
+
     with get_connection() as conn:
         cursor = conn.cursor()
+        cursor.execute(query, params)
+        rows = [dict(r) for r in cursor.fetchall()]
 
-        # Invoiced amounts by status
-        cursor.execute("""
-            SELECT status, SUM(total_amount) AS sum_total, COUNT(*) AS count
-            FROM invoices
-            GROUP BY status;
-        """)
-        rows = cursor.fetchall()
-        status_map = {r["status"]: {"total": r["sum_total"] or 0.0, "count": r["count"]} for r in rows}
+        total_invoiced = 0.0
+        outstanding = 0.0
+        paid = 0.0
+        drafts_count = 0
+        void_count = 0
+        clients_set = set()
 
-        total_invoiced = sum(
-            d["total"] for s, d in status_map.items() if s != "void"
-        )
-        outstanding = (
-            status_map.get("sent", {}).get("total", 0.0) +
-            status_map.get("overdue", {}).get("total", 0.0)
-        )
-        paid = status_map.get("paid", {}).get("total", 0.0)
-        drafts_count = status_map.get("draft", {}).get("count", 0)
-        void_count = status_map.get("void", {}).get("count", 0)
+        for inv in rows:
+            st = (inv.get("status") or "").lower()
+            amt = float(inv.get("total_amount") or 0.0)
 
-        # Count total clients
-        cursor.execute("SELECT COUNT(*) AS cnt FROM clients;")
-        total_clients = cursor.fetchone()["cnt"]
+            if st != "void":
+                total_invoiced += amt
+            else:
+                void_count += 1
 
-        # Count total invoices
-        cursor.execute("SELECT COUNT(*) AS cnt FROM invoices;")
-        total_invoices = cursor.fetchone()["cnt"]
+            if st in ("sent", "overdue"):
+                outstanding += amt
+            elif st == "paid":
+                paid += amt
+            elif st == "draft":
+                drafts_count += 1
+
+            c_key = inv.get("client_id") or (inv.get("client_name_snapshot") or "").strip().lower()
+            if c_key:
+                clients_set.add(c_key)
+
+        if status and status.lower() == "void":
+            total_invoiced = sum(float(inv.get("total_amount") or 0.0) for inv in rows)
 
         return {
             "total_invoiced": round(total_invoiced, 2),
             "outstanding": round(outstanding, 2),
             "paid": round(paid, 2),
-            "total_clients": total_clients,
-            "total_invoices": total_invoices,
+            "total_clients": len(clients_set),
+            "total_invoices": len(rows),
             "drafts_count": drafts_count,
             "void_count": void_count
         }

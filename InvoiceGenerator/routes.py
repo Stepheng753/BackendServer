@@ -24,7 +24,8 @@ from .db import (
     update_invoice_status,
     duplicate_invoice,
     delete_invoice,
-    get_invoices_summary
+    get_invoices_summary,
+    format_phone
 )
 from .pdf import generate_invoice_pdf
 
@@ -50,7 +51,13 @@ def invoice_preview_page(invoice_id):
     invoice = get_invoice_by_id(invoice_id)
     if not invoice:
         abort(404, description="Invoice not found.")
-    return render_template("invoice_print.html", invoice=invoice)
+
+    if invoice.get("sender_info") and invoice["sender_info"].get("phone"):
+        invoice["sender_info"]["formatted_phone"] = format_phone(invoice["sender_info"]["phone"])
+    if invoice.get("client_info") and invoice["client_info"].get("phone"):
+        invoice["client_info"]["formatted_phone"] = format_phone(invoice["client_info"]["phone"])
+
+    return render_template("invoice_print.html", invoice=invoice, items=invoice.get("items", []))
 
 
 # ---------------------------------------------------------------------------
@@ -59,8 +66,22 @@ def invoice_preview_page(invoice_id):
 
 @invoice_bp.route("/api/invoices/summary", methods=["GET"])
 def api_get_summary():
-    """Returns aggregated metrics for the dashboard summary cards."""
-    summary = get_invoices_summary()
+    """Returns aggregated metrics for the dashboard summary cards with optional filters."""
+    status = request.args.get("status")
+    client_id = request.args.get("client_id")
+    sender_id = request.args.get("sender_id")
+    search = request.args.get("search")
+    start_date = request.args.get("start_date")
+    end_date = request.args.get("end_date")
+
+    summary = get_invoices_summary(
+        status=status,
+        client_id=client_id,
+        sender_id=sender_id,
+        search=search,
+        start_date=start_date,
+        end_date=end_date
+    )
     return jsonify(summary)
 
 
@@ -245,7 +266,10 @@ def api_add_preset():
         preset_name=preset_name,
         default_due_days=data.get("default_due_days", 14),
         items=data.get("items", []),
-        notes=data.get("notes", "")
+        notes=data.get("notes", ""),
+        discount_amount=data.get("discount_amount", 0.0),
+        tax_rate=data.get("tax_rate", 0.0),
+        payment_instructions=data.get("payment_instructions", "")
     )
     return jsonify({"success": True, "preset_id": new_id}), 201
 
@@ -377,7 +401,10 @@ def api_download_pdf(invoice_id):
         abort(404, description="Invoice not found.")
 
     pdf_buffer = generate_invoice_pdf(invoice)
-    filename = f"{invoice.get('invoice_number', f'invoice_{invoice_id}')}.pdf"
+    inv_num = invoice.get("invoice_number", f"invoice_{invoice_id}")
+    client_name = invoice.get("client_name_snapshot", "Client")
+    safe_client = "".join(c for c in client_name if c.isalnum() or c in (" ", "-", "_")).strip()
+    filename = f"{inv_num} - {safe_client}.pdf" if safe_client else f"{inv_num}.pdf"
 
     return send_file(
         pdf_buffer,

@@ -488,6 +488,19 @@
       }
     }
 
+    /* CLIENTS & SENDERS EQUAL WIDTH GRID */
+    .entities-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    @media (max-width: 992px) {
+      .entities-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
     .form-card {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
@@ -1135,7 +1148,7 @@
          =================================================================== -->
     <div id="tab-entities" class="tab-pane" style="display: none;">
 
-      <div class="builder-grid">
+      <div class="entities-grid">
 
         <!-- LEFT: SENDER PROFILES (COMPANIES) -->
         <div>
@@ -1285,12 +1298,30 @@
           <label class="form-label">Preset Name*</label>
           <input type="text" id="modal-preset-name" class="form-input" required placeholder="e.g. Weekly 2hr Tutoring, Standard Retainer" />
         </div>
-        <div class="form-group">
-          <label class="form-label">Default Due Days</label>
-          <input type="number" id="modal-preset-due" class="form-input" value="14" min="0" />
+        <div class="form-row-3">
+          <div class="form-group">
+            <label class="form-label">Default Due Days</label>
+            <input type="number" id="modal-preset-due" class="form-input" value="14" min="0" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Discount ($)</label>
+            <input type="number" id="modal-preset-discount" class="form-input" value="0.00" min="0" step="0.01" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tax Rate (%)</label>
+            <input type="number" id="modal-preset-tax-rate" class="form-input" value="0.0" min="0" step="0.1" />
+          </div>
         </div>
-        <p style="font-size: 0.82rem; color: var(--text-muted);">
-          This will save the current line items as a reusable template for the selected client.
+        <div class="form-group">
+          <label class="form-label">Payment Instructions (Remittance)</label>
+          <textarea id="modal-preset-payment" class="form-textarea" rows="2" placeholder="Preset remittance instructions..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notes & Terms</label>
+          <textarea id="modal-preset-notes" class="form-textarea" rows="2" placeholder="Preset notes and terms..."></textarea>
+        </div>
+        <p style="font-size: 0.82rem; color: var(--text-muted); margin: 0 0 10px 0;">
+          This will save current line items, discount, tax, payment instructions, and terms as a reusable template for the selected client.
         </p>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-close="modal-preset">Cancel</button>
@@ -1364,6 +1395,17 @@
       }
     });
 
+    // Phone formatting helper: +1 (XXX) XXX-XXXX
+    function formatPhone(phone) {
+      if (!phone) return '';
+      const digits = String(phone).replace(/\D/g, '');
+      const cleaned = (digits.length === 11 && digits.startsWith('1')) ? digits.slice(1) : digits;
+      if (cleaned.length === 10) {
+        return `+1 (${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6)}`;
+      }
+      return phone;
+    }
+
     // STATE
     let allInvoices = [];
     let allSenders = [];
@@ -1376,7 +1418,20 @@
     // -----------------------------------------------------------------------
     async function loadSummary() {
       try {
-        const res = await fetch('/api/invoices/summary');
+        const params = new URLSearchParams();
+        if (activeStatusFilter !== 'all') params.append('status', activeStatusFilter);
+        const search = document.getElementById('filter-search').value.trim();
+        if (search) params.append('search', search);
+        const senderId = document.getElementById('filter-sender').value;
+        if (senderId) params.append('sender_id', senderId);
+        const clientId = document.getElementById('filter-client').value;
+        if (clientId) params.append('client_id', clientId);
+        const startDate = document.getElementById('filter-start-date').value;
+        if (startDate) params.append('start_date', startDate);
+        const endDate = document.getElementById('filter-end-date').value;
+        if (endDate) params.append('end_date', endDate);
+
+        const res = await fetch(`/api/invoices/summary?${params.toString()}`);
         const data = await res.json();
         document.getElementById('metric-total-invoiced').textContent = `$${data.total_invoiced.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
         document.getElementById('metric-outstanding').textContent = `$${data.outstanding.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
@@ -1427,6 +1482,7 @@
         const res = await fetch(`/api/invoices?${params.toString()}`);
         allInvoices = await res.json();
         renderInvoicesTable();
+        loadSummary(); // Recompute summary metrics to match active filters
       } catch (err) {
         console.error('Failed to load invoices:', err);
       }
@@ -1460,7 +1516,7 @@
       const s = allSenders.find(x => String(x.id) === String(senderId));
       const previewDiv = document.getElementById('builder-sender-preview');
       if (s) {
-        const parts = [s.email, s.phone, s.address ? s.address.split('\n')[0] : ''].filter(Boolean);
+        const parts = [s.email, formatPhone(s.phone), s.address ? s.address.split('\n')[0] : ''].filter(Boolean);
         previewDiv.textContent = parts.join(' • ');
         // If creating new invoice, set default instructions/notes
         if (!currentEditingInvoiceId) {
@@ -1514,7 +1570,7 @@
       const client = allClients.find(x => String(x.id) === String(clientId));
       if (client) {
         document.getElementById('builder-client-name').value = client.name;
-        const parts = [client.email, client.phone, client.address ? client.address.split('\n')[0] : ''].filter(Boolean);
+        const parts = [client.email, formatPhone(client.phone), client.address ? client.address.split('\n')[0] : ''].filter(Boolean);
         previewDiv.textContent = parts.join(' • ');
 
         // Fetch presets for this client
@@ -1548,8 +1604,17 @@
       if (!presetVal) return;
       try {
         const p = JSON.parse(presetVal);
-        if (p.default_due_days) {
+        if (p.default_due_days !== undefined && p.default_due_days !== null) {
           setDueDateByOffset(p.default_due_days);
+        }
+        if (p.discount_amount !== undefined) {
+          document.getElementById('builder-discount').value = Number(p.discount_amount).toFixed(2);
+        }
+        if (p.tax_rate !== undefined) {
+          document.getElementById('builder-tax-rate').value = Number(p.tax_rate).toFixed(1);
+        }
+        if (p.payment_instructions) {
+          document.getElementById('builder-payment-instructions').value = p.payment_instructions;
         }
         if (p.notes) {
           document.getElementById('builder-notes').value = p.notes;
@@ -1557,9 +1622,9 @@
         if (p.items && p.items.length > 0) {
           clearItemRows();
           p.items.forEach(it => addItemRow(it.description, it.quantity, it.unit_price));
-          recalcSummary();
-          showToast(`Applied preset "${p.preset_name}"!`);
         }
+        recalcSummary();
+        showToast(`Applied preset "${p.preset_name}"!`);
       } catch (e) {
         console.error('Failed to parse preset:', e);
       }
@@ -1572,6 +1637,25 @@
         alert('Please select a saved client first to associate this preset.');
         return;
       }
+
+      // Calculate due days offset from builder
+      const issueDateVal = document.getElementById('builder-issue-date').value;
+      const dueDateVal = document.getElementById('builder-due-date').value;
+      let diffDays = 14;
+      if (issueDateVal && dueDateVal) {
+        const d1 = new Date(issueDateVal + 'T00:00:00');
+        const d2 = new Date(dueDateVal + 'T00:00:00');
+        const diffTime = d2.getTime() - d1.getTime();
+        diffDays = Math.max(0, Math.round(diffTime / (1000 * 60 * 60 * 24)));
+      }
+
+      document.getElementById('modal-preset-name').value = '';
+      document.getElementById('modal-preset-due').value = diffDays;
+      document.getElementById('modal-preset-discount').value = document.getElementById('builder-discount').value || '0.00';
+      document.getElementById('modal-preset-tax-rate').value = document.getElementById('builder-tax-rate').value || '0.0';
+      document.getElementById('modal-preset-payment').value = document.getElementById('builder-payment-instructions').value || '';
+      document.getElementById('modal-preset-notes').value = document.getElementById('builder-notes').value || '';
+
       openModal('modal-preset');
     });
 
@@ -1684,10 +1768,28 @@
 
     function clearItemRows() {
       document.getElementById('builder-items-tbody').innerHTML = '';
+      checkEmptyItemRows();
+    }
+
+    function checkEmptyItemRows() {
+      const tbody = document.getElementById('builder-items-tbody');
+      const itemRows = tbody.querySelectorAll('tr:not(#no-items-row)');
+      if (itemRows.length === 0) {
+        tbody.innerHTML = `
+          <tr id="no-items-row">
+            <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 24px; font-style: italic;">
+              No line items. Click <b>+ Add Item</b> to add a service or product.
+            </td>
+          </tr>
+        `;
+      }
     }
 
     function addItemRow(desc = '', qty = 1, unitPrice = 0) {
       const tbody = document.getElementById('builder-items-tbody');
+      const noItems = document.getElementById('no-items-row');
+      if (noItems) noItems.remove();
+
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>
@@ -1713,12 +1815,9 @@
       `;
 
       tr.querySelector('.item-remove-btn').addEventListener('click', () => {
-        if (tbody.children.length > 1) {
-          tr.remove();
-          recalcSummary();
-        } else {
-          showToast('An invoice must have at least one line item.', 'error');
-        }
+        tr.remove();
+        checkEmptyItemRows();
+        recalcSummary();
       });
 
       tr.querySelectorAll('input').forEach(input => {
@@ -1735,13 +1834,18 @@
 
     function recalcSummary() {
       let subtotal = 0;
-      const rows = document.querySelectorAll('#builder-items-tbody tr');
+      const rows = document.querySelectorAll('#builder-items-tbody tr:not(#no-items-row)');
       rows.forEach(tr => {
-        const qty = parseFloat(tr.querySelector('.item-qty').value) || 0;
-        const price = parseFloat(tr.querySelector('.item-price').value) || 0;
-        const amount = qty * price;
-        subtotal += amount;
-        tr.querySelector('.item-amount-display').textContent = `$${amount.toFixed(2)}`;
+        const qtyInput = tr.querySelector('.item-qty');
+        const priceInput = tr.querySelector('.item-price');
+        if (qtyInput && priceInput) {
+          const qty = parseFloat(qtyInput.value) || 0;
+          const price = parseFloat(priceInput.value) || 0;
+          const amount = qty * price;
+          subtotal += amount;
+          const amtDisp = tr.querySelector('.item-amount-display');
+          if (amtDisp) amtDisp.textContent = `$${amount.toFixed(2)}`;
+        }
       });
 
       const discount = Math.max(0, parseFloat(document.getElementById('builder-discount').value) || 0);
@@ -2014,7 +2118,7 @@
               ${s.is_default ? '<span class="status-badge paid" style="font-size: 0.68rem;">Default</span>' : ''}
             </div>
             <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">
-              ${[s.email, s.phone, s.website].filter(Boolean).map(x => escapeHtml(x)).join(' • ')}
+              ${[s.email, formatPhone(s.phone), s.website].filter(Boolean).map(x => escapeHtml(x)).join(' • ')}
             </div>
             ${s.address ? `<div style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 4px; white-space: pre-line;">${escapeHtml(s.address)}</div>` : ''}
           </div>
@@ -2051,7 +2155,7 @@
           <div>
             <strong style="font-size: 0.95rem; color: var(--text-main);">${escapeHtml(c.name)}</strong>
             <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">
-              ${[c.email, c.phone].filter(Boolean).map(x => escapeHtml(x)).join(' • ')}
+              ${[c.email, formatPhone(c.phone)].filter(Boolean).map(x => escapeHtml(x)).join(' • ')}
             </div>
             ${c.address ? `<div style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 4px; white-space: pre-line;">${escapeHtml(c.address)}</div>` : ''}
           </div>
@@ -2175,20 +2279,28 @@
       const clientId = document.getElementById('builder-client-id').value;
       if (!clientId) return;
 
-      const rows = document.querySelectorAll('#builder-items-tbody tr');
+      const rows = document.querySelectorAll('#builder-items-tbody tr:not(#no-items-row)');
       const items = [];
       rows.forEach(tr => {
-        const desc = tr.querySelector('.item-desc-input').value.trim();
-        const qty = parseFloat(tr.querySelector('.item-qty').value) || 0;
-        const unit_price = parseFloat(tr.querySelector('.item-price').value) || 0;
-        if (desc) items.push({ description: desc, quantity: qty, unit_price: unit_price });
+        const descInput = tr.querySelector('.item-desc-input');
+        const qtyInput = tr.querySelector('.item-qty');
+        const priceInput = tr.querySelector('.item-price');
+        if (descInput && qtyInput && priceInput) {
+          const desc = descInput.value.trim();
+          const qty = parseFloat(qtyInput.value) || 0;
+          const unit_price = parseFloat(priceInput.value) || 0;
+          if (desc) items.push({ description: desc, quantity: qty, unit_price: unit_price });
+        }
       });
 
       const payload = {
         client_id: parseInt(clientId),
         preset_name: document.getElementById('modal-preset-name').value.trim(),
         default_due_days: parseInt(document.getElementById('modal-preset-due').value) || 14,
-        notes: document.getElementById('builder-notes').value.trim(),
+        discount_amount: parseFloat(document.getElementById('modal-preset-discount').value) || 0,
+        tax_rate: parseFloat(document.getElementById('modal-preset-tax-rate').value) || 0,
+        payment_instructions: document.getElementById('modal-preset-payment').value.trim(),
+        notes: document.getElementById('modal-preset-notes').value.trim(),
         items: items
       };
 
@@ -2200,7 +2312,7 @@
         });
         const data = await res.json();
         if (data.success) {
-          showToast('Preset saved for this client!');
+          showToast('Preset saved with invoice details and remittance/terms!');
           closeModal('modal-preset');
           handleClientSelectChange();
         } else {

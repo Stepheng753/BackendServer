@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Invoice {{ invoice.invoice_number }} - Preview</title>
+  <title>{{ invoice.invoice_number }} - {{ invoice.client_name_snapshot }}</title>
   <link rel="icon" type="image/png" href="/static/flash.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -338,7 +338,9 @@
         {% if invoice.sender_info.email %}
           <p>{{ invoice.sender_info.email }}</p>
         {% endif %}
-        {% if invoice.sender_info.phone %}
+        {% if invoice.sender_info.formatted_phone %}
+          <p>{{ invoice.sender_info.formatted_phone }}</p>
+        {% elif invoice.sender_info.phone %}
           <p>{{ invoice.sender_info.phone }}</p>
         {% endif %}
         {% if invoice.sender_info.website %}
@@ -349,6 +351,9 @@
       <div class="meta-box">
         <h2>INVOICE</h2>
         <div class="meta-row">Invoice #: <strong>{{ invoice.invoice_number }}</strong></div>
+        {% if invoice.status == 'paid' %}
+        <div class="meta-row">Status: <strong style="color: #059669;">PAID</strong></div>
+        {% endif %}
         <div class="meta-row">Issue Date: <strong>{{ invoice.issue_date }}</strong></div>
         <div class="meta-row">Due Date: <strong>{{ invoice.due_date }}</strong></div>
       </div>
@@ -365,7 +370,9 @@
         {% if invoice.client_info.email %}
           <div>{{ invoice.client_info.email }}</div>
         {% endif %}
-        {% if invoice.client_info.phone %}
+        {% if invoice.client_info.formatted_phone %}
+          <div>{{ invoice.client_info.formatted_phone }}</div>
+        {% elif invoice.client_info.phone %}
           <div>{{ invoice.client_info.phone }}</div>
         {% endif %}
       </div>
@@ -382,7 +389,7 @@
         </tr>
       </thead>
       <tbody>
-        {% for it in invoice.items %}
+        {% for it in items %}
         <tr>
           <td>{{ it.description }}</td>
           <td class="text-right">{{ it.quantity }}</td>

@@ -194,6 +194,8 @@ class InvoiceGeneratorTestCase(unittest.TestCase):
         content = buf.getvalue()
         self.assertGreater(len(content), 1000)
         self.assertTrue(content.startswith(b"%PDF"))
+        self.assertIn(b"/Title (INV-TEST-001 - Test Client)", content)
+        self.assertNotIn(b"anonymous", content.lower())
 
     def test_05_api_endpoints(self):
         # Summary
@@ -225,6 +227,19 @@ class InvoiceGeneratorTestCase(unittest.TestCase):
         resp = self.client.get("/invoices")
         self.assertEqual(resp.status_code, 200)
         self.assertIn(b"Invoice Generator & History", resp.data)
+
+        # Preview Page
+        inv_id = create_invoice({
+            "client_name": "Preview Client",
+            "client_phone": "8585551234",
+            "items": [{"description": "Preview item", "quantity": 1, "unit_price": 50.0}]
+        })
+        resp = self.client.get(f"/invoices/{inv_id}/preview")
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn(b"Preview Client", resp.data)
+        self.assertIn(b"+1 (858) 555-1234", resp.data)
+        self.assertIn(b"Preview item", resp.data)
+        delete_invoice(inv_id)
 
 
 if __name__ == "__main__":
