@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Invoice {{ invoice.invoice_number }} - Preview</title>
+  <link rel="icon" type="image/png" href="/static/flash.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #f3f4f6;
+      color: #111827;
+      line-height: 1.5;
+      padding: 24px;
+    }
+
+    /* TOP ACTION BAR */
+    .top-actions-bar {
+      max-width: 850px;
+      margin: 0 auto 20px auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      background: #ffffff;
+      padding: 12px 20px;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      border: 1px solid #e5e7eb;
+    }
+    .top-actions-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #374151;
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid #d1d5db;
+      background: #ffffff;
+      transition: background 0.15s;
+    }
+    .back-btn:hover {
+      background: #f9fafb;
+    }
+    .btn-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      border: none;
+      text-decoration: none;
+      transition: all 0.15s;
+    }
+    .btn-primary {
+      background: #2563eb;
+      color: #ffffff;
+    }
+    .btn-primary:hover {
+      background: #1d4ed8;
+    }
+    .btn-secondary {
+      background: #f3f4f6;
+      color: #374151;
+      border: 1px solid #d1d5db;
+    }
+    .btn-secondary:hover {
+      background: #e5e7eb;
+    }
+
+    /* INVOICE PAPER SHEET */
+    .invoice-sheet {
+      max-width: 850px;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 48px;
+      border-radius: 8px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+      border: 1px solid #e5e7eb;
+    }
+
+    /* HEADER */
+    .sheet-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 2px solid #2d567c;
+      padding-bottom: 24px;
+      margin-bottom: 24px;
+    }
+    .sender-box h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #2d567c;
+      margin-bottom: 6px;
+    }
+    .sender-box p {
+      font-size: 0.88rem;
+      color: #4b5563;
+      line-height: 1.45;
+    }
+
+    .meta-box {
+      text-align: right;
+    }
+    .meta-box h2 {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #2d567c;
+      margin-bottom: 6px;
+    }
+    .meta-row {
+      font-size: 0.9rem;
+      margin-bottom: 4px;
+      color: #4b5563;
+    }
+    .meta-row strong {
+      color: #111827;
+      margin-left: 6px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      border-radius: 9999px;
+      letter-spacing: 0.05em;
+    }
+    .badge-paid { background: #d1fae5; color: #065f46; }
+    .badge-sent { background: #dbeafe; color: #1e40af; }
+    .badge-draft { background: #fef3c7; color: #92400e; }
+    .badge-overdue { background: #fee2e2; color: #991b1b; }
+    .badge-void { background: #f3f4f6; color: #4b5563; }
+
+    /* BILL TO */
+    .bill-to-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 16px 20px;
+      margin-bottom: 28px;
+    }
+    .bill-to-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #2d567c;
+      margin-bottom: 6px;
+    }
+    .bill-to-name {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #111827;
+      margin-bottom: 4px;
+    }
+    .bill-to-details {
+      font-size: 0.88rem;
+      color: #4b5563;
+      line-height: 1.45;
+    }
+
+    /* ITEMS TABLE */
+    .items-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 24px;
+    }
+    .items-table th {
+      background: #2d567c;
+      color: #ffffff;
+      padding: 10px 14px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .items-table td {
+      padding: 12px 14px;
+      font-size: 0.9rem;
+      border-bottom: 1px solid #e5e7eb;
+      color: #1f2937;
+    }
+    .items-table tr:nth-child(even) td {
+      background: #f8fafc;
+    }
+    .text-right {
+      text-align: right;
+    }
+    .text-center {
+      text-align: center;
+    }
+
+    /* TOTALS CONTAINER */
+    .totals-wrapper {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 30px;
+    }
+    .totals-box {
+      width: 280px;
+    }
+    .totals-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+      font-size: 0.92rem;
+      color: #4b5563;
+    }
+    .totals-row.grand-total {
+      border-top: 2px solid #2d567c;
+      margin-top: 6px;
+      padding-top: 10px;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #2d567c;
+    }
+
+    /* PAYMENT INSTRUCTIONS & NOTES */
+    .info-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 16px 20px;
+      margin-bottom: 16px;
+    }
+    .info-card-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #2d567c;
+      margin-bottom: 6px;
+    }
+    .info-card-body {
+      font-size: 0.88rem;
+      color: #374151;
+      white-space: pre-line;
+      line-height: 1.45;
+    }
+
+    .sheet-footer {
+      text-align: center;
+      margin-top: 36px;
+      padding-top: 16px;
+      border-top: 1px solid #e5e7eb;
+      font-size: 0.8rem;
+      color: #9ca3af;
+      font-style: italic;
+    }
+
+    /* PRINT STYLES */
+    @media print {
+      body {
+        background: #ffffff;
+        padding: 0;
+        color: #000000;
+      }
+      .top-actions-bar {
+        display: none !important;
+      }
+      .invoice-sheet {
+        box-shadow: none;
+        border: none;
+        padding: 0;
+        max-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOP ACTIONS BAR (Hidden on print) -->
+  <div class="top-actions-bar">
+    <div class="top-actions-left">
+      <a href="/invoices" class="back-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        Back to Invoices
+      </a>
+      <span class="badge badge-{{ invoice.status }}">{{ invoice.status }}</span>
+    </div>
+    <div style="display: flex; gap: 10px;">
+      <button onclick="window.print()" class="btn-action btn-secondary" title="Print Invoice">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="6 9 6 2 18 2 18 9"></polyline>
+          <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+          <rect x="6" y="14" width="12" height="8"></rect>
+        </svg>
+        Print
+      </button>
+      <a href="/api/invoices/{{ invoice.id }}/pdf" class="btn-action btn-primary" title="Download Official Vector PDF">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        Download PDF
+      </a>
+    </div>
+  </div>
+
+  <!-- PRINTABLE INVOICE SHEET -->
+  <div class="invoice-sheet">
+    
+    <!-- HEADER -->
+    <div class="sheet-header">
+      <div class="sender-box">
+        <h1>{{ invoice.sender_name_snapshot }}</h1>
+        {% if invoice.sender_info.address %}
+          <p>{{ invoice.sender_info.address | replace('\n', '<br>') | safe }}</p>
+        {% endif %}
+        {% if invoice.sender_info.email %}
+          <p>{{ invoice.sender_info.email }}</p>
+        {% endif %}
+        {% if invoice.sender_info.phone %}
+          <p>{{ invoice.sender_info.phone }}</p>
+        {% endif %}
+        {% if invoice.sender_info.website %}
+          <p>{{ invoice.sender_info.website }}</p>
+        {% endif %}
+      </div>
+
+      <div class="meta-box">
+        <h2>INVOICE</h2>
+        <div class="meta-row">Invoice #: <strong>{{ invoice.invoice_number }}</strong></div>
+        <div class="meta-row">Issue Date: <strong>{{ invoice.issue_date }}</strong></div>
+        <div class="meta-row">Due Date: <strong>{{ invoice.due_date }}</strong></div>
+      </div>
+    </div>
+
+    <!-- BILL TO -->
+    <div class="bill-to-card">
+      <div class="bill-to-title">Bill To:</div>
+      <div class="bill-to-name">{{ invoice.client_name_snapshot }}</div>
+      <div class="bill-to-details">
+        {% if invoice.client_info.address %}
+          <div>{{ invoice.client_info.address | replace('\n', '<br>') | safe }}</div>
+        {% endif %}
+        {% if invoice.client_info.email %}
+          <div>{{ invoice.client_info.email }}</div>
+        {% endif %}
+        {% if invoice.client_info.phone %}
+          <div>{{ invoice.client_info.phone }}</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- LINE ITEMS TABLE -->
+    <table class="items-table">
+      <thead>
+        <tr>
+          <th>Description</th>
+          <th class="text-right" style="width: 100px;">Qty / Hrs</th>
+          <th class="text-right" style="width: 120px;">Rate</th>
+          <th class="text-right" style="width: 130px;">Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for it in invoice.items %}
+        <tr>
+          <td>{{ it.description }}</td>
+          <td class="text-right">{{ it.quantity }}</td>
+          <td class="text-right">${{ "%.2f"|format(it.unit_price) }}</td>
+          <td class="text-right">${{ "%.2f"|format(it.amount) }}</td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="4" class="text-center" style="color: #6b7280; font-style: italic;">No line items provided.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <!-- TOTALS WRAPPER -->
+    <div class="totals-wrapper">
+      <div class="totals-box">
+        <div class="totals-row">
+          <span>Subtotal:</span>
+          <span>${{ "%.2f"|format(invoice.subtotal) }}</span>
+        </div>
+        {% if invoice.discount_amount > 0 %}
+        <div class="totals-row">
+          <span>Discount:</span>
+          <span>-${{ "%.2f"|format(invoice.discount_amount) }}</span>
+        </div>
+        {% endif %}
+        {% if invoice.tax_rate > 0 %}
+        <div class="totals-row">
+          <span>Tax ({{ invoice.tax_rate }}%):</span>
+          <span>${{ "%.2f"|format((invoice.subtotal - invoice.discount_amount) * (invoice.tax_rate / 100.0)) }}</span>
+        </div>
+        {% endif %}
+        <div class="totals-row grand-total">
+          <span>Total Due:</span>
+          <span>${{ "%.2f"|format(invoice.total_amount) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAYMENT INSTRUCTIONS -->
+    {% if invoice.payment_instructions %}
+    <div class="info-card">
+      <div class="info-card-title">Payment Instructions:</div>
+      <div class="info-card-body">{{ invoice.payment_instructions }}</div>
+    </div>
+    {% endif %}
+
+    <!-- NOTES & TERMS -->
+    {% if invoice.notes %}
+    <div class="info-card">
+      <div class="info-card-title">Notes & Terms:</div>
+      <div class="info-card-body">{{ invoice.notes }}</div>
+    </div>
+    {% endif %}
+
+    <!-- FOOTER -->
+    <div class="sheet-footer">
+      Thank you for your business! Generated on-demand by Stephen Giang's Flash Server.
+    </div>
+
+  </div>
+
+</body>
+</html>

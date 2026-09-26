@@ -11,6 +11,7 @@ from TutoringCalculator.routes import tutoring_bp
 from Monitoring.routes import monitoring_bp
 from ToDo.routes import todo_bp
 from ToDo.scheduler import start_todo_scheduler
+from InvoiceGenerator.routes import invoice_bp
 
 app = Flask(__name__)
 CORS(app)
@@ -27,6 +28,10 @@ app.register_blueprint(tutoring_bp, name='tutoring_calculator', url_prefix='/Tut
 
 # Register To-Do board & endpoints
 app.register_blueprint(todo_bp)
+
+# Register Invoice Generator & history endpoints
+app.register_blueprint(invoice_bp)
+app.register_blueprint(invoice_bp, name='invoice_generator', url_prefix='/InvoiceGenerator')
 
 # Start background auto-archive scheduler
 start_todo_scheduler()

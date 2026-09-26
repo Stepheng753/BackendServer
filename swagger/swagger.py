@@ -46,6 +46,10 @@ OPENAPI_SPEC = {
         {
             "name": "To Do",
             "description": "Interactive Crossroads To-Do board, categorized task items, auto-archive cutoff, and reordering API."
+        },
+        {
+            "name": "Invoices",
+            "description": "Pure-Python on-demand vector PDF invoice generation, multi-company profiles, clients, presets, and history."
         }
     ],
     "components": {
@@ -859,6 +863,416 @@ OPENAPI_SPEC = {
                     }
                 }
             }
+        },
+        "/invoices": {
+            "get": {
+                "tags": ["Invoices"],
+                "summary": "Invoices Management Console",
+                "description": "Interactive web UI for invoice history, builder, and company/client management.",
+                "responses": {
+                    "200": {"description": "HTML page rendered."}
+                }
+            }
+        },
+        "/invoices/{invoice_id}/preview": {
+            "get": {
+                "tags": ["Invoices"],
+                "summary": "Print Preview Invoice",
+                "description": "Clean, print-ready HTML invoice view rendered on-demand from database data.",
+                "parameters": [
+                    {"name": "invoice_id", "in": "path", "required": True, "schema": {"type": "integer"}}
+                ],
+                "responses": {
+                    "200": {"description": "Print-ready HTML layout."},
+                    "404": {"description": "Invoice not found."}
+                }
+            }
+        },
+        "/api/invoices/summary": {
+            "get": {
+                "tags": ["Invoices"],
+                "summary": "Dashboard Aggregate Metrics",
+                "description": "Returns total invoiced, outstanding balances, collected payments, and client counts.",
+                "responses": {
+                    "200": {"description": "Summary metrics JSON."}
+                }
+            }
+        },
+        "/api/invoices/next-number": {
+            "get": {
+                "tags": ["Invoices"],
+                "summary": "Get Next Invoice Number",
+                "description": "Calculates the next sequential invoice number for current year (e.g. INV-YYYY-001).",
+                "responses": {
+                    "200": {"description": "Next invoice number string."}
+                }
+            }
+        },
+        "/api/invoices/senders": {
+            "get": {
+                "tags": ["Invoices"],
+                "summary": "List Sender Profiles",
+                "description": "Returns all business/company profiles used in the 'From' block.",
+                "responses": {
+                    "200": {"description": "List of sender profiles."}
+                }
+            },
+            "post": {
+                "tags": ["Invoices"],
+                "summary": "Create Sender Profile",
+                "description": "Creates a new business or entity profile.",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["name"],
+                                "properties": {
+                                    "name": {"type": "string"},
+                                    "email": {"type": "string"},
+                                    "phone": {"type": "string"},
+                                    "address": {"type": "string"},
+                                    "website": {"type": "string"},
+                                    "payment_instructions": {"type": "string"},
+                                    "default_notes": {"type": "string"},
+                                    "is_default": {"type": "integer", "enum": [0, 1]}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {"description": "Sender profile created."}
+                }
+            }
+        },
+        "/api/invoices/senders/{sender_id}": {
+            "get": {
+                "tags": ["Invoices"],
+                "summary": "Get Sender Profile",
+                "parameters": [
+                    {"name": "sender_id", "in": "path", "required": True, "schema": {"type": "integer"}}
+                ],
+                "responses": {
+                    "200": {"description": "Sender profile object."},
+                    "404": {"description": "Sender profile not found."}
+                }
+            },
+            "put": {
+                "tags": ["Invoices"],
+                "summary": "Update Sender Profile",
+                "parameters": [
+                    {"name": "sender_id", "in": "path", "required": True, "schema": {"type": "integer"}}
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["name"],
+                                "properties": {
+                                    "name": {"type": "string"},
+                                    "email": {"type": "string"},
+                                    "phone": {"type": "string"},
+                                    "address": {"type": "string"},
+                                    "website": {"type": "string"},
+                                    "payment_instructions": {"type": "string"},
+                                    "default_notes": {"type": "string"},
+                                    "is_default": {"type": "integer", "enum": [0, 1]}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {"description": "Updated successfully."}
+                }
+            },
+            "delete": {
+                "tags": ["Invoices"],
+                "summary": "Delete Sender Profile",
+                "parameters": [
+                    {"name": "sender_id", "in": "path", "required": True, "schema": {"type": "integer"}}
+                ],
+                "responses": {
+                    "200": {"description": "Deleted successfully."}
+                }
+            }
+        },
+        "/api/invoices/clients": {
+            "get": {
+                "tags": ["Invoices"],
+                "summary": "List Saved Clients",
+                "description": "Returns all saved client records.",
+                "responses": {
+                    "200": {"description": "List of clients."}
+                }
+            },
+            "post": {
+                "tags": ["Invoices"],
+                "summary": "Create Client",
+                "description": "Adds a new client record.",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["name"],
+                                "properties": {
+                                    "name": {"type": "string"},
+                                    "email": {"type": "string"},
+                                    "phone": {"type": "string"},
+                                    "address": {"type": "string"},
+                                    "notes": {"type": "string"}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {"description": "Client created."}
+                }
+            }
+        },
+        "/api/invoices/clients/{client_id}": {
+            "get": {
+                "tags": ["Invoices"],
+                "summary": "Get Client",
+                "parameters": [
+                    {"name": "client_id", "in": "path", "required": True, "schema": {"type": "integer"}}
+                ],
+                "responses": {
+                    "200": {"description": "Client object."},
+                    "404": {"description": "Client not found."}
+                }
+            },
+            "put": {
+                "tags": ["Invoices"],
+                "summary": "Update Client",
+                "parameters": [
+                    {"name": "client_id", "in": "path", "required": True, "schema": {"type": "integer"}}
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["name"],
+                                "properties": {
+                                    "name": {"type": "string"},
+                                    "email": {"type": "string"},
+                                    "phone": {"type": "string"},
+                                    "address": {"type": "string"},
+                                    "notes": {"type": "string"}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {"description": "Updated successfully."}
+                }
+            },
+            "delete": {
+                "tags": ["Invoices"],
+                "summary": "Delete Client",
+                "parameters": [
+                    {"name": "client_id", "in": "path", "required": True, "schema": {"type": "integer"}}
+                ],
+                "responses": {
+                    "200": {"description": "Deleted successfully."}
+                }
+            }
+        },
+        "/api/invoices/presets/{client_id}": {
+            "get": {
+                "tags": ["Invoices"],
+                "summary": "Get Client Presets",
+                "description": "Returns saved recurring line item presets for a client.",
+                "parameters": [
+                    {"name": "client_id", "in": "path", "required": True, "schema": {"type": "integer"}}
+                ],
+                "responses": {
+                    "200": {"description": "List of presets."}
+                }
+            }
+        },
+        "/api/invoices/presets": {
+            "post": {
+                "tags": ["Invoices"],
+                "summary": "Create Client Preset",
+                "description": "Saves recurring line items as a template for a client.",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["client_id", "preset_name"],
+                                "properties": {
+                                    "client_id": {"type": "integer"},
+                                    "preset_name": {"type": "string"},
+                                    "default_due_days": {"type": "integer"},
+                                    "items": {"type": "array", "items": {"type": "object"}},
+                                    "notes": {"type": "string"}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {"description": "Preset created."}
+                }
+            }
+        },
+        "/api/invoices": {
+            "get": {
+                "tags": ["Invoices"],
+                "summary": "List Invoices",
+                "description": "Lists invoices with optional filtering by status, search, client, sender, and dates.",
+                "parameters": [
+                    {"name": "status", "in": "query", "schema": {"type": "string"}},
+                    {"name": "search", "in": "query", "schema": {"type": "string"}},
+                    {"name": "client_id", "in": "query", "schema": {"type": "integer"}},
+                    {"name": "sender_id", "in": "query", "schema": {"type": "integer"}},
+                    {"name": "start_date", "in": "query", "schema": {"type": "string"}},
+                    {"name": "end_date", "in": "query", "schema": {"type": "string"}}
+                ],
+                "responses": {
+                    "200": {"description": "List of invoices."}
+                }
+            },
+            "post": {
+                "tags": ["Invoices"],
+                "summary": "Create Invoice",
+                "description": "Creates an invoice, saves snapshots and line items.",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["client_name", "items"],
+                                "properties": {
+                                    "invoice_number": {"type": "string"},
+                                    "sender_id": {"type": "integer"},
+                                    "client_id": {"type": "integer"},
+                                    "client_name": {"type": "string"},
+                                    "issue_date": {"type": "string"},
+                                    "due_date": {"type": "string"},
+                                    "status": {"type": "string", "enum": ["draft", "sent", "paid", "void"]},
+                                    "discount_amount": {"type": "number"},
+                                    "tax_rate": {"type": "number"},
+                                    "payment_instructions": {"type": "string"},
+                                    "notes": {"type": "string"},
+                                    "items": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "required": ["description"],
+                                            "properties": {
+                                                "description": {"type": "string"},
+                                                "quantity": {"type": "number"},
+                                                "unit_price": {"type": "number"}
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {"description": "Invoice created."}
+                }
+            }
+        },
+        "/api/invoices/{invoice_id}": {
+            "get": {
+                "tags": ["Invoices"],
+                "summary": "Get Invoice Detail",
+                "description": "Returns invoice details including historical snapshots and line items.",
+                "parameters": [
+                    {"name": "invoice_id", "in": "path", "required": True, "schema": {"type": "integer"}}
+                ],
+                "responses": {
+                    "200": {"description": "Invoice details object."},
+                    "404": {"description": "Invoice not found."}
+                }
+            },
+            "put": {
+                "tags": ["Invoices"],
+                "summary": "Update Invoice",
+                "parameters": [
+                    {"name": "invoice_id", "in": "path", "required": True, "schema": {"type": "integer"}}
+                ],
+                "responses": {
+                    "200": {"description": "Invoice updated."}
+                }
+            },
+            "delete": {
+                "tags": ["Invoices"],
+                "summary": "Delete Invoice",
+                "parameters": [
+                    {"name": "invoice_id", "in": "path", "required": True, "schema": {"type": "integer"}}
+                ],
+                "responses": {
+                    "200": {"description": "Invoice deleted."}
+                }
+            }
+        },
+        "/api/invoices/{invoice_id}/status": {
+            "patch": {
+                "tags": ["Invoices"],
+                "summary": "Update Invoice Status",
+                "description": "Updates invoice status (draft, sent, paid, overdue, void).",
+                "parameters": [
+                    {"name": "invoice_id", "in": "path", "required": True, "schema": {"type": "integer"}}
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["status"],
+                                "properties": {
+                                    "status": {"type": "string", "enum": ["draft", "sent", "paid", "overdue", "void"]}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {"description": "Status updated."}
+                }
+            }
+        },
+        "/api/invoices/{invoice_id}/duplicate": {
+            "post": {
+                "tags": ["Invoices"],
+                "summary": "Duplicate Invoice",
+                "description": "Duplicates an invoice into a fresh draft with today's date and next invoice #.",
+                "parameters": [
+                    {"name": "invoice_id", "in": "path", "required": True, "schema": {"type": "integer"}}
+                ],
+                "responses": {
+                    "201": {"description": "Duplicated draft created."}
+                }
+            }
+        },
+        "/api/invoices/{invoice_id}/pdf": {
+            "get": {
+                "tags": ["Invoices"],
+                "summary": "Download Pure-Python Vector PDF",
+                "description": "Generates a vector PDF on-the-fly from stored invoice data and streams as download. Zero disk PDF storage.",
+                "parameters": [
+                    {"name": "invoice_id", "in": "path", "required": True, "schema": {"type": "integer"}}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Vector PDF binary stream.",
+                        "content": {"application/pdf": {}}
+                    }
+                }
+            }
         }
     }
 }
@@ -1480,6 +1894,7 @@ SWAGGER_HTML_TEMPLATE = """<!DOCTYPE html>
           <a href="/tutoring" class="nav-btn" title="Crossroads Tutoring Console">Tutoring Calc</a>
           <a href="/monitoring" class="nav-btn" title="Flash Server Monitoring">System Monitor</a>
           <a href="/todo" class="nav-btn" title="Crossroads To-Do Board">To Do</a>
+          <a href="/invoices" class="nav-btn" title="Invoice Generator & History">Invoices</a>
           <button id="swagger-theme-toggle" class="nav-btn" aria-label="Toggle Theme" title="Toggle Theme">
             <img src="/static/day-and-night.svg" alt="Theme" class="theme-icon" />
           </button>
