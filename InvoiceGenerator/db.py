@@ -2,7 +2,8 @@ import json
 import os
 import re
 import sqlite3
-from datetime import datetime
+import calendar
+from datetime import datetime, date, timedelta
 from .config import DB_PATH, APP_TIMEZONE, DEFAULT_SENDER, DEFAULT_DUE_DAYS
 
 
@@ -77,6 +78,13 @@ def init_db():
                 discount_amount REAL DEFAULT 0.0,
                 tax_rate REAL DEFAULT 0.0,
                 payment_instructions TEXT DEFAULT '',
+                is_recurring INTEGER DEFAULT 0,
+                recurrence_type TEXT DEFAULT 'monthly',
+                recurrence_day INTEGER DEFAULT 1,
+                recurrence_start_date TEXT DEFAULT '',
+                sender_id INTEGER REFERENCES sender_profiles(id) ON DELETE SET NULL,
+                auto_status TEXT DEFAULT 'draft',
+                last_generated_date TEXT DEFAULT '',
                 created_at TEXT NOT NULL
             );
         """)
@@ -90,6 +98,20 @@ def init_db():
             cursor.execute("ALTER TABLE client_presets ADD COLUMN tax_rate REAL DEFAULT 0.0;")
         if "payment_instructions" not in preset_cols:
             cursor.execute("ALTER TABLE client_presets ADD COLUMN payment_instructions TEXT DEFAULT '';")
+        if "is_recurring" not in preset_cols:
+            cursor.execute("ALTER TABLE client_presets ADD COLUMN is_recurring INTEGER DEFAULT 0;")
+        if "recurrence_type" not in preset_cols:
+            cursor.execute("ALTER TABLE client_presets ADD COLUMN recurrence_type TEXT DEFAULT 'monthly';")
+        if "recurrence_day" not in preset_cols:
+            cursor.execute("ALTER TABLE client_presets ADD COLUMN recurrence_day INTEGER DEFAULT 1;")
+        if "recurrence_start_date" not in preset_cols:
+            cursor.execute("ALTER TABLE client_presets ADD COLUMN recurrence_start_date TEXT DEFAULT '';")
+        if "sender_id" not in preset_cols:
+            cursor.execute("ALTER TABLE client_presets ADD COLUMN sender_id INTEGER REFERENCES sender_profiles(id) ON DELETE SET NULL;")
+        if "auto_status" not in preset_cols:
+            cursor.execute("ALTER TABLE client_presets ADD COLUMN auto_status TEXT DEFAULT 'draft';")
+        if "last_generated_date" not in preset_cols:
+            cursor.execute("ALTER TABLE client_presets ADD COLUMN last_generated_date TEXT DEFAULT '';")
 
         # 4. Invoices
         cursor.execute("""
@@ -379,8 +401,10 @@ def get_presets_by_client(client_id):
 
 
 def add_preset(client_id, preset_name, default_due_days=14, items=None, notes="",
-               discount_amount=0.0, tax_rate=0.0, payment_instructions=""):
-    """Saves a recurring line-item preset for a client including invoice details, remittance, and terms."""
+               discount_amount=0.0, tax_rate=0.0, payment_instructions="",
+               is_recurring=0, recurrence_type="monthly", recurrence_day=1,
+               recurrence_start_date="", sender_id=None, auto_status="draft"):
+    """Saves a line-item preset for a client with optional automated recurring schedule."""
     if items is None:
         items = []
     now_iso = datetime.now(APP_TIMEZONE).isoformat()
@@ -390,8 +414,10 @@ def add_preset(client_id, preset_name, default_due_days=14, items=None, notes=""
         cursor.execute("""
             INSERT INTO client_presets (
                 client_id, preset_name, default_due_days, items_json, notes,
-                discount_amount, tax_rate, payment_instructions, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+                discount_amount, tax_rate, payment_instructions, created_at,
+                is_recurring, recurrence_type, recurrence_day, recurrence_start_date,
+                sender_id, auto_status
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
         """, (
             client_id,
             preset_name.strip(),
@@ -401,10 +427,176 @@ def add_preset(client_id, preset_name, default_due_days=14, items=None, notes=""
             float(discount_amount or 0.0),
             float(tax_rate or 0.0),
             (payment_instructions or "").strip(),
-            now_iso
+            now_iso,
+            1 if is_recurring else 0,
+            (recurrence_type or "monthly").strip(),
+            int(recurrence_day or 1),
+            (recurrence_start_date or "").strip(),
+            sender_id,
+            (auto_status or "draft").strip()
         ))
         conn.commit()
         return cursor.lastrowid
+
+
+def get_recurring_presets():
+    """Returns all presets marked as active recurring templates."""
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT cp.*, c.name AS client_name, c.email AS client_email,
+                   sp.name AS sender_name
+            FROM client_presets cp
+            JOIN clients c ON cp.client_id = c.id
+            LEFT JOIN sender_profiles sp ON cp.sender_id = sp.id
+            WHERE cp.is_recurring = 1
+            ORDER BY cp.preset_name COLLATE NOCASE ASC;
+        """)
+        rows = cursor.fetchall()
+        result = []
+        for r in rows:
+            d = dict(r)
+            try:
+                d["items"] = json.loads(d.get("items_json") or "[]")
+            except Exception:
+                d["items"] = []
+            result.append(d)
+        return result
+
+
+def process_recurring_invoices(target_date=None):
+    """
+    Evaluates all active recurring presets (is_recurring = 1) and generates
+    invoices for presets scheduled on the specified target_date (defaulting to today in APP_TIMEZONE).
+    Prevents duplicate creation if already run on target_date.
+    Returns a dictionary summarizing execution and newly created invoices.
+    """
+    if target_date is None:
+        eval_date = datetime.now(APP_TIMEZONE).date()
+    elif isinstance(target_date, str):
+        try:
+            eval_date = datetime.strptime(target_date.strip(), "%Y-%m-%d").date()
+        except ValueError:
+            eval_date = datetime.now(APP_TIMEZONE).date()
+    elif isinstance(target_date, datetime):
+        eval_date = target_date.date()
+    elif isinstance(target_date, date):
+        eval_date = target_date
+    else:
+        eval_date = datetime.now(APP_TIMEZONE).date()
+
+    date_str = eval_date.strftime("%Y-%m-%d")
+    created_invoices = []
+
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM client_presets WHERE is_recurring = 1;")
+        presets = [dict(r) for r in cursor.fetchall()]
+
+        for p in presets:
+            # Skip if already generated on this target date
+            if p.get("last_generated_date") == date_str:
+                continue
+
+            rec_type = (p.get("recurrence_type") or "monthly").lower()
+            rec_day = int(p.get("recurrence_day") or 1)
+            start_date_str = (p.get("recurrence_start_date") or "").strip()
+
+            start_date = None
+            if start_date_str:
+                try:
+                    start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
+                except ValueError:
+                    start_date = None
+
+            is_due = False
+
+            if rec_type == "monthly":
+                # Matches day of the month (e.g. 1 for 1st of month)
+                _, max_days = calendar.monthrange(eval_date.year, eval_date.month)
+                effective_day = min(rec_day, max_days)
+                if eval_date.day == effective_day:
+                    if not start_date or eval_date >= start_date:
+                        is_due = True
+
+            elif rec_type == "weekly":
+                # rec_day is 0=Monday..6=Sunday
+                if eval_date.weekday() == rec_day:
+                    if not start_date or eval_date >= start_date:
+                        is_due = True
+
+            elif rec_type == "biweekly":
+                # Every other week on rec_day weekday starting from start_date
+                if eval_date.weekday() == rec_day:
+                    if start_date:
+                        delta = (eval_date - start_date).days
+                        if delta >= 0 and delta % 14 == 0:
+                            is_due = True
+                    else:
+                        is_due = True
+
+            if not is_due:
+                continue
+
+            # Load client
+            client = get_client_by_id(p["client_id"])
+            if not client:
+                continue
+
+            sender_id = p.get("sender_id")
+            sender = get_sender_by_id(sender_id) if sender_id else None
+            if not sender:
+                senders = get_senders()
+                if senders:
+                    sender = senders[0]
+                    sender_id = sender["id"]
+
+            sender_name = sender["name"] if sender else "Stephen Giang"
+            due_days = int(p.get("default_due_days") or 14)
+            due_date = eval_date + timedelta(days=due_days)
+
+            try:
+                items = json.loads(p.get("items_json") or "[]")
+            except Exception:
+                items = []
+
+            inv_data = {
+                "invoice_number": generate_next_invoice_number(),
+                "sender_id": sender_id,
+                "sender_name": sender_name,
+                "client_id": client["id"],
+                "client_name": client["name"],
+                "issue_date": date_str,
+                "due_date": due_date.strftime("%Y-%m-%d"),
+                "status": p.get("auto_status") or "draft",
+                "discount_amount": float(p.get("discount_amount") or 0.0),
+                "tax_rate": float(p.get("tax_rate") or 0.0),
+                "payment_instructions": p.get("payment_instructions") or (sender.get("payment_instructions") if sender else ""),
+                "notes": p.get("notes") or (sender.get("default_notes") if sender else ""),
+                "items": items
+            }
+
+            inv_id = create_invoice(inv_data)
+            if inv_id:
+                cursor.execute("UPDATE client_presets SET last_generated_date = ? WHERE id = ?;", (date_str, p["id"]))
+                conn.commit()
+                created_invoices.append({
+                    "id": inv_id,
+                    "invoice_number": inv_data["invoice_number"],
+                    "client_name": client["name"],
+                    "preset_name": p["preset_name"],
+                    "status": inv_data["status"],
+                    "issue_date": date_str,
+                    "due_date": inv_data["due_date"]
+                })
+
+    return {
+        "success": True,
+        "date": date_str,
+        "active_recurring_presets": len(presets),
+        "created_count": len(created_invoices),
+        "invoices": created_invoices
+    }
 
 
 def delete_preset(preset_id):

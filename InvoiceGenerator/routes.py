@@ -23,9 +23,10 @@ from .db import (
     update_invoice,
     update_invoice_status,
     duplicate_invoice,
-    delete_invoice,
     get_invoices_summary,
-    format_phone
+    format_phone,
+    process_recurring_invoices,
+    get_recurring_presets
 )
 from .pdf import generate_invoice_pdf
 
@@ -269,7 +270,13 @@ def api_add_preset():
         notes=data.get("notes", ""),
         discount_amount=data.get("discount_amount", 0.0),
         tax_rate=data.get("tax_rate", 0.0),
-        payment_instructions=data.get("payment_instructions", "")
+        payment_instructions=data.get("payment_instructions", ""),
+        is_recurring=1 if data.get("is_recurring") else 0,
+        recurrence_type=data.get("recurrence_type", "monthly"),
+        recurrence_day=data.get("recurrence_day", 1),
+        recurrence_start_date=data.get("recurrence_start_date", ""),
+        sender_id=data.get("sender_id"),
+        auto_status=data.get("auto_status", "draft")
     )
     return jsonify({"success": True, "preset_id": new_id}), 201
 
@@ -281,6 +288,28 @@ def api_delete_preset(preset_id):
     if not success:
         return jsonify({"error": "Preset not found"}), 404
     return jsonify({"success": True})
+
+
+@invoice_bp.route("/api/invoices/recurring/run", methods=["GET", "POST"])
+def api_run_recurring():
+    """
+    Endpoint triggered by daily cron job to evaluate recurring invoice presets
+    and generate invoices whose recurrence rule matches the target date.
+    Accepts optional ?date=YYYY-MM-DD query parameter or JSON body for manual triggers / testing.
+    """
+    target_date = request.args.get("date")
+    if not target_date and request.is_json:
+        target_date = (request.get_json(silent=True) or {}).get("date")
+
+    result = process_recurring_invoices(target_date=target_date)
+    return jsonify(result)
+
+
+@invoice_bp.route("/api/invoices/recurring", methods=["GET"])
+def api_get_recurring_presets():
+    """Lists all active recurring invoice presets."""
+    presets = get_recurring_presets()
+    return jsonify(presets)
 
 
 # ---------------------------------------------------------------------------

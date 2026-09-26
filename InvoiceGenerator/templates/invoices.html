@@ -268,15 +268,27 @@
     }
 
     .filter-select {
-      padding: 9px 12px;
+      padding: 9px 36px 9px 12px;
       font-size: 0.88rem;
       border: 1px solid var(--input);
       border-radius: var(--radius);
-      background: var(--card-bg);
+      background-color: var(--card-bg);
       color: var(--text-main);
       outline: none;
       min-width: 140px;
       cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23888888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      background-size: 14px 14px;
+    }
+
+    input[type="date"].filter-select {
+      padding-right: 12px;
+      background-image: none;
     }
 
     .status-chips {
@@ -533,8 +545,7 @@
     }
 
     .form-input,
-    .form-textarea,
-    .form-select {
+    .form-textarea {
       width: 100%;
       padding: 9px 12px;
       font-size: 0.88rem;
@@ -547,10 +558,36 @@
       transition: border-color 0.15s ease;
     }
 
+    .form-select {
+      width: 100%;
+      padding: 9px 36px 9px 12px;
+      font-size: 0.88rem;
+      border: 1px solid var(--input);
+      border-radius: var(--radius);
+      background-color: var(--bg-page);
+      color: var(--text-main);
+      box-sizing: border-box;
+      outline: none;
+      transition: border-color 0.15s ease;
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23888888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      background-size: 14px 14px;
+      cursor: pointer;
+    }
+
     .form-input:focus,
     .form-textarea:focus,
     .form-select:focus {
       border-color: var(--primary-blue);
+    }
+
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      cursor: pointer;
+      margin-right: 4px;
     }
 
     .form-row-2 {
@@ -1320,8 +1357,72 @@
           <label class="form-label">Notes & Terms</label>
           <textarea id="modal-preset-notes" class="form-textarea" rows="2" placeholder="Preset notes and terms..."></textarea>
         </div>
+
+        <!-- RECURRING SCHEDULE SETTINGS -->
+        <div style="border-top: 1px solid var(--border); padding-top: 12px; margin-top: 12px; margin-bottom: 12px;">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+            <input type="checkbox" id="modal-preset-is-recurring" style="width: 16px; height: 16px; cursor: pointer;" />
+            <label for="modal-preset-is-recurring" style="font-size: 0.88rem; font-weight: 600; cursor: pointer; color: var(--text-main);">
+              Make Recurring Invoice (Auto-generate on schedule)
+            </label>
+          </div>
+          <div id="modal-preset-recurring-options" style="display: none; background: var(--bg-hover); padding: 12px; border-radius: var(--radius); border: 1px solid var(--border);">
+            <div class="form-row-2">
+              <div class="form-group" style="margin-bottom: 10px;">
+                <label class="form-label">Frequency</label>
+                <select id="modal-preset-recurrence-type" class="form-select">
+                  <option value="monthly" selected>Monthly (e.g. 1st of every month)</option>
+                  <option value="biweekly">Bi-weekly (Every other week)</option>
+                  <option value="weekly">Weekly (Every week)</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin-bottom: 10px;">
+                <label class="form-label">Recurrence Date / Day</label>
+                <!-- For Monthly -->
+                <select id="modal-preset-recurrence-day-month" class="form-select">
+                  <option value="1" selected>Every 1st of the month</option>
+                  <option value="2">Every 2nd of the month</option>
+                  <option value="5">Every 5th of the month</option>
+                  <option value="10">Every 10th of the month</option>
+                  <option value="15">Every 15th of the month</option>
+                  <option value="20">Every 20th of the month</option>
+                  <option value="25">Every 25th of the month</option>
+                  <option value="28">Every 28th of the month</option>
+                  <option value="31">Last day of the month</option>
+                </select>
+                <!-- For Weekly / Bi-weekly -->
+                <select id="modal-preset-recurrence-day-week" class="form-select" style="display: none;">
+                  <option value="0">Every Monday</option>
+                  <option value="1">Every Tuesday</option>
+                  <option value="2">Every Wednesday</option>
+                  <option value="3">Every Thursday</option>
+                  <option value="4" selected>Every Friday</option>
+                  <option value="5">Every Saturday</option>
+                  <option value="6">Every Sunday</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row-2" style="margin-top: 4px;">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label">Starting Reference Date</label>
+                <input type="date" id="modal-preset-start-date" class="form-input" />
+              </div>
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label">Auto-Generated Status</label>
+                <select id="modal-preset-auto-status" class="form-select">
+                  <option value="draft" selected>Save as Draft (for review)</option>
+                  <option value="sent">Save & Mark Sent</option>
+                </select>
+              </div>
+            </div>
+            <p style="font-size: 0.76rem; color: var(--text-muted); margin: 8px 0 0 0;">
+              The daily recurring cron check will auto-generate the invoice with sequential invoice numbering on matching schedule dates.
+            </p>
+          </div>
+        </div>
+
         <p style="font-size: 0.82rem; color: var(--text-muted); margin: 0 0 10px 0;">
-          This will save current line items, discount, tax, payment instructions, and terms as a reusable template for the selected client.
+          This will save current line items, discount, tax, payment instructions, terms, and optional recurring rules as a reusable template for the selected client.
         </p>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-close="modal-preset">Cancel</button>
@@ -1491,6 +1592,7 @@
     function renderSenderSelects() {
       const filterSelect = document.getElementById('filter-sender');
       const builderSelect = document.getElementById('builder-sender-id');
+      const prevSelected = builderSelect.value;
 
       filterSelect.innerHTML = '<option value="">All Senders / Companies</option>';
       builderSelect.innerHTML = '';
@@ -1504,9 +1606,15 @@
         const optBuilder = document.createElement('option');
         optBuilder.value = s.id;
         optBuilder.textContent = s.name + (s.is_default ? ' (Default)' : '');
-        if (s.is_default) optBuilder.selected = true;
         builderSelect.appendChild(optBuilder);
       });
+
+      if (prevSelected && allSenders.some(s => String(s.id) === String(prevSelected))) {
+        builderSelect.value = prevSelected;
+      } else {
+        const defaultSender = allSenders.find(s => s.is_default) || allSenders[0];
+        if (defaultSender) builderSelect.value = defaultSender.id;
+      }
 
       updateBuilderSenderPreview();
     }
@@ -1516,16 +1624,14 @@
       const s = allSenders.find(x => String(x.id) === String(senderId));
       const previewDiv = document.getElementById('builder-sender-preview');
       if (s) {
-        const parts = [s.email, formatPhone(s.phone), s.address ? s.address.split('\n')[0] : ''].filter(Boolean);
+        // Under the from and to, only show the email and phone number not the address
+        const parts = [s.email, formatPhone(s.phone)].filter(Boolean);
         previewDiv.textContent = parts.join(' • ');
-        // If creating new invoice, set default instructions/notes
+
+        // When creating a new invoice, remittance and terms must change per the from profile selected
         if (!currentEditingInvoiceId) {
-          if (!document.getElementById('builder-payment-instructions').value.trim()) {
-            document.getElementById('builder-payment-instructions').value = s.payment_instructions || '';
-          }
-          if (!document.getElementById('builder-notes').value.trim()) {
-            document.getElementById('builder-notes').value = s.default_notes || '';
-          }
+          document.getElementById('builder-payment-instructions').value = s.payment_instructions || '';
+          document.getElementById('builder-notes').value = s.default_notes || '';
         }
       } else {
         previewDiv.textContent = '';
@@ -1537,6 +1643,7 @@
     function renderClientSelects() {
       const filterSelect = document.getElementById('filter-client');
       const builderSelect = document.getElementById('builder-client-id');
+      const prevVal = builderSelect.value;
 
       filterSelect.innerHTML = '<option value="">All Clients</option>';
       builderSelect.innerHTML = '<option value="">-- Choose saved client or type custom name below --</option>';
@@ -1552,6 +1659,11 @@
         optBuilder.textContent = c.name;
         builderSelect.appendChild(optBuilder);
       });
+
+      if (prevVal && allClients.some(c => String(c.id) === String(prevVal))) {
+        builderSelect.value = prevVal;
+      }
+      handleClientSelectChange();
     }
 
     async function handleClientSelectChange() {
@@ -1559,9 +1671,13 @@
       const previewDiv = document.getElementById('builder-client-preview');
       const presetBar = document.getElementById('client-preset-bar');
       const presetSelect = document.getElementById('builder-client-presets');
+      const clientNameInput = document.getElementById('builder-client-name');
 
       if (!clientId) {
         previewDiv.textContent = '';
+        if (clientNameInput) {
+          clientNameInput.style.display = 'block';
+        }
         presetBar.style.display = 'none';
         presetSelect.innerHTML = '<option value="">Choose a recurring preset...</option>';
         return;
@@ -1569,8 +1685,13 @@
 
       const client = allClients.find(x => String(x.id) === String(clientId));
       if (client) {
-        document.getElementById('builder-client-name').value = client.name;
-        const parts = [client.email, formatPhone(client.phone), client.address ? client.address.split('\n')[0] : ''].filter(Boolean);
+        if (clientNameInput) {
+          clientNameInput.value = client.name;
+          // Don't include the bottom client name box if a preselected client is already chosen
+          clientNameInput.style.display = 'none';
+        }
+        // Under the from and to, only show the email and phone number not the address
+        const parts = [client.email, formatPhone(client.phone)].filter(Boolean);
         previewDiv.textContent = parts.join(' • ');
 
         // Fetch presets for this client
@@ -1899,6 +2020,7 @@
       document.getElementById('builder-status').value = 'draft';
       document.getElementById('builder-client-id').value = '';
       document.getElementById('builder-client-name').value = '';
+      document.getElementById('builder-client-name').style.display = 'block';
       document.getElementById('builder-client-preview').textContent = '';
       document.getElementById('client-preset-bar').style.display = 'none';
 
