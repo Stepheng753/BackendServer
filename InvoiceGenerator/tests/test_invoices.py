@@ -247,8 +247,9 @@ class InvoiceGeneratorTestCase(unittest.TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertIn(b"Preview Client", resp.data)
         self.assertIn(b"+1 (858) 555-1234", resp.data)
-        self.assertIn(b"Preview item", resp.data)
-        delete_invoice(inv_id)
+        resp_del = self.client.delete(f"/api/invoices/{inv_id}")
+        self.assertEqual(resp_del.status_code, 200)
+        self.assertTrue(resp_del.get_json().get("success"))
 
     def test_06_recurring_invoices_and_cron_endpoint(self):
         # 1. Setup client

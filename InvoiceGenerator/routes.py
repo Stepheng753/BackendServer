@@ -23,6 +23,7 @@ from .db import (
     update_invoice,
     update_invoice_status,
     duplicate_invoice,
+    delete_invoice,
     get_invoices_summary,
     format_phone,
     process_recurring_invoices,
