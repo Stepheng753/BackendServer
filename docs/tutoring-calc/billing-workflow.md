@@ -12,25 +12,25 @@ Crossroads Tutoring operates on a weekly billing cycle running from Monday to Su
 [Monday Morning 04:00 AM]
           │
           ▼
-[1. Calculate Billing Dates (/dates)]
+[1. Calculate Billing Dates (/api/tutoring/dates)]
   start_date (Previous Monday) ➔ end_date (Following Sunday)
           │
           ▼
-[2. Copy Template Sheet (/copy-template)]
+[2. Copy Template Sheet (/api/tutoring/copy-template)]
   Copies master "Student Pay" into target Year Folder
   Renames to "MM.DD.YY - MM.DD.YY CALCULATED"
           │
           ▼
-[3. Parse Calendar Hours (/calc-hours)]
+[3. Parse Calendar Hours (/api/tutoring/calc-hours)]
   Parses Google Calendar for default-colored events ending in "Tutoring"
   Consolidates hours by student first name
           │
           ▼
-[4. Query Previous Unpaid Balances (/previous-balances)]
+[4. Query Previous Unpaid Balances (/api/tutoring/previous-balances)]
   Inspects prior week's sheet for rows with status "Need to Pay"
           │
           ▼
-[5. Update Sheet & Notify (/update-sheet)]
+[5. Update Sheet & Notify (/api/tutoring/update-sheet)]
   Populates Column D (Hours) and Column G (Remaining Balances)
   Sends email alert with spreadsheet link to Stephen Giang
 ```
@@ -39,7 +39,7 @@ Crossroads Tutoring operates on a weekly billing cycle running from Monday to Su
 
 ## 2. Endpoints Technical Reference
 
-### 2.1. `GET /dates`
+### 2.1. `GET /api/tutoring/dates`
 * **Purpose**: Calculates the billing week date range.
 * **Logic**: Computes the previous Monday date (if today is Monday, calculates the previous Monday 7 days prior) and the following Sunday in `MM.DD.YY` and ISO format.
 * **Response**:
@@ -52,7 +52,7 @@ Crossroads Tutoring operates on a weekly billing cycle running from Monday to Su
   }
   ```
 
-### 2.2. `POST /copy-template`
+### 2.2. `POST /api/tutoring/copy-template`
 * **Parameters** (JSON or query): `start_date`, `end_date` (optional; auto-computed if omitted).
 * **Behavior**:
   1. Locates or creates a subfolder for the target year (e.g. `2026`) inside `PAY_PARENT_FOLDER_ID`.
@@ -70,7 +70,7 @@ Crossroads Tutoring operates on a weekly billing cycle running from Monday to Su
   }
   ```
 
-### 2.3. `GET /calc-hours`
+### 2.3. `GET /api/tutoring/calc-hours`
 * **Parameters**: `start_date`, `end_date`
 * **Behavior**:
   1. Queries Google Calendar API for events between `start_date 00:00:00` and `end_date 23:59:59` PST.
@@ -87,14 +87,14 @@ Crossroads Tutoring operates on a weekly billing cycle running from Monday to Su
   }
   ```
 
-### 2.4. `GET /previous-balances`
+### 2.4. `GET /api/tutoring/previous-balances`
 * **Parameters**: `start_date`, `end_date`
 * **Behavior**:
   1. Locates the previous week's sheet (7 days prior to `start_date`).
   2. Scans student rows where `Student Status` (Column B) is `"Need to Pay"`.
   3. Returns a dictionary mapping student first names to their unpaid balance.
 
-### 2.5. `POST /update-sheet`
+### 2.5. `POST /api/tutoring/update-sheet`
 * **Parameters**:
   * `sheet_id`: Google Sheet ID (required).
   * `action`: `"update_hours"` or `"update_pay_status"`.
@@ -105,7 +105,7 @@ Crossroads Tutoring operates on a weekly billing cycle running from Monday to Su
   4. Halts processing before the summary / subtotal row.
   5. Sends an email notification to `NOTIFICATION_EMAIL` containing the sheet link.
 
-### 2.6. `POST /tutoring/run-calc` (Orchestrator Endpoint)
+### 2.6. `POST /api/tutoring/run-calc` (Orchestrator Endpoint)
 * **Parameters**: `start_date`, `end_date` (optional, auto-calculated if omitted).
 * **Behavior**:
   1. Automatically runs steps 2.1 through 2.5 in a single unified atomic workflow.

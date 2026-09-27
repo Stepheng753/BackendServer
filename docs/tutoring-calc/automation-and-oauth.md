@@ -9,17 +9,17 @@ This document details the **automated cron job schedules** and the **Google OAut
 The tutoring billing pipeline runs on two scheduled HTTP endpoint triggers every Monday on the host machine (`flash-server`):
 
 ```
-Monday 04:00 AM PST ───> curl -u "$USER:$PASS" -X POST /tutoring/run-calc
+Monday 04:00 AM PST ───> curl -u "$USER:$PASS" -X POST /api/tutoring/run-calc
                                │
                 [Human Review Window: 8 Hours]
                                │
-Monday 12:00 PM PST ───> curl -u "$USER:$PASS" -X POST /tutoring/run-send-texts
+Monday 12:00 PM PST ───> curl -u "$USER:$PASS" -X POST /api/tutoring/run-send-texts
 ```
 
 ### 1.1. Endpoint Execution Reference
 
-#### `POST /tutoring/run-calc` (Action 1)
-* **Endpoint**: `http://localhost:5000/tutoring/run-calc` (or `/run-calc`)
+#### `POST /api/tutoring/run-calc` (Action 1)
+* **Endpoint**: `http://localhost:5000/api/tutoring/run-calc` (or `/tutoring/run-calc`)
 * **Schedule**: Every Monday at `04:00 AM` PST
 * **Responsibilities**:
   1. Computes preceding Monday–Sunday date range.
@@ -30,8 +30,8 @@ Monday 12:00 PM PST ───> curl -u "$USER:$PASS" -X POST /tutoring/run-send-
   6. Sends calculation summary email with direct spreadsheet link to `stepheng753@gmail.com`.
   7. Returns JSON with `sheet_url`, `total_balance`, and student breakdown for web UI and log tracking.
 
-#### `POST /tutoring/run-send-texts` (Action 2)
-* **Endpoint**: `http://localhost:5000/tutoring/run-send-texts` (or `/send-texts`)
+#### `POST /api/tutoring/run-send-texts` (Action 2)
+* **Endpoint**: `http://localhost:5000/api/tutoring/run-send-texts` (or `/tutoring/run-send-texts`)
 * **Schedule**: Every Monday at `12:00 PM` (Noon) PST
 * **Responsibilities**:
   1. Locates the current week's sheet in Google Drive (auto-detected via date range).
@@ -58,17 +58,17 @@ Add the following entries (using authenticated `curl` with your basic auth crede
 # Crossroads Tutoring Weekly Automation Pipeline (Endpoint-Driven)
 # -----------------------------------------------------------------------------
 # 1. Weekly Pay Calculation: Monday 4:00 AM PST
-0 4 * * 1 curl -sS -u "$USERNAME:$PASSWORD" -X POST https://dev.stepheng753.com/tutoring/run-calc >> /home/flash-server/Development/BackendServer/TutoringCalculator/logs/cron.log 2>&1
+0 4 * * 1 curl -sS -u "$USERNAME:$PASSWORD" -X POST https://dev.stepheng753.com/api/tutoring/run-calc >> /home/flash-server/Development/BackendServer/TutoringCalculator/logs/cron.log 2>&1
 
 # 2. Text Message Dispatch Guarded by Approval: Monday 12:00 PM (Noon) PST
-0 12 * * 1 curl -sS -u "$USERNAME:$PASSWORD" -X POST https://dev.stepheng753.com/tutoring/run-send-texts >> /home/flash-server/Development/BackendServer/TutoringCalculator/logs/cron.log 2>&1
+0 12 * * 1 curl -sS -u "$USERNAME:$PASSWORD" -X POST https://dev.stepheng753.com/api/tutoring/run-send-texts >> /home/flash-server/Development/BackendServer/TutoringCalculator/logs/cron.log 2>&1
 ```
 
 > [!TIP]
 > **Production Socket Alternative**: If you prefer triggering directly via the local Gunicorn socket without DNS/HTTPS routing:
 > ```bash
-> 0 4 * * 1 curl -sS -u "$USERNAME:$PASSWORD" --unix-socket /tmp/dev_stepheng753_com_api.sock -X POST http://localhost/tutoring/run-calc >> /home/flash-server/Development/BackendServer/TutoringCalculator/logs/cron.log 2>&1
-> 0 12 * * 1 curl -sS -u "$USERNAME:$PASSWORD" --unix-socket /tmp/dev_stepheng753_com_api.sock -X POST http://localhost/tutoring/run-send-texts >> /home/flash-server/Development/BackendServer/TutoringCalculator/logs/cron.log 2>&1
+> 0 4 * * 1 curl -sS -u "$USERNAME:$PASSWORD" --unix-socket /tmp/dev_stepheng753_com_api.sock -X POST http://localhost/api/tutoring/run-calc >> /home/flash-server/Development/BackendServer/TutoringCalculator/logs/cron.log 2>&1
+> 0 12 * * 1 curl -sS -u "$USERNAME:$PASSWORD" --unix-socket /tmp/dev_stepheng753_com_api.sock -X POST http://localhost/api/tutoring/run-send-texts >> /home/flash-server/Development/BackendServer/TutoringCalculator/logs/cron.log 2>&1
 > ```
 
 > [!NOTE]

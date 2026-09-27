@@ -393,11 +393,66 @@ def get_presets_by_client(client_id):
         for r in rows:
             d = dict(r)
             try:
-                d["items"] = json.loads(d.get("items_json") or "[]")
+                items_val = json.loads(d.get("items_json") or "[]")
+                if isinstance(items_val, str):
+                    items_val = json.loads(items_val)
+                d["items"] = items_val if isinstance(items_val, list) else []
             except Exception:
                 d["items"] = []
             result.append(d)
         return result
+
+
+def get_all_presets():
+    """Returns all client presets with client and sender profile details."""
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT cp.*, c.name AS client_name, c.email AS client_email,
+                   sp.name AS sender_name
+            FROM client_presets cp
+            JOIN clients c ON cp.client_id = c.id
+            LEFT JOIN sender_profiles sp ON cp.sender_id = sp.id
+            ORDER BY cp.preset_name COLLATE NOCASE ASC;
+        """)
+        rows = cursor.fetchall()
+        result = []
+        for r in rows:
+            d = dict(r)
+            try:
+                items_val = json.loads(d.get("items_json") or "[]")
+                if isinstance(items_val, str):
+                    items_val = json.loads(items_val)
+                d["items"] = items_val if isinstance(items_val, list) else []
+            except Exception:
+                d["items"] = []
+            result.append(d)
+        return result
+
+
+def get_preset_by_id(preset_id):
+    """Returns a single preset by ID with parsed line items."""
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT cp.*, c.name AS client_name, sp.name AS sender_name
+            FROM client_presets cp
+            JOIN clients c ON cp.client_id = c.id
+            LEFT JOIN sender_profiles sp ON cp.sender_id = sp.id
+            WHERE cp.id = ?;
+        """, (preset_id,))
+        row = cursor.fetchone()
+        if not row:
+            return None
+        d = dict(row)
+        try:
+            items_val = json.loads(d.get("items_json") or "[]")
+            if isinstance(items_val, str):
+                items_val = json.loads(items_val)
+            d["items"] = items_val if isinstance(items_val, list) else []
+        except Exception:
+            d["items"] = []
+        return d
 
 
 def add_preset(client_id, preset_name, default_due_days=14, items=None, notes="",
@@ -406,6 +461,13 @@ def add_preset(client_id, preset_name, default_due_days=14, items=None, notes=""
                recurrence_start_date="", sender_id=None, auto_status="draft"):
     """Saves a line-item preset for a client with optional automated recurring schedule."""
     if items is None:
+        items = []
+    if isinstance(items, str):
+        try:
+            items = json.loads(items)
+        except Exception:
+            items = []
+    if not isinstance(items, list):
         items = []
     now_iso = datetime.now(APP_TIMEZONE).isoformat()
     items_json = json.dumps(items)
@@ -439,6 +501,59 @@ def add_preset(client_id, preset_name, default_due_days=14, items=None, notes=""
         return cursor.lastrowid
 
 
+def update_preset(preset_id, preset_name, default_due_days=14, items=None, notes="",
+                  discount_amount=0.0, tax_rate=0.0, payment_instructions="",
+                  is_recurring=0, recurrence_type="monthly", recurrence_day=1,
+                  recurrence_start_date="", sender_id=None, auto_status="draft"):
+    """Updates an existing preset record including its line items and recurring rules."""
+    if items is None:
+        items = []
+    if isinstance(items, str):
+        try:
+            items = json.loads(items)
+        except Exception:
+            items = []
+    if not isinstance(items, list):
+        items = []
+    items_json = json.dumps(items)
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            UPDATE client_presets SET
+                preset_name = ?,
+                default_due_days = ?,
+                items_json = ?,
+                notes = ?,
+                discount_amount = ?,
+                tax_rate = ?,
+                payment_instructions = ?,
+                is_recurring = ?,
+                recurrence_type = ?,
+                recurrence_day = ?,
+                recurrence_start_date = ?,
+                sender_id = ?,
+                auto_status = ?
+            WHERE id = ?;
+        """, (
+            preset_name.strip(),
+            int(default_due_days),
+            items_json,
+            notes.strip(),
+            float(discount_amount or 0.0),
+            float(tax_rate or 0.0),
+            (payment_instructions or "").strip(),
+            1 if is_recurring else 0,
+            (recurrence_type or "monthly").strip(),
+            int(recurrence_day or 1),
+            (recurrence_start_date or "").strip(),
+            sender_id,
+            (auto_status or "draft").strip(),
+            preset_id
+        ))
+        conn.commit()
+        return cursor.rowcount > 0
+
+
 def get_recurring_presets():
     """Returns all presets marked as active recurring templates."""
     with get_connection() as conn:
@@ -457,7 +572,10 @@ def get_recurring_presets():
         for r in rows:
             d = dict(r)
             try:
-                d["items"] = json.loads(d.get("items_json") or "[]")
+                items_val = json.loads(d.get("items_json") or "[]")
+                if isinstance(items_val, str):
+                    items_val = json.loads(items_val)
+                d["items"] = items_val if isinstance(items_val, list) else []
             except Exception:
                 d["items"] = []
             result.append(d)

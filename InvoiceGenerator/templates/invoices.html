@@ -817,6 +817,7 @@
         transform: translateX(100%);
         opacity: 0;
       }
+
       to {
         transform: translateX(0);
         opacity: 1;
@@ -834,7 +835,7 @@
         <img src="/static/flash.png" alt="Flash Logo" />
         <div>
           <div class="brand-title">Invoice Generator</div>
-          <div class="brand-subtitle">Pure Python Vector Billing Console & History</div>
+          <div class="brand-subtitle">Billing Console & History</div>
         </div>
       </a>
       <div class="nav-actions">
@@ -843,7 +844,8 @@
         <a href="/monitoring" class="nav-btn" title="Flash Server Monitoring">System Monitor</a>
         <a href="/todo" class="nav-btn" title="Crossroads To-Do Board">To Do</a>
         <a href="/invoices" class="nav-btn active" title="Invoice Generator & History">Invoices</a>
-        <button id="theme-toggle" class="nav-btn" style="cursor: pointer;" aria-label="Toggle Theme" title="Toggle Theme">
+        <button id="theme-toggle" class="nav-btn" style="cursor: pointer;" aria-label="Toggle Theme"
+          title="Toggle Theme">
           <img src="/static/day-and-night.svg" alt="Theme" class="theme-icon" />
         </button>
       </div>
@@ -853,7 +855,8 @@
     <div class="header-card">
       <div class="header-left">
         <div class="pulse-icon-box">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
             <polyline points="14 2 14 8 20 8"></polyline>
             <line x1="16" y1="13" x2="8" y2="13"></line>
@@ -863,7 +866,8 @@
         </div>
         <div class="header-headings">
           <h1>Invoice Generator & History</h1>
-          <p>Create professional vector PDFs on-demand, manage multi-company profiles, and track billings with instant data persistence.</p>
+          <p>Create professional vector PDFs on-demand, manage multi-company profiles, and track billings with instant
+            data persistence.</p>
         </div>
       </div>
       <div>
@@ -892,6 +896,14 @@
           <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
         </svg>
         + New Invoice
+      </button>
+      <button class="tab-btn" data-tab="tab-presets">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="23 4 23 10 17 10"></polyline>
+          <polyline points="1 20 1 14 7 14"></polyline>
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+        </svg>
+        Presets & Recurring
       </button>
       <button class="tab-btn" data-tab="tab-entities">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -937,11 +949,13 @@
       <div class="filter-card">
         <div class="filter-row">
           <div class="search-box">
-            <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2">
               <circle cx="11" cy="11" r="8"></circle>
               <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
             </svg>
-            <input type="text" id="filter-search" class="search-input" placeholder="Search by invoice #, client, company, or notes..." />
+            <input type="text" id="filter-search" class="search-input"
+              placeholder="Search by invoice #, client, company, or notes..." />
           </div>
 
           <select id="filter-sender" class="filter-select">
@@ -958,8 +972,11 @@
           <button id="btn-reset-filters" class="btn btn-secondary btn-sm" title="Clear all filters">
             Reset
           </button>
-          <button id="btn-run-recurring" class="btn btn-secondary btn-sm" title="Check & generate recurring invoices due today" style="display: inline-flex; align-items: center; gap: 5px;">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <button id="btn-run-recurring" class="btn btn-secondary btn-sm"
+            title="Check & generate recurring invoices due today"
+            style="display: inline-flex; align-items: center; gap: 5px;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+              stroke-linecap="round" stroke-linejoin="round">
               <polyline points="23 4 23 10 17 10"></polyline>
               <polyline points="1 20 1 14 7 14"></polyline>
               <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
@@ -1028,40 +1045,36 @@
             <div class="form-row-2">
               <!-- SENDER / FROM -->
               <div class="form-group">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                  <label class="form-label" style="margin: 0;">From (Company / Profile)*</label>
-                  <button type="button" id="btn-modal-new-sender" class="btn btn-secondary btn-sm" style="padding: 2px 6px; font-size: 0.72rem;">+ New</button>
-                </div>
+                <label class="form-label">From (Company / Profile)*</label>
                 <select id="builder-sender-id" class="form-select"></select>
-                <div id="builder-sender-preview" style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; line-height: 1.3;"></div>
+                <div id="builder-sender-preview"
+                  style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; line-height: 1.3;"></div>
               </div>
 
               <!-- CLIENT / TO -->
               <div class="form-group">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                  <label class="form-label" style="margin: 0;">Bill To (Client)*</label>
-                  <button type="button" id="btn-modal-new-client" class="btn btn-secondary btn-sm" style="padding: 2px 6px; font-size: 0.72rem;">+ New</button>
-                </div>
+                <label class="form-label">Bill To (Client)*</label>
                 <select id="builder-client-id" class="form-select">
                   <option value="">Select a saved client or type name below...</option>
                 </select>
-                <input type="text" id="builder-client-name" class="form-input" style="margin-top: 6px;" placeholder="Client Name (required)" />
-                <div id="builder-client-preview" style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; line-height: 1.3;"></div>
+                <input type="text" id="builder-client-name" class="form-input" style="margin-top: 6px;"
+                  placeholder="Client Name (required)" />
+                <div id="builder-client-preview"
+                  style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; line-height: 1.3;"></div>
               </div>
             </div>
 
-            <!-- RECURRING PRESET SELECTOR -->
-            <div id="client-preset-bar" class="form-row-2" style="margin-top: 10px; background: var(--muted); padding: 10px; border-radius: var(--radius); display: none;">
+            <!-- PRESET SELECTOR -->
+            <div id="client-preset-bar" class="form-row-2"
+              style="margin-top: 10px; background: var(--muted); padding: 10px; border-radius: var(--radius); display: none;">
               <div>
                 <label class="form-label">Client Preset:</label>
                 <select id="builder-client-presets" class="form-select">
-                  <option value="">Choose a recurring preset...</option>
+                  <option value="">Choose a preset...</option>
                 </select>
               </div>
               <div style="display: flex; align-items: flex-end; gap: 8px;">
                 <button type="button" id="btn-apply-preset" class="btn btn-secondary btn-sm">Apply Preset</button>
-                <button type="button" id="btn-delete-preset" class="btn btn-secondary btn-sm" style="color: var(--danger-color, #ef4444); border-color: rgba(239, 68, 68, 0.25);" title="Delete selected preset">Delete</button>
-                <button type="button" id="btn-save-as-preset" class="btn btn-secondary btn-sm" title="Save current line items as template for this client">+ Save as Preset</button>
               </div>
             </div>
 
@@ -1086,6 +1099,7 @@
                   <button type="button" class="due-preset-btn" data-days="0">Receipt</button>
                   <button type="button" class="due-preset-btn" data-days="7">+7d</button>
                   <button type="button" class="due-preset-btn" data-days="14">+14d</button>
+                  <button type="button" class="due-preset-btn" data-days="15">+15d</button>
                   <button type="button" class="due-preset-btn" data-days="30">+30d</button>
                 </div>
               </div>
@@ -1135,11 +1149,13 @@
             <div class="card-title">Remittance & Terms</div>
             <div class="form-group">
               <label class="form-label">Payment Instructions</label>
-              <textarea id="builder-payment-instructions" class="form-textarea" rows="3" placeholder="Zelle, Venmo, Direct Deposit, or Bank Wire details..."></textarea>
+              <textarea id="builder-payment-instructions" class="form-textarea" rows="3"
+                placeholder="Zelle, Venmo, Direct Deposit, or Bank Wire details..."></textarea>
             </div>
             <div class="form-group" style="margin-bottom: 0;">
               <label class="form-label">Notes & Terms</label>
-              <textarea id="builder-notes" class="form-textarea" rows="2" placeholder="Thank you for your business!"></textarea>
+              <textarea id="builder-notes" class="form-textarea" rows="2"
+                placeholder="Thank you for your business!"></textarea>
             </div>
           </div>
 
@@ -1159,12 +1175,14 @@
 
               <div class="summary-line">
                 <span>Discount ($):</span>
-                <input type="number" id="builder-discount" class="form-input" style="width: 100px; padding: 4px 8px; text-align: right;" value="0.00" min="0" step="0.01" />
+                <input type="number" id="builder-discount" class="form-input"
+                  style="width: 100px; padding: 4px 8px; text-align: right;" value="0.00" min="0" step="0.01" />
               </div>
 
               <div class="summary-line">
                 <span>Tax Rate (%):</span>
-                <input type="number" id="builder-tax-rate" class="form-input" style="width: 100px; padding: 4px 8px; text-align: right;" value="0.0" min="0" step="0.1" />
+                <input type="number" id="builder-tax-rate" class="form-input"
+                  style="width: 100px; padding: 4px 8px; text-align: right;" value="0.0" min="0" step="0.1" />
               </div>
 
               <div class="summary-line grand">
@@ -1184,7 +1202,8 @@
               <button type="button" id="btn-save-pdf" class="btn btn-secondary" style="justify-content: center;">
                 Save & Download PDF
               </button>
-              <button type="button" id="btn-builder-reset" class="btn btn-sm" style="color: var(--text-muted); justify-content: center; background: transparent; border: none;">
+              <button type="button" id="btn-builder-reset" class="btn btn-sm"
+                style="color: var(--text-muted); justify-content: center; background: transparent; border: none;">
                 Cancel / Reset
               </button>
             </div>
@@ -1198,7 +1217,67 @@
     </div>
 
     <!-- ===================================================================
-         TAB 3: CLIENTS & SENDERS MANAGEMENT
+         TAB 3: PRESETS & RECURRING JOBS MANAGEMENT
+         =================================================================== -->
+    <div id="tab-presets" class="tab-pane" style="display: none;">
+
+      <div class="form-card">
+        <div class="card-title" style="flex-wrap: wrap; gap: 12px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span>Presets & Recurring Schedules</span>
+            <span id="badge-total-presets" class="status-badge paid" style="font-size: 0.75rem;">0 Templates</span>
+            <span id="badge-recurring-presets" class="status-badge sent" style="font-size: 0.75rem;">0 Recurring</span>
+          </div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button type="button" id="btn-presets-run-recurring" class="btn btn-secondary btn-sm" title="Trigger recurring invoice check now">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+              Run Check Now
+            </button>
+            <button type="button" id="btn-open-preset-modal" class="btn btn-primary btn-sm">
+              + New Preset / Schedule
+            </button>
+          </div>
+        </div>
+
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: -8px; margin-bottom: 16px;">
+          Manage line-item presets and scheduled recurring invoice automation across all clients.
+        </p>
+
+        <!-- PRESETS FILTER BAR -->
+        <div class="form-row-3" style="margin-bottom: 16px; background: var(--muted); padding: 12px; border-radius: var(--radius);">
+          <div>
+            <label class="form-label" style="font-size: 0.78rem;">Filter by Client</label>
+            <select id="filter-preset-client" class="form-select">
+              <option value="">All Clients</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label" style="font-size: 0.78rem;">Filter by Type</label>
+            <select id="filter-preset-type" class="form-select">
+              <option value="all">All Presets & Recurring</option>
+              <option value="recurring">Recurring Schedules Only</option>
+              <option value="templates">On-Demand Templates Only</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label" style="font-size: 0.78rem;">Search</label>
+            <input type="text" id="filter-preset-search" class="form-input" placeholder="Search preset name or service..." />
+          </div>
+        </div>
+
+        <!-- PRESETS CONTAINER -->
+        <div id="presets-list-container" style="display: flex; flex-direction: column; gap: 14px;">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ===================================================================
+         TAB 4: CLIENTS & SENDERS MANAGEMENT
          =================================================================== -->
     <div id="tab-entities" class="tab-pane" style="display: none;">
 
@@ -1212,7 +1291,8 @@
               <button type="button" id="btn-open-sender-modal" class="btn btn-primary btn-sm">+ Add Profile</button>
             </div>
             <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: -8px; margin-bottom: 16px;">
-              Manage business entities (e.g. Stephen Giang personal, Crossroads Tutoring, or consulting companies) with distinct contact details and remittance instructions.
+              Manage business entities (e.g. Stephen Giang personal, Crossroads Tutoring, or consulting companies) with
+              distinct contact details and remittance instructions.
             </p>
 
             <div id="senders-list-container" style="display: flex; flex-direction: column; gap: 12px;">
@@ -1257,7 +1337,8 @@
         <input type="hidden" id="modal-sender-id" />
         <div class="form-group">
           <label class="form-label">Entity / Business Name*</label>
-          <input type="text" id="modal-sender-name" class="form-input" required placeholder="Stephen Giang / Crossroads Tutoring" />
+          <input type="text" id="modal-sender-name" class="form-input" required
+            placeholder="Stephen Giang / Crossroads Tutoring" />
         </div>
         <div class="form-row-2">
           <div class="form-group">
@@ -1271,7 +1352,8 @@
         </div>
         <div class="form-group">
           <label class="form-label">Mailing / Physical Address</label>
-          <textarea id="modal-sender-address" class="form-textarea" rows="2" placeholder="123 Business St&#10;City, ST 12345"></textarea>
+          <textarea id="modal-sender-address" class="form-textarea" rows="2"
+            placeholder="123 Business St&#10;City, ST 12345"></textarea>
         </div>
         <div class="form-group">
           <label class="form-label">Website</label>
@@ -1279,15 +1361,18 @@
         </div>
         <div class="form-group">
           <label class="form-label">Default Payment Instructions</label>
-          <textarea id="modal-sender-payment" class="form-textarea" rows="2" placeholder="Zelle: stepheng753@gmail.com&#10;Venmo: @Stephen-Giang"></textarea>
+          <textarea id="modal-sender-payment" class="form-textarea" rows="2"
+            placeholder="Zelle: stepheng753@gmail.com&#10;Venmo: @Stephen-Giang"></textarea>
         </div>
         <div class="form-group">
           <label class="form-label">Default Notes & Terms</label>
-          <textarea id="modal-sender-notes" class="form-textarea" rows="2" placeholder="Thank you for your business!"></textarea>
+          <textarea id="modal-sender-notes" class="form-textarea" rows="2"
+            placeholder="Thank you for your business!"></textarea>
         </div>
         <div class="form-group" style="display: flex; align-items: center; gap: 8px;">
           <input type="checkbox" id="modal-sender-is-default" />
-          <label for="modal-sender-is-default" style="font-size: 0.88rem; cursor: pointer;">Set as default sender profile</label>
+          <label for="modal-sender-is-default" style="font-size: 0.88rem; cursor: pointer;">Set as default sender
+            profile</label>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-close="modal-sender">Cancel</button>
@@ -1324,11 +1409,13 @@
         </div>
         <div class="form-group">
           <label class="form-label">Billing Address</label>
-          <textarea id="modal-client-address" class="form-textarea" rows="2" placeholder="456 Client Rd&#10;San Diego, CA 92101"></textarea>
+          <textarea id="modal-client-address" class="form-textarea" rows="2"
+            placeholder="456 Client Rd&#10;San Diego, CA 92101"></textarea>
         </div>
         <div class="form-group">
           <label class="form-label">Internal Notes</label>
-          <textarea id="modal-client-notes" class="form-textarea" rows="2" placeholder="Student name, recurring hourly rate, etc."></textarea>
+          <textarea id="modal-client-notes" class="form-textarea" rows="2"
+            placeholder="Student name, recurring hourly rate, etc."></textarea>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-close="modal-client">Cancel</button>
@@ -1344,14 +1431,32 @@
   <div id="modal-preset" class="modal-backdrop">
     <div class="modal-content">
       <div class="modal-header">
-        <h3 class="modal-title">Save as Client Preset</h3>
+        <h3 id="modal-preset-title" class="modal-title">Add / Edit Preset</h3>
         <button type="button" class="modal-close" data-close="modal-preset">&times;</button>
       </div>
       <form id="form-preset">
+        <input type="hidden" id="modal-preset-id" value="" />
+        <div class="form-row-2">
+          <div class="form-group">
+            <label class="form-label">From (Sender Profile)*</label>
+            <select id="modal-preset-sender-id" class="form-select" required>
+              <option value="">-- Choose Sender Profile --</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Bill To (Client)*</label>
+            <select id="modal-preset-client-id" class="form-select" required>
+              <option value="">-- Choose Client --</option>
+            </select>
+          </div>
+        </div>
+
         <div class="form-group">
           <label class="form-label">Preset Name*</label>
-          <input type="text" id="modal-preset-name" class="form-input" required placeholder="e.g. Weekly 2hr Tutoring, Standard Retainer" />
+          <input type="text" id="modal-preset-name" class="form-input" required
+            placeholder="e.g. Weekly 2hr Tutoring, Standard Retainer" />
         </div>
+
         <div class="form-row-3">
           <div class="form-group">
             <label class="form-label">Default Due Days</label>
@@ -1366,24 +1471,53 @@
             <input type="number" id="modal-preset-tax-rate" class="form-input" value="0.0" min="0" step="0.1" />
           </div>
         </div>
+
+        <!-- PRESET LINE ITEMS EDITOR -->
+        <div class="form-group">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <label class="form-label" style="margin: 0;">Preset Line Items</label>
+            <button type="button" id="btn-modal-preset-add-item" class="btn btn-secondary btn-sm" style="padding: 2px 8px; font-size: 0.74rem;">+ Add Line Item</button>
+          </div>
+          <div style="border: 1px solid var(--border); border-radius: var(--radius); overflow-x: auto; background: var(--bg-hover);">
+            <table class="table" style="margin: 0; font-size: 0.84rem;">
+              <thead>
+                <tr>
+                  <th style="padding: 6px 10px;">Description</th>
+                  <th style="width: 75px; padding: 6px 8px;">Qty</th>
+                  <th style="width: 95px; padding: 6px 8px;">Rate ($)</th>
+                  <th style="width: 85px; text-align: right; padding: 6px 8px;">Total</th>
+                  <th style="width: 36px; text-align: center; padding: 6px 4px;"></th>
+                </tr>
+              </thead>
+              <tbody id="modal-preset-items-tbody">
+                <!-- Dynamically populated rows -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
         <div class="form-group">
           <label class="form-label">Payment Instructions (Remittance)</label>
-          <textarea id="modal-preset-payment" class="form-textarea" rows="2" placeholder="Preset remittance instructions..."></textarea>
+          <textarea id="modal-preset-payment" class="form-textarea" rows="2"
+            placeholder="Preset remittance instructions..."></textarea>
         </div>
         <div class="form-group">
           <label class="form-label">Notes & Terms</label>
-          <textarea id="modal-preset-notes" class="form-textarea" rows="2" placeholder="Preset notes and terms..."></textarea>
+          <textarea id="modal-preset-notes" class="form-textarea" rows="2"
+            placeholder="Preset notes and terms..."></textarea>
         </div>
 
         <!-- RECURRING SCHEDULE SETTINGS -->
         <div style="border-top: 1px solid var(--border); padding-top: 12px; margin-top: 12px; margin-bottom: 12px;">
           <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
             <input type="checkbox" id="modal-preset-is-recurring" style="width: 16px; height: 16px; cursor: pointer;" />
-            <label for="modal-preset-is-recurring" style="font-size: 0.88rem; font-weight: 600; cursor: pointer; color: var(--text-main);">
+            <label for="modal-preset-is-recurring"
+              style="font-size: 0.88rem; font-weight: 600; cursor: pointer; color: var(--text-main);">
               Make Recurring Invoice (Auto-generate on schedule)
             </label>
           </div>
-          <div id="modal-preset-recurring-options" style="display: none; background: var(--bg-hover); padding: 12px; border-radius: var(--radius); border: 1px solid var(--border);">
+          <div id="modal-preset-recurring-options"
+            style="display: none; background: var(--bg-hover); padding: 12px; border-radius: var(--radius); border: 1px solid var(--border);">
             <div class="form-row-2">
               <div class="form-group" style="margin-bottom: 10px;">
                 <label class="form-label">Frequency</label>
@@ -1455,13 +1589,15 @@
               </div>
             </div>
             <p style="font-size: 0.76rem; color: var(--text-muted); margin: 8px 0 0 0;">
-              The daily recurring cron check will auto-generate the invoice with sequential invoice numbering on matching schedule dates.
+              The daily recurring cron check will auto-generate the invoice with sequential invoice numbering on
+              matching schedule dates.
             </p>
           </div>
         </div>
 
         <p style="font-size: 0.82rem; color: var(--text-muted); margin: 0 0 10px 0;">
-          This will save current line items, discount, tax, payment instructions, terms, and optional recurring rules as a reusable template for the selected client.
+          This will save current line items, discount, tax, payment instructions, terms, and optional recurring rules as
+          a reusable template for the selected client.
         </p>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-close="modal-preset">Cancel</button>
@@ -1525,8 +1661,15 @@
       btn.addEventListener('click', () => closeModal(btn.getAttribute('data-close')));
     });
     document.querySelectorAll('.modal-backdrop').forEach(modal => {
+      let isMouseDownOnBackdrop = false;
+      modal.addEventListener('mousedown', (e) => {
+        isMouseDownOnBackdrop = (e.target === modal);
+      });
       modal.addEventListener('click', (e) => {
-        if (e.target === modal) modal.classList.remove('show');
+        if (e.target === modal && isMouseDownOnBackdrop) {
+          modal.classList.remove('show');
+        }
+        isMouseDownOnBackdrop = false;
       });
     });
     document.addEventListener('keydown', (e) => {
@@ -1550,6 +1693,8 @@
     let allInvoices = [];
     let allSenders = [];
     let allClients = [];
+    let allPresets = [];
+    let currentClientPresets = [];
     let currentEditingInvoiceId = null;
     let activeStatusFilter = 'all';
 
@@ -1573,9 +1718,9 @@
 
         const res = await fetch(`/api/invoices/summary?${params.toString()}`);
         const data = await res.json();
-        document.getElementById('metric-total-invoiced').textContent = `$${data.total_invoiced.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-        document.getElementById('metric-outstanding').textContent = `$${data.outstanding.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-        document.getElementById('metric-paid').textContent = `$${data.paid.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        document.getElementById('metric-total-invoiced').textContent = `$${data.total_invoiced.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        document.getElementById('metric-outstanding').textContent = `$${data.outstanding.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        document.getElementById('metric-paid').textContent = `$${data.paid.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
         document.getElementById('metric-clients').textContent = data.total_clients;
       } catch (err) {
         console.error('Failed to load invoice summary:', err);
@@ -1658,7 +1803,7 @@
       updateBuilderSenderPreview();
     }
 
-    function updateBuilderSenderPreview() {
+    function updateBuilderSenderPreview(updateDefaults = true) {
       const senderId = document.getElementById('builder-sender-id').value;
       const s = allSenders.find(x => String(x.id) === String(senderId));
       const previewDiv = document.getElementById('builder-sender-preview');
@@ -1668,7 +1813,7 @@
         previewDiv.textContent = parts.join(' • ');
 
         // When creating a new invoice, remittance and terms must change per the from profile selected
-        if (!currentEditingInvoiceId) {
+        if (!currentEditingInvoiceId && updateDefaults) {
           document.getElementById('builder-payment-instructions').value = s.payment_instructions || '';
           document.getElementById('builder-notes').value = s.default_notes || '';
         }
@@ -1702,6 +1847,8 @@
       if (prevVal && allClients.some(c => String(c.id) === String(prevVal))) {
         builderSelect.value = prevVal;
       }
+      populateModalPresetSelects();
+      renderPresetsFilterClients();
       handleClientSelectChange();
     }
 
@@ -1718,7 +1865,7 @@
           clientNameInput.style.display = 'block';
         }
         presetBar.style.display = 'none';
-        presetSelect.innerHTML = '<option value="">Choose a recurring preset...</option>';
+        presetSelect.innerHTML = '<option value="">Choose a preset...</option>';
         return;
       }
 
@@ -1737,11 +1884,12 @@
         try {
           const res = await fetch(`/api/invoices/presets/${clientId}`);
           const presets = await res.json();
-          if (presets && presets.length > 0) {
-            presetSelect.innerHTML = '<option value="">Choose a recurring preset...</option>';
-            presets.forEach(p => {
+          currentClientPresets = Array.isArray(presets) ? presets : [];
+          if (currentClientPresets.length > 0) {
+            presetSelect.innerHTML = '<option value="">Choose a preset...</option>';
+            currentClientPresets.forEach(p => {
               const opt = document.createElement('option');
-              opt.value = JSON.stringify(p);
+              opt.value = p.id;
               let recBadge = '';
               if (p.is_recurring) {
                 if (p.recurrence_type === 'monthly') {
@@ -1755,7 +1903,8 @@
                   recBadge = ` [🔁 Every ${dayNames[p.recurrence_day] || 'Fri'}]`;
                 }
               }
-              opt.textContent = `${p.preset_name}${recBadge} (${p.items ? p.items.length : 0} items)`;
+              const count = Array.isArray(p.items) ? p.items.length : (typeof p.items === 'string' ? JSON.parse(p.items).length : 0);
+              opt.textContent = `${p.preset_name}${recBadge} (${count} item${count === 1 ? '' : 's'})`;
               presetSelect.appendChild(opt);
             });
             presetBar.style.display = 'flex';
@@ -1773,51 +1922,76 @@
       const num = parseInt(n) || 1;
       if (num > 3 && num < 21) return 'th';
       switch (num % 10) {
-        case 1:  return 'st';
-        case 2:  return 'nd';
-        case 3:  return 'rd';
+        case 1: return 'st';
+        case 2: return 'nd';
+        case 3: return 'rd';
         default: return 'th';
       }
     }
 
     document.getElementById('builder-client-id').addEventListener('change', handleClientSelectChange);
 
-    // Apply Preset button
-    document.getElementById('btn-apply-preset').addEventListener('click', () => {
-      const presetVal = document.getElementById('builder-client-presets').value;
-      if (!presetVal) return;
-      try {
-        const p = JSON.parse(presetVal);
-        if (p.default_due_days !== undefined && p.default_due_days !== null) {
-          setDueDateByOffset(p.default_due_days);
+    // Apply Preset logic
+    function applySelectedPreset(customPreset = null) {
+      let p = customPreset;
+      if (!p) {
+        const presetSelect = document.getElementById('builder-client-presets');
+        const selectedId = parseInt(presetSelect.value);
+        if (!selectedId) return;
+        p = (currentClientPresets || []).find(x => x.id === selectedId) || allPresets.find(x => x.id === selectedId);
+      }
+      if (!p) return;
+
+      if (p.default_due_days !== undefined && p.default_due_days !== null) {
+        setDueDateByOffset(p.default_due_days);
+      }
+      if (p.discount_amount !== undefined) {
+        document.getElementById('builder-discount').value = Number(p.discount_amount).toFixed(2);
+      }
+      if (p.tax_rate !== undefined) {
+        document.getElementById('builder-tax-rate').value = Number(p.tax_rate).toFixed(1);
+      }
+      if (p.sender_id) {
+        const senderSelect = document.getElementById('builder-sender-id');
+        if (senderSelect && Array.from(senderSelect.options).some(o => String(o.value) === String(p.sender_id))) {
+          senderSelect.value = p.sender_id;
         }
-        if (p.discount_amount !== undefined) {
-          document.getElementById('builder-discount').value = Number(p.discount_amount).toFixed(2);
-        }
-        if (p.tax_rate !== undefined) {
-          document.getElementById('builder-tax-rate').value = Number(p.tax_rate).toFixed(1);
-        }
-        if (p.payment_instructions) {
-          document.getElementById('builder-payment-instructions').value = p.payment_instructions;
-        }
-        if (p.notes) {
-          document.getElementById('builder-notes').value = p.notes;
-        }
-        if (p.sender_id) {
-          const senderSelect = document.getElementById('builder-sender-id');
-          if (senderSelect && Array.from(senderSelect.options).some(o => o.value == p.sender_id)) {
-            senderSelect.value = p.sender_id;
-            updateSenderPreview();
-          }
-        }
-        if (p.items && p.items.length > 0) {
-          clearItemRows();
-          p.items.forEach(it => addItemRow(it.description, it.quantity, it.unit_price));
-        }
-        recalcSummary();
-        showToast(`Applied preset "${p.preset_name}"!`);
-      } catch (e) {
-        console.error('Failed to parse preset:', e);
+      }
+      updateBuilderSenderPreview(false);
+
+      if (p.payment_instructions !== undefined && p.payment_instructions !== null) {
+        document.getElementById('builder-payment-instructions').value = p.payment_instructions;
+      }
+      if (p.notes !== undefined && p.notes !== null) {
+        document.getElementById('builder-notes').value = p.notes;
+      }
+
+      // Always override any existing line items and populate with preset items
+      clearItemRows();
+      let itemsList = p.items;
+      if (typeof itemsList === 'string') {
+        try { itemsList = JSON.parse(itemsList); } catch (e) { itemsList = []; }
+      }
+      if (Array.isArray(itemsList) && itemsList.length > 0) {
+        itemsList.forEach(it => {
+          const desc = it.description || it.desc || '';
+          const qty = (it.quantity !== undefined ? it.quantity : it.qty) ?? 1;
+          const price = (it.unit_price !== undefined ? it.unit_price : it.price) ?? 0;
+          addItemRow(desc, qty, price);
+        });
+      } else {
+        addItemRow('', 1, 0);
+      }
+
+      recalcSummary();
+      const itemCount = Array.isArray(itemsList) ? itemsList.length : 0;
+      showToast(`Applied preset "${p.preset_name}" (${itemCount} line item${itemCount === 1 ? '' : 's'})!`);
+    }
+
+    document.getElementById('btn-apply-preset').addEventListener('click', () => applySelectedPreset());
+    document.getElementById('builder-client-presets').addEventListener('change', (e) => {
+      if (e.target.value) {
+        applySelectedPreset();
       }
     });
 
@@ -1845,54 +2019,195 @@
 
     document.getElementById('modal-preset-recurrence-type').addEventListener('change', updateRecurrenceInputs);
 
-    // Save as Preset button
-    document.getElementById('btn-save-as-preset').addEventListener('click', () => {
-      const clientId = document.getElementById('builder-client-id').value;
-      if (!clientId) {
-        alert('Please select a saved client first to associate this preset.');
-        return;
+    // -----------------------------------------------------------------------
+    // PRESET MODAL LINE ITEMS
+    // -----------------------------------------------------------------------
+    function clearPresetModalItemRows() {
+      document.getElementById('modal-preset-items-tbody').innerHTML = '';
+    }
+
+    function addPresetModalItemRow(desc = '', qty = 1, unitPrice = 0) {
+      const tbody = document.getElementById('modal-preset-items-tbody');
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td style="padding: 4px 6px;">
+          <input type="text" class="form-input modal-item-desc" style="padding: 4px 8px; font-size: 0.82rem;" placeholder="Description..." value="${escapeHtml(desc)}" required />
+        </td>
+        <td style="padding: 4px 6px;">
+          <input type="number" class="form-input modal-item-qty" style="padding: 4px 6px; font-size: 0.82rem; text-align: center;" value="${qty}" min="0.01" step="any" required />
+        </td>
+        <td style="padding: 4px 6px;">
+          <input type="number" class="form-input modal-item-price" style="padding: 4px 6px; font-size: 0.82rem; text-align: right;" value="${unitPrice}" min="0" step="0.01" required />
+        </td>
+        <td style="padding: 4px 6px; text-align: right; font-family: var(--font-mono); font-size: 0.82rem; font-weight: 600;" class="modal-item-total">
+          $${(qty * unitPrice).toFixed(2)}
+        </td>
+        <td style="padding: 4px; text-align: center;">
+          <button type="button" class="item-remove-btn modal-item-del" title="Remove" style="padding: 2px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </td>
+      `;
+
+      const qtyInput = tr.querySelector('.modal-item-qty');
+      const priceInput = tr.querySelector('.modal-item-price');
+      const totalTd = tr.querySelector('.modal-item-total');
+
+      function updateRowTotal() {
+        const q = parseFloat(qtyInput.value) || 0;
+        const p = parseFloat(priceInput.value) || 0;
+        totalTd.textContent = `$${(q * p).toFixed(2)}`;
       }
 
-      // Calculate due days offset from builder
-      const issueDateVal = document.getElementById('builder-issue-date').value;
-      const dueDateVal = document.getElementById('builder-due-date').value;
-      let diffDays = 14;
-      if (issueDateVal && dueDateVal) {
-        const d1 = new Date(issueDateVal + 'T00:00:00');
-        const d2 = new Date(dueDateVal + 'T00:00:00');
-        const diffTime = d2.getTime() - d1.getTime();
-        diffDays = Math.max(0, Math.round(diffTime / (1000 * 60 * 60 * 24)));
+      qtyInput.addEventListener('input', updateRowTotal);
+      priceInput.addEventListener('input', updateRowTotal);
+
+      tr.querySelector('.modal-item-del').addEventListener('click', () => {
+        tr.remove();
+        if (tbody.querySelectorAll('tr').length === 0) {
+          addPresetModalItemRow('', 1, 0);
+        }
+      });
+
+      tbody.appendChild(tr);
+    }
+
+    function getPresetModalItems() {
+      const items = [];
+      document.querySelectorAll('#modal-preset-items-tbody tr').forEach(tr => {
+        const descInput = tr.querySelector('.modal-item-desc');
+        const qtyInput = tr.querySelector('.modal-item-qty');
+        const priceInput = tr.querySelector('.modal-item-price');
+        if (descInput && qtyInput && priceInput) {
+          const desc = descInput.value.trim();
+          const qty = parseFloat(qtyInput.value) || 0;
+          const unit_price = parseFloat(priceInput.value) || 0;
+          if (desc) items.push({ description: desc, quantity: qty, unit_price: unit_price });
+        }
+      });
+      return items;
+    }
+
+    document.getElementById('btn-modal-preset-add-item').addEventListener('click', () => {
+      addPresetModalItemRow('', 1, 0);
+    });
+
+    function populateModalPresetSelects() {
+      const senderSelect = document.getElementById('modal-preset-sender-id');
+      const clientSelect = document.getElementById('modal-preset-client-id');
+      
+      const curSender = senderSelect.value;
+      const curClient = clientSelect.value;
+
+      senderSelect.innerHTML = '<option value="">-- Choose Sender Profile --</option>';
+      allSenders.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.id;
+        opt.textContent = s.name + (s.is_default ? ' (Default)' : '');
+        senderSelect.appendChild(opt);
+      });
+      if (curSender) {
+        senderSelect.value = curSender;
+      } else {
+        const defaultSender = allSenders.find(s => s.is_default) || allSenders[0];
+        if (defaultSender) senderSelect.value = defaultSender.id;
       }
 
+      clientSelect.innerHTML = '<option value="">-- Choose Client --</option>';
+      allClients.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.id;
+        opt.textContent = c.name;
+        clientSelect.appendChild(opt);
+      });
+      if (curClient) clientSelect.value = curClient;
+    }
+
+    function openCreatePresetModal(prefilledClientId = null) {
+      populateModalPresetSelects();
+      document.getElementById('modal-preset-title').textContent = 'Create Preset / Schedule';
+      document.getElementById('modal-preset-id').value = '';
+      if (prefilledClientId) {
+        document.getElementById('modal-preset-client-id').value = prefilledClientId;
+      }
+      const defaultSender = allSenders.find(s => s.is_default) || allSenders[0];
+      if (defaultSender) {
+        document.getElementById('modal-preset-sender-id').value = defaultSender.id;
+      }
       document.getElementById('modal-preset-name').value = '';
-      document.getElementById('modal-preset-due').value = diffDays;
-      document.getElementById('modal-preset-discount').value = document.getElementById('builder-discount').value || '0.00';
-      document.getElementById('modal-preset-tax-rate').value = document.getElementById('builder-tax-rate').value || '0.0';
-      document.getElementById('modal-preset-payment').value = document.getElementById('builder-payment-instructions').value || '';
-      document.getElementById('modal-preset-notes').value = document.getElementById('builder-notes').value || '';
+      document.getElementById('modal-preset-due').value = '14';
+      document.getElementById('modal-preset-discount').value = '0.00';
+      document.getElementById('modal-preset-tax-rate').value = '0.0';
+      document.getElementById('modal-preset-payment').value = '';
+      document.getElementById('modal-preset-notes').value = '';
+      
+      document.getElementById('modal-preset-is-recurring').checked = false;
+      document.getElementById('modal-preset-recurring-options').style.display = 'none';
+      document.getElementById('modal-preset-recurrence-type').value = 'monthly';
+      updateRecurrenceInputs();
+      document.getElementById('modal-preset-recurrence-day-month').value = '1';
+      document.getElementById('modal-preset-recurrence-day-week').value = '4';
+      document.getElementById('modal-preset-start-date').value = new Date().toISOString().split('T')[0];
+      document.getElementById('modal-preset-auto-status').value = 'draft';
 
-      // Check if a preset is currently chosen in builder-client-presets to prefill
-      const presetSelectVal = document.getElementById('builder-client-presets').value;
-      let curP = null;
-      if (presetSelectVal) {
-        try { curP = JSON.parse(presetSelectVal); } catch(e){}
-      }
+      clearPresetModalItemRows();
+      addPresetModalItemRow('', 1, 0);
 
-      if (curP) {
-        document.getElementById('modal-preset-name').value = curP.preset_name || '';
-        document.getElementById('modal-preset-due').value = curP.default_due_days || diffDays;
-        if (curP.is_recurring) {
+      openModal('modal-preset');
+    }
+
+    async function openEditPresetModal(presetId) {
+      try {
+        const res = await fetch(`/api/invoices/presets/detail/${presetId}`);
+        const p = await res.json();
+        if (!p || p.error) {
+          showToast('Failed to load preset details', 'error');
+          return;
+        }
+
+        populateModalPresetSelects();
+        document.getElementById('modal-preset-title').textContent = `Edit Preset: ${p.preset_name}`;
+        document.getElementById('modal-preset-id').value = p.id;
+        document.getElementById('modal-preset-client-id').value = p.client_id || '';
+        document.getElementById('modal-preset-sender-id').value = p.sender_id || '';
+        document.getElementById('modal-preset-name').value = p.preset_name || '';
+        document.getElementById('modal-preset-due').value = p.default_due_days !== undefined ? p.default_due_days : 14;
+        document.getElementById('modal-preset-discount').value = Number(p.discount_amount || 0).toFixed(2);
+        document.getElementById('modal-preset-tax-rate').value = Number(p.tax_rate || 0).toFixed(1);
+        document.getElementById('modal-preset-payment').value = p.payment_instructions || '';
+        document.getElementById('modal-preset-notes').value = p.notes || '';
+
+        clearPresetModalItemRows();
+        let itemsList = p.items;
+        if (typeof itemsList === 'string') {
+          try { itemsList = JSON.parse(itemsList); } catch (e) { itemsList = []; }
+        }
+        if (Array.isArray(itemsList) && itemsList.length > 0) {
+          itemsList.forEach(it => {
+            const desc = it.description || it.desc || '';
+            const qty = (it.quantity !== undefined ? it.quantity : it.qty) ?? 1;
+            const price = (it.unit_price !== undefined ? it.unit_price : it.price) ?? 0;
+            addPresetModalItemRow(desc, qty, price);
+          });
+        } else {
+          addPresetModalItemRow('', 1, 0);
+        }
+
+        if (p.is_recurring) {
           document.getElementById('modal-preset-is-recurring').checked = true;
           document.getElementById('modal-preset-recurring-options').style.display = 'block';
-          document.getElementById('modal-preset-recurrence-type').value = curP.recurrence_type || 'monthly';
+          document.getElementById('modal-preset-recurrence-type').value = p.recurrence_type || 'monthly';
           updateRecurrenceInputs();
-          if (curP.recurrence_type === 'monthly') {
-            document.getElementById('modal-preset-recurrence-day-month').value = String(curP.recurrence_day || 1);
+          if (p.recurrence_type === 'monthly') {
+            document.getElementById('modal-preset-recurrence-day-month').value = String(p.recurrence_day || 1);
           } else {
-            document.getElementById('modal-preset-recurrence-day-week').value = String(curP.recurrence_day || 4);
+            document.getElementById('modal-preset-recurrence-day-week').value = String(p.recurrence_day || 4);
           }
-          document.getElementById('modal-preset-start-date').value = curP.recurrence_start_date || document.getElementById('builder-issue-date').value || new Date().toISOString().split('T')[0];
-          document.getElementById('modal-preset-auto-status').value = curP.auto_status || 'draft';
+          document.getElementById('modal-preset-start-date').value = p.recurrence_start_date || '';
+          document.getElementById('modal-preset-auto-status').value = p.auto_status || 'draft';
         } else {
           document.getElementById('modal-preset-is-recurring').checked = false;
           document.getElementById('modal-preset-recurring-options').style.display = 'none';
@@ -1900,46 +2215,284 @@
           updateRecurrenceInputs();
           document.getElementById('modal-preset-recurrence-day-month').value = '1';
           document.getElementById('modal-preset-recurrence-day-week').value = '4';
-          document.getElementById('modal-preset-start-date').value = document.getElementById('builder-issue-date').value || new Date().toISOString().split('T')[0];
+          document.getElementById('modal-preset-start-date').value = new Date().toISOString().split('T')[0];
           document.getElementById('modal-preset-auto-status').value = 'draft';
         }
-      } else {
-        document.getElementById('modal-preset-is-recurring').checked = false;
-        document.getElementById('modal-preset-recurring-options').style.display = 'none';
-        document.getElementById('modal-preset-recurrence-type').value = 'monthly';
-        updateRecurrenceInputs();
-        document.getElementById('modal-preset-recurrence-day-month').value = '1';
-        document.getElementById('modal-preset-recurrence-day-week').value = '4';
-        document.getElementById('modal-preset-start-date').value = document.getElementById('builder-issue-date').value || new Date().toISOString().split('T')[0];
-        document.getElementById('modal-preset-auto-status').value = 'draft';
-      }
 
-      openModal('modal-preset');
-    });
-
-    // Delete Preset button
-    document.getElementById('btn-delete-preset').addEventListener('click', async () => {
-      const presetSelect = document.getElementById('builder-client-presets');
-      const val = presetSelect.value;
-      if (!val) {
-        showToast('Please select a preset from the dropdown first to delete it.', 'error');
-        return;
+        openModal('modal-preset');
+      } catch (err) {
+        showToast('Error loading preset details', 'error');
       }
+    }
+
+    async function deletePresetById(id) {
+      const p = allPresets.find(x => x.id === id);
+      const name = p ? p.preset_name : 'this preset';
+      if (!confirm(`Are you sure you want to delete preset "${name}"?`)) return;
       try {
-        const p = JSON.parse(val);
-        if (!confirm(`Are you sure you want to delete the preset "${p.preset_name}"?`)) return;
-        const res = await fetch(`/api/invoices/presets/${p.id}`, { method: 'DELETE' });
+        const res = await fetch(`/api/invoices/presets/${id}`, { method: 'DELETE' });
         const data = await res.json();
         if (data.success) {
-          showToast(`Preset "${p.preset_name}" deleted.`);
+          showToast(`Preset "${name}" deleted.`);
+          await loadPresets();
           handleClientSelectChange();
         } else {
           showToast(data.error || 'Failed to delete preset', 'error');
         }
-      } catch (err) {
+      } catch (e) {
         showToast('Error deleting preset', 'error');
       }
+    }
+
+    async function usePresetInBuilder(presetId) {
+      const p = allPresets.find(x => x.id === presetId);
+      if (!p) return;
+
+      await resetBuilder();
+      switchTab('tab-builder');
+
+      // 1. Set sender profile
+      if (p.sender_id) {
+        const senderSelect = document.getElementById('builder-sender-id');
+        if (senderSelect && Array.from(senderSelect.options).some(o => String(o.value) === String(p.sender_id))) {
+          senderSelect.value = p.sender_id;
+        }
+      }
+      updateBuilderSenderPreview(false);
+
+      // 2. Set client and wait for presets to populate
+      const clientSelect = document.getElementById('builder-client-id');
+      clientSelect.value = p.client_id;
+      await handleClientSelectChange();
+
+      // 3. Select preset in dropdown
+      const presetSelect = document.getElementById('builder-client-presets');
+      if (presetSelect) {
+        presetSelect.value = String(p.id);
+      }
+
+      // 4. Apply preset directly
+      applySelectedPreset(p);
+
+      showToast(`Loaded preset "${p.preset_name}" into invoice builder!`);
+    }
+
+    // -----------------------------------------------------------------------
+    // PRESETS TAB: DATA FETCHING & RENDERING
+    // -----------------------------------------------------------------------
+    async function loadPresets() {
+      try {
+        const res = await fetch('/api/invoices/presets');
+        allPresets = await res.json();
+        renderPresetsFilterClients();
+        renderPresetsList();
+      } catch (err) {
+        console.error('Error loading presets:', err);
+      }
+    }
+
+    function renderPresetsFilterClients() {
+      const select = document.getElementById('filter-preset-client');
+      if (!select) return;
+      const prev = select.value;
+      select.innerHTML = '<option value="">All Clients</option>';
+      allClients.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.id;
+        opt.textContent = c.name;
+        select.appendChild(opt);
+      });
+      if (prev) select.value = prev;
+    }
+
+    function renderPresetsList() {
+      const container = document.getElementById('presets-list-container');
+      if (!container) return;
+
+      const clientFilter = document.getElementById('filter-preset-client').value;
+      const typeFilter = document.getElementById('filter-preset-type').value;
+      const search = (document.getElementById('filter-preset-search').value || '').toLowerCase().trim();
+
+      let filtered = allPresets.slice();
+
+      if (clientFilter) {
+        filtered = filtered.filter(p => String(p.client_id) === String(clientFilter));
+      }
+
+      if (typeFilter === 'recurring') {
+        filtered = filtered.filter(p => p.is_recurring);
+      } else if (typeFilter === 'templates') {
+        filtered = filtered.filter(p => !p.is_recurring);
+      }
+
+      if (search) {
+        filtered = filtered.filter(p => {
+          const name = (p.preset_name || '').toLowerCase();
+          const client = (p.client_name || '').toLowerCase();
+          const sender = (p.sender_name || '').toLowerCase();
+          const itemsMatch = Array.isArray(p.items) && p.items.some(it => (it.description || '').toLowerCase().includes(search));
+          return name.includes(search) || client.includes(search) || sender.includes(search) || itemsMatch;
+        });
+      }
+
+      // Update metrics badges
+      const totalCount = allPresets.length;
+      const recurringCount = allPresets.filter(p => p.is_recurring).length;
+      document.getElementById('badge-total-presets').textContent = `${totalCount} Template${totalCount === 1 ? '' : 's'}`;
+      document.getElementById('badge-recurring-presets').textContent = `${recurringCount} Recurring`;
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div style="text-align: center; color: var(--text-muted); padding: 40px; border: 1px dashed var(--border); border-radius: var(--radius);">
+            No presets or recurring jobs found matching criteria. Click <b>+ New Preset / Schedule</b> to create one.
+          </div>
+        `;
+        return;
+      }
+
+      const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+      container.innerHTML = filtered.map(p => {
+        let recurrenceLabel = '<span class="status-badge draft" style="font-size: 0.72rem;">On-Demand Template</span>';
+        if (p.is_recurring) {
+          let scheduleDesc = '';
+          if (p.recurrence_type === 'monthly') {
+            const d = parseInt(p.recurrence_day) || 1;
+            scheduleDesc = d === 31 ? 'Monthly on Last Day' : `Monthly on ${d}${getOrdinalSuffix(d)}`;
+          } else if (p.recurrence_type === 'biweekly') {
+            scheduleDesc = `Every other ${dayNames[p.recurrence_day] || 'Fri'}`;
+          } else if (p.recurrence_type === 'weekly') {
+            scheduleDesc = `Weekly on ${dayNames[p.recurrence_day] || 'Fri'}`;
+          }
+          const autoStatusBadge = p.auto_status === 'sent'
+            ? '<span class="status-badge paid" style="font-size: 0.7rem;">Auto-Sent</span>'
+            : '<span class="status-badge draft" style="font-size: 0.7rem;">Auto-Draft</span>';
+          recurrenceLabel = `
+            <span class="status-badge sent" style="font-size: 0.72rem;">🔁 ${scheduleDesc}</span>
+            ${autoStatusBadge}
+          `;
+        }
+
+        const items = Array.isArray(p.items) ? p.items : [];
+        let itemsHtml = '';
+        let subtotal = 0;
+        if (items.length > 0) {
+          itemsHtml = items.map(it => {
+            const lineAmt = (parseFloat(it.quantity) || 0) * (parseFloat(it.unit_price) || 0);
+            subtotal += lineAmt;
+            return `
+              <div style="display: flex; justify-content: space-between; font-size: 0.8rem; padding: 2px 0;">
+                <span>${escapeHtml(it.description)} <span style="color: var(--text-muted);">(${it.quantity} &times; $${Number(it.unit_price).toFixed(2)})</span></span>
+                <span style="font-family: var(--font-mono); font-weight: 600;">$${lineAmt.toFixed(2)}</span>
+              </div>
+            `;
+          }).join('');
+        } else {
+          itemsHtml = '<div style="font-size: 0.8rem; color: var(--text-muted); font-style: italic;">No line items specified.</div>';
+        }
+
+        const discount = parseFloat(p.discount_amount) || 0;
+        const taxRate = parseFloat(p.tax_rate) || 0;
+        const discounted = Math.max(0, subtotal - discount);
+        const taxAmt = discounted * (taxRate / 100.0);
+        const grandTotal = discounted + taxAmt;
+
+        return `
+          <div style="background: var(--muted); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 12px;">
+              <div>
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                  <strong style="font-size: 1.05rem; color: var(--text-main);">${escapeHtml(p.preset_name)}</strong>
+                  ${recurrenceLabel}
+                  <span class="status-badge paid" style="font-size: 0.72rem;">Due +${p.default_due_days || 0}d</span>
+                </div>
+                <div style="font-size: 0.82rem; color: var(--text-muted); margin-top: 4px;">
+                  Client: <strong style="color: var(--text-main);">${escapeHtml(p.client_name || 'Client #' + p.client_id)}</strong>
+                  ${p.sender_name ? ` • Sender: <span>${escapeHtml(p.sender_name)}</span>` : ''}
+                  ${p.is_recurring && p.last_generated_date ? ` • Last generated: <strong>${p.last_generated_date}</strong>` : ''}
+                </div>
+              </div>
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="usePresetInBuilder(${p.id})" title="Create invoice with this preset">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                  </svg>
+                  Use in Builder
+                </button>
+                <button type="button" class="icon-btn" onclick="openEditPresetModal(${p.id})" title="Edit Preset">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                  </svg>
+                </button>
+                <button type="button" class="icon-btn danger" onclick="deletePresetById(${p.id})" title="Delete Preset">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- ITEMS BOX -->
+            <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 14px;">
+              <div style="font-size: 0.76rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); margin-bottom: 6px;">
+                Line Items (${items.length})
+              </div>
+              ${itemsHtml}
+              <div style="border-top: 1px dashed var(--border); margin-top: 8px; padding-top: 6px; display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 700;">
+                <span>Estimated Total:</span>
+                <span style="font-family: var(--font-mono); color: var(--primary-blue);">$${grandTotal.toFixed(2)}</span>
+              </div>
+            </div>
+
+            ${(p.payment_instructions || p.notes) ? `
+              <div style="display: flex; gap: 16px; margin-top: 10px; font-size: 0.78rem; color: var(--text-secondary);">
+                ${p.payment_instructions ? `<div><strong>Remittance:</strong> ${escapeHtml(p.payment_instructions).slice(0, 80)}...</div>` : ''}
+                ${p.notes ? `<div><strong>Notes:</strong> ${escapeHtml(p.notes).slice(0, 80)}...</div>` : ''}
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    document.getElementById('btn-open-preset-modal').addEventListener('click', () => {
+      openCreatePresetModal();
     });
+
+    document.getElementById('btn-presets-run-recurring').addEventListener('click', async () => {
+      const btn = document.getElementById('btn-presets-run-recurring');
+      const originalHtml = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = 'Running...';
+      try {
+        const res = await fetch('/api/invoices/recurring/run', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          if (data.created_count > 0) {
+            showToast(`Generated ${data.created_count} recurring invoice(s)!`);
+            await loadInvoices();
+            await loadSummary();
+          } else {
+            showToast('Recurring check ran: No invoices due today.');
+          }
+          await loadPresets();
+        } else {
+          showToast(data.error || 'Failed to execute recurring check', 'error');
+        }
+      } catch (e) {
+        showToast('Error executing recurring check', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
+      }
+    });
+
+    document.getElementById('filter-preset-client').addEventListener('change', renderPresetsList);
+    document.getElementById('filter-preset-type').addEventListener('change', renderPresetsList);
+    document.getElementById('filter-preset-search').addEventListener('input', renderPresetsList);
 
     // Run Recurring Check button
     document.getElementById('btn-run-recurring').addEventListener('click', async () => {
@@ -1989,7 +2542,7 @@
       }
 
       tbody.innerHTML = allInvoices.map(inv => {
-        const totalFormatted = `$${Number(inv.total_amount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        const totalFormatted = `$${Number(inv.total_amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
         return `
           <tr>
             <td style="font-weight: 700; font-family: var(--font-mono); color: var(--primary-blue);">
@@ -2070,6 +2623,9 @@
       document.querySelectorAll('.tab-pane').forEach(p => {
         p.style.display = p.id === tabId ? 'block' : 'none';
       });
+      if (tabId === 'tab-presets') {
+        loadPresets();
+      }
     }
 
     document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -2500,20 +3056,8 @@
       document.getElementById('form-sender').reset();
       openModal('modal-sender');
     });
-    document.getElementById('btn-modal-new-sender').addEventListener('click', () => {
-      document.getElementById('modal-sender-title').textContent = 'Add Sender Profile';
-      document.getElementById('modal-sender-id').value = '';
-      document.getElementById('form-sender').reset();
-      openModal('modal-sender');
-    });
 
     document.getElementById('btn-open-client-modal').addEventListener('click', () => {
-      document.getElementById('modal-client-title').textContent = 'Add Client';
-      document.getElementById('modal-client-id').value = '';
-      document.getElementById('form-client').reset();
-      openModal('modal-client');
-    });
-    document.getElementById('btn-modal-new-client').addEventListener('click', () => {
       document.getElementById('modal-client-title').textContent = 'Add Client';
       document.getElementById('modal-client-id').value = '';
       document.getElementById('form-client').reset();
@@ -2592,23 +3136,18 @@
     // Save Preset Form
     document.getElementById('form-preset').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const clientId = document.getElementById('builder-client-id').value;
-      if (!clientId) return;
+      const senderId = document.getElementById('modal-preset-sender-id').value;
+      if (!senderId) {
+        showToast('Please select a sender profile.', 'error');
+        return;
+      }
+      const clientId = document.getElementById('modal-preset-client-id').value;
+      if (!clientId) {
+        showToast('Please select a client.', 'error');
+        return;
+      }
 
-      const rows = document.querySelectorAll('#builder-items-tbody tr:not(#no-items-row)');
-      const items = [];
-      rows.forEach(tr => {
-        const descInput = tr.querySelector('.item-desc-input');
-        const qtyInput = tr.querySelector('.item-qty');
-        const priceInput = tr.querySelector('.item-price');
-        if (descInput && qtyInput && priceInput) {
-          const desc = descInput.value.trim();
-          const qty = parseFloat(qtyInput.value) || 0;
-          const unit_price = parseFloat(priceInput.value) || 0;
-          if (desc) items.push({ description: desc, quantity: qty, unit_price: unit_price });
-        }
-      });
-
+      const items = getPresetModalItems();
       const isRecurring = document.getElementById('modal-preset-is-recurring').checked;
       const recType = document.getElementById('modal-preset-recurrence-type').value;
       const recDay = recType === 'monthly'
@@ -2616,10 +3155,10 @@
         : parseInt(document.getElementById('modal-preset-recurrence-day-week').value) || 0;
       const recStartDate = document.getElementById('modal-preset-start-date').value || '';
       const autoStatus = document.getElementById('modal-preset-auto-status').value || 'draft';
-      const senderId = document.getElementById('builder-sender-id').value;
 
       const payload = {
         client_id: parseInt(clientId),
+        sender_id: parseInt(senderId),
         preset_name: document.getElementById('modal-preset-name').value.trim(),
         default_due_days: parseInt(document.getElementById('modal-preset-due').value) || 14,
         discount_amount: parseFloat(document.getElementById('modal-preset-discount').value) || 0,
@@ -2633,21 +3172,24 @@
         recurrence_start_date: recStartDate,
         auto_status: autoStatus
       };
-      if (senderId) {
-        payload.sender_id = parseInt(senderId);
-      }
+
+      const presetId = document.getElementById('modal-preset-id').value;
+      const url = presetId ? `/api/invoices/presets/${presetId}` : '/api/invoices/presets';
+      const method = presetId ? 'PUT' : 'POST';
 
       try {
-        const res = await fetch('/api/invoices/presets', {
-          method: 'POST',
+        const res = await fetch(url, {
+          method: method,
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
         const data = await res.json();
         if (data.success) {
-          showToast(isRecurring ? `Recurring schedule saved for "${payload.preset_name}"!` : `Preset "${payload.preset_name}" saved!`);
+          const itemText = `${items.length} line item${items.length === 1 ? '' : 's'}`;
+          showToast(isRecurring ? `Recurring schedule saved for "${payload.preset_name}" (${itemText})!` : `Preset "${payload.preset_name}" saved with ${itemText}!`);
           closeModal('modal-preset');
-          handleClientSelectChange();
+          await loadPresets();
+          await handleClientSelectChange();
         } else {
           showToast(data.error || 'Failed to save preset', 'error');
         }
@@ -2774,11 +3316,12 @@
     // -----------------------------------------------------------------------
     // INITIALIZATION
     // -----------------------------------------------------------------------
-    window.onload = async function() {
+    window.onload = async function () {
       initTheme();
       await loadSummary();
       await loadSenders();
       await loadClients();
+      await loadPresets();
       await loadInvoices();
       resetBuilder();
     };

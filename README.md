@@ -105,7 +105,7 @@
 | :--- | :--- | :--- |
 | **[`app.py`](./app.py)** | Main Flask application entry point with blueprint registrations. | `localhost:5000` / Unix Socket |
 | **[`Monitoring/`](./Monitoring/)** | System telemetry collectors (`collectors/`), process monitors, service probes, and HTML dashboard. | `/monitoring` |
-| **[`TutoringCalculator/`](./TutoringCalculator/)** | Weekly invoicing engine, web dashboard (`/tutoring`), Google APIs integration, and Twilio SMS client. | `/tutoring`, `/dates`, etc. |
+| **[`TutoringCalculator/`](./TutoringCalculator/)** | Weekly invoicing engine, web dashboard (`/tutoring`), Google APIs integration, and Twilio SMS client. | `/tutoring`, `/api/tutoring/*` |
 | **[`ToDo/`](./ToDo/)** | Categorized task board, drag-and-drop reordering, and Monday 2:00 AM PST auto-archive scheduler. | `/todo`, `/api/tasks`, `/api/categories` |
 | **[`InvoiceGenerator/`](./InvoiceGenerator/)** | In-memory vector PDF invoice builder, client presets, multi-sender directory, and history tracker. | `/invoices`, `/api/invoices/*` |
 | **[`swagger/`](./swagger/)** | Interactive OpenAPI 3.0 Swagger documentation console and JSON spec generator. | `/`, `/docs`, `/openapi.json` |
@@ -146,27 +146,27 @@ Accessible at `http://localhost:5000/tutoring` (or `https://dev.stepheng753.com/
 Weekly billing cycle runs Monday–Sunday:
 
 ```
-Monday 04:00 AM PST ───> curl -u "$USER:$PASS" -X POST /tutoring/run-calc
+Monday 04:00 AM PST ───> curl -u "$USER:$PASS" -X POST /api/tutoring/run-calc
                                │
                 [Human Review Window: 8 Hours]
                                │
-Monday 12:00 PM PST ───> curl -u "$USER:$PASS" -X POST /tutoring/run-send-texts
+Monday 12:00 PM PST ───> curl -u "$USER:$PASS" -X POST /api/tutoring/run-send-texts
 ```
 
 ### Tutoring Calculator Endpoints
 | Endpoint | Method | Description |
 | :--- | :--- | :--- |
 | `/tutoring` | `GET` | Interactive HTML Web Dashboard with one-click actions, modals, and dark mode. |
-| `/tutoring/status` | `GET` | Live billing dates, Google auth state, current week sheet metadata, and Drive folder links. |
-| `/tutoring/run-calc` | `POST` | One-click full pay calculation: clones template, scrapes hours, checks balances, updates sheet, and emails summary. |
-| `/tutoring/run-send-texts` | `POST` | One-click SMS dispatch: evaluates `CALCULATED` title safeguard, sends Twilio texts, and updates statuses. |
-| `/dates` | `GET` | Computes preceding Monday & following Sunday billing week dates (`MM.DD.YY`). |
-| `/copy-template` | `POST` | Clones master template into target year folder named `MM.DD.YY - MM.DD.YY CALCULATED`. |
-| `/calc-hours` | `GET` | Scrapes Google Calendar for sessions ending in "Tutoring" and consolidates hours. |
-| `/previous-balances` | `GET` | Queries prior week's sheet for students marked `"Need to Pay"`. |
-| `/update-sheet` | `POST` | Injects hours into Column D, unpaid balances into Column G, and sends notification email. |
-| `/send-texts` | `POST` | Low-level text dispatch route guarded by `CALCULATED` approval check. |
-| `/text-logs` | `GET` | Returns raw audit log of all dispatched text messages (`text_messages.log`). |
+| `/api/tutoring/status` | `GET` | Live billing dates, Google auth state, current week sheet metadata, and Drive folder links. |
+| `/api/tutoring/run-calc` | `POST` | One-click full pay calculation: clones template, scrapes hours, checks balances, updates sheet, and emails summary. |
+| `/api/tutoring/run-send-texts` | `POST` | One-click SMS dispatch: evaluates `CALCULATED` title safeguard, sends Twilio texts, and updates statuses. |
+| `/api/tutoring/dates` | `GET` | Computes preceding Monday & following Sunday billing week dates (`MM.DD.YY`). |
+| `/api/tutoring/copy-template` | `POST` | Clones master template into target year folder named `MM.DD.YY - MM.DD.YY CALCULATED`. |
+| `/api/tutoring/calc-hours` | `GET` | Scrapes Google Calendar for sessions ending in "Tutoring" and consolidates hours. |
+| `/api/tutoring/previous-balances` | `GET` | Queries prior week's sheet for students marked `"Need to Pay"`. |
+| `/api/tutoring/update-sheet` | `POST` | Injects hours into Column D, unpaid balances into Column G, and sends notification email. |
+| `/api/tutoring/send-texts` | `POST` | Low-level text dispatch route guarded by `CALCULATED` approval check. |
+| `/api/tutoring/text-logs` | `GET` | Returns raw audit log of all dispatched text messages (`text_messages.log`). |
 | `/login_oauth` | `GET` | Google OAuth 2.0 web consent flow for Calendar, Drive, Sheets, and Gmail scopes. |
 
 ---
@@ -375,10 +375,10 @@ sudo journalctl -u dev_stepheng753_com_api.service -f
 On `flash-server`, schedule the automated billing workflow via `crontab -e`:
 ```bash
 # 1. Weekly Pay Calculation: Monday 4:00 AM PST
-0 4 * * 1 curl -sS -u "$USERNAME:$PASSWORD" -X POST https://dev.stepheng753.com/tutoring/run-calc >> /home/flash-server/Development/BackendServer/TutoringCalculator/logs/cron.log 2>&1
+0 4 * * 1 curl -sS -u "$USERNAME:$PASSWORD" -X POST https://dev.stepheng753.com/api/tutoring/run-calc >> /home/flash-server/Development/BackendServer/TutoringCalculator/logs/cron.log 2>&1
 
 # 2. Text Message Dispatch Guarded by Approval: Monday 12:00 PM (Noon) PST
-0 12 * * 1 curl -sS -u "$USERNAME:$PASSWORD" -X POST https://dev.stepheng753.com/tutoring/run-send-texts >> /home/flash-server/Development/BackendServer/TutoringCalculator/logs/cron.log 2>&1
+0 12 * * 1 curl -sS -u "$USERNAME:$PASSWORD" -X POST https://dev.stepheng753.com/api/tutoring/run-send-texts >> /home/flash-server/Development/BackendServer/TutoringCalculator/logs/cron.log 2>&1
 ```
 
 ### Daily Recurring Invoices Crontab

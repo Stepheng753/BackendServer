@@ -13,8 +13,11 @@ from .db import (
     add_client,
     update_client,
     delete_client,
+    get_all_presets,
+    get_preset_by_id,
     get_presets_by_client,
     add_preset,
+    update_preset,
     delete_preset,
     generate_next_invoice_number,
     get_invoices,
@@ -247,6 +250,21 @@ def api_delete_client(client_id):
 # CLIENT PRESETS API
 # ---------------------------------------------------------------------------
 
+@invoice_bp.route("/api/invoices/presets", methods=["GET"])
+def api_get_all_presets():
+    """Lists all presets across all clients."""
+    return jsonify(get_all_presets())
+
+
+@invoice_bp.route("/api/invoices/presets/detail/<int:preset_id>", methods=["GET"])
+def api_get_preset_detail(preset_id):
+    """Returns a single preset by ID."""
+    p = get_preset_by_id(preset_id)
+    if not p:
+        return jsonify({"error": "Preset not found"}), 404
+    return jsonify(p)
+
+
 @invoice_bp.route("/api/invoices/presets/<int:client_id>", methods=["GET"])
 def api_get_client_presets(client_id):
     """Lists reusable recurring invoice presets for a given client."""
@@ -280,6 +298,35 @@ def api_add_preset():
         auto_status=data.get("auto_status", "draft")
     )
     return jsonify({"success": True, "preset_id": new_id}), 201
+
+
+@invoice_bp.route("/api/invoices/presets/<int:preset_id>", methods=["PUT"])
+def api_update_preset(preset_id):
+    """Updates an existing preset including line items and recurrence settings."""
+    data = request.get_json(force=True, silent=True) or {}
+    preset_name = (data.get("preset_name") or "").strip()
+    if not preset_name:
+        return jsonify({"error": "preset_name is required"}), 400
+
+    success = update_preset(
+        preset_id=preset_id,
+        preset_name=preset_name,
+        default_due_days=data.get("default_due_days", 14),
+        items=data.get("items", []),
+        notes=data.get("notes", ""),
+        discount_amount=data.get("discount_amount", 0.0),
+        tax_rate=data.get("tax_rate", 0.0),
+        payment_instructions=data.get("payment_instructions", ""),
+        is_recurring=1 if data.get("is_recurring") else 0,
+        recurrence_type=data.get("recurrence_type", "monthly"),
+        recurrence_day=data.get("recurrence_day", 1),
+        recurrence_start_date=data.get("recurrence_start_date", ""),
+        sender_id=data.get("sender_id"),
+        auto_status=data.get("auto_status", "draft")
+    )
+    if not success:
+        return jsonify({"error": "Preset not found"}), 404
+    return jsonify({"success": True})
 
 
 @invoice_bp.route("/api/invoices/presets/<int:preset_id>", methods=["DELETE"])

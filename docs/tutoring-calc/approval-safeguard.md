@@ -9,7 +9,7 @@ This document details the **human-in-the-loop approval mechanism**, the **`CALCU
 Automated billing should never charge clients or dispatch text messages without human verification. To prevent erroneous messages (e.g., miscategorized calendar entries, adjusted student rates, or in-person cash payments):
 
 ```
-                                [4:00 AM Cron POST /tutoring/run-calc]
+                                [4:00 AM Cron POST /api/tutoring/run-calc]
                                               │
                                               ▼
                              [Sheet Created in Google Drive]
@@ -32,7 +32,7 @@ Automated billing should never charge clients or dispatch text messages without 
                            └──────────────────┬──────────────────┘
                                               │
                                               ▼
-                             [12:00 PM Cron POST /tutoring/run-send-texts]
+                             [12:00 PM Cron POST /api/tutoring/run-send-texts]
                                               │
                          ┌────────────────────┴────────────────────┐
                          ▼                                         ▼
@@ -48,7 +48,7 @@ Automated billing should never charge clients or dispatch text messages without 
 ## 2. The `CALCULATED` Safety Gate
 
 ### 2.1. Generation Phase
-When `POST /tutoring/run-calc` (or `POST /copy-template`) creates a new spreadsheet, it appends the tag `CALCULATED` to the sheet title:
+When `POST /api/tutoring/run-calc` (or `POST /api/tutoring/copy-template`) creates a new spreadsheet, it appends the tag `CALCULATED` to the sheet title:
 ```
 Title Format: MM.DD.YY - MM.DD.YY CALCULATED
 Example:      08.31.26 - 09.06.26 CALCULATED
@@ -65,7 +65,7 @@ Stephen receives an automated email at 4:00 AM with the sheet link (or reviews i
      `08.31.26 - 09.06.26`
 
 ### 2.3. Safety Interception in Code
-When `POST /tutoring/run-send-texts` (or `POST /send-texts`) executes, it evaluates `get_pending_text_recipients()`:
+When `POST /api/tutoring/run-send-texts` (or `POST /api/tutoring/send-texts`) executes, it evaluates `get_pending_text_recipients()`:
 
 ```python
 # TutoringCalculator/apis/drive_sheets_api.py
@@ -84,7 +84,7 @@ If `CALCULATED` is present, the endpoint immediately returns `"status": "skipped
 
 ## 3. Twilio SMS Dispatch Rules
 
-Once the sheet title is approved (i.e. `CALCULATED` is removed), `POST /send-texts` parses student rows to identify eligible recipients.
+Once the sheet title is approved (i.e. `CALCULATED` is removed), `POST /api/tutoring/send-texts` parses student rows to identify eligible recipients.
 
 ### 3.1. Recipient Eligibility Criteria
 A student row receives an SMS if and only if **all** of the following conditions are met:
@@ -129,9 +129,9 @@ All dispatched text messages are logged locally in `TutoringCalculator/logs/text
 ### 4.2. Querying Logs via API
 View recent text logs directly via browser or curl:
 ```bash
-curl -X GET http://localhost:5000/text-logs
+curl -X GET http://localhost:5000/api/tutoring/text-logs
 ```
-* **Endpoint**: `GET /text-logs`
+* **Endpoint**: `GET /api/tutoring/text-logs`
 * **Content-Type**: `text/plain`
 * **Response**: Raw contents of `text_messages.log`.
 
@@ -147,4 +147,4 @@ If you do not want texts to send for a given week:
 ### How to Force a Resend
 If a parent requests their invoice text again:
 1. Clear Column B (Status) and Column L (Timestamp) for that student row in Google Sheets.
-2. Call `POST /send-texts?sheet_id=<SHEET_ID>`.
+2. Call `POST /api/tutoring/send-texts?sheet_id=<SHEET_ID>`.

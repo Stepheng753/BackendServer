@@ -1045,7 +1045,7 @@
     // --- STATUS & DATA LOADING ---
     async function loadStatus() {
       try {
-        const res = await fetch('/tutoring/status?check_sheet=1');
+        const res = await fetch('/api/tutoring/status?check_sheet=1');
         const data = await res.json();
 
         // Google Auth Badge
@@ -1171,7 +1171,7 @@
 
     async function loadLogs() {
       try {
-        const res = await fetch('/text-logs');
+        const res = await fetch('/api/tutoring/text-logs');
         const text = await res.text();
         const logViewer = document.getElementById('log-viewer');
         if (text.trim()) {
@@ -1193,7 +1193,7 @@
       btn.innerHTML = '<div class="spinner"></div> <span>Calculating Hours & Updating Sheet...</span>';
 
       try {
-        const res = await fetch('/tutoring/run-calc?send_email=false', { method: 'POST' });
+        const res = await fetch('/api/tutoring/run-calc?send_email=false', { method: 'POST' });
         const data = await res.json();
 
         if (res.ok && data.status === 'success') {
@@ -1263,7 +1263,7 @@
       btn.innerHTML = '<div class="spinner"></div> <span>Evaluating Safeguard & Sending SMS...</span>';
 
       try {
-        const res = await fetch('/tutoring/run-send-texts', { method: 'POST' });
+        const res = await fetch('/api/tutoring/run-send-texts', { method: 'POST' });
         const data = await res.json();
 
         if (res.ok) {

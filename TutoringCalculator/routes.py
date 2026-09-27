@@ -131,6 +131,8 @@ def tutoring_dashboard():
     )
 
 
+@tutoring_bp.route("/api/tutoring/status", methods=["GET"])
+@tutoring_bp.route("/api/status", methods=["GET"])
 @tutoring_bp.route("/tutoring/status", methods=["GET"])
 def tutoring_status():
     """Returns live billing dates, Google auth state, current week sheet metadata, and Drive folders."""
@@ -185,6 +187,8 @@ def tutoring_status():
 
 # --- ONE-CLICK ORCHESTRATION ENDPOINTS ---
 
+@tutoring_bp.route("/api/tutoring/run-calc", methods=["POST"])
+@tutoring_bp.route("/api/run-calc", methods=["POST"])
 @tutoring_bp.route("/tutoring/run-calc", methods=["POST"])
 @tutoring_bp.route("/run-calc", methods=["POST"])
 def run_calc_orchestration():
@@ -285,6 +289,10 @@ def run_calc_orchestration():
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
+@tutoring_bp.route("/api/tutoring/run-send-texts", methods=["POST"])
+@tutoring_bp.route("/api/tutoring/send-texts", methods=["POST"])
+@tutoring_bp.route("/api/run-send-texts", methods=["POST"])
+@tutoring_bp.route("/api/send-texts", methods=["POST"])
 @tutoring_bp.route("/tutoring/run-send-texts", methods=["POST"])
 @tutoring_bp.route("/run-send-texts", methods=["POST"])
 @tutoring_bp.route("/send-texts", methods=["POST"])
@@ -385,12 +393,16 @@ def send_texts_route():
 
 # --- LOW-LEVEL STEPWISE ENDPOINTS ---
 
+@tutoring_bp.route("/api/tutoring/dates", methods=["GET"])
+@tutoring_bp.route("/api/dates", methods=["GET"])
 @tutoring_bp.route("/dates", methods=["GET"])
 def get_dates():
     dates = calculate_billing_dates()
     return jsonify(dates), 200
 
 
+@tutoring_bp.route("/api/tutoring/copy-template", methods=["POST"])
+@tutoring_bp.route("/api/copy-template", methods=["POST"])
 @tutoring_bp.route("/copy-template", methods=["POST"])
 def copy_template():
     creds, err_resp, err_code = require_google_creds()
@@ -413,6 +425,8 @@ def copy_template():
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
+@tutoring_bp.route("/api/tutoring/calc-hours", methods=["GET"])
+@tutoring_bp.route("/api/calc-hours", methods=["GET"])
 @tutoring_bp.route("/calc-hours", methods=["GET"])
 def calc_hours():
     creds, err_resp, err_code = require_google_creds()
@@ -434,6 +448,8 @@ def calc_hours():
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
+@tutoring_bp.route("/api/tutoring/previous-balances", methods=["GET"])
+@tutoring_bp.route("/api/previous-balances", methods=["GET"])
 @tutoring_bp.route("/previous-balances", methods=["GET"])
 def previous_balances():
     creds, err_resp, err_code = require_google_creds()
@@ -455,6 +471,8 @@ def previous_balances():
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
+@tutoring_bp.route("/api/tutoring/update-sheet", methods=["POST"])
+@tutoring_bp.route("/api/update-sheet", methods=["POST"])
 @tutoring_bp.route("/update-sheet", methods=["POST"])
 def update_sheet():
     creds, err_resp, err_code = require_google_creds()
@@ -532,6 +550,8 @@ def update_sheet():
         return jsonify({"status": "error", "message": f"Unknown action: '{action}'. Must be 'update_hours' or 'update_pay_status'."}), 400
 
 
+@tutoring_bp.route("/api/tutoring/text-logs", methods=["GET"])
+@tutoring_bp.route("/api/text-logs", methods=["GET"])
 @tutoring_bp.route("/text-logs", methods=["GET"])
 def get_text_logs_route():
     logs = read_text_logs()

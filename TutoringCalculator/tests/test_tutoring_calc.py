@@ -297,7 +297,40 @@ class TestTutoringCalculator(unittest.TestCase):
             mock_email.assert_not_called()
 
 
+    def test_tutoring_api_routes_registered(self):
+        """Verifies that /api/tutoring/... endpoints are properly registered on the blueprint."""
+        from flask import Flask
+        from TutoringCalculator.routes import tutoring_bp
+
+        app = Flask(__name__)
+        app.register_blueprint(tutoring_bp)
+        client = app.test_client()
+
+        # Test /api/tutoring/dates endpoint
+        resp = client.get('/api/tutoring/dates')
+        self.assertEqual(resp.status_code, 200)
+        data = resp.get_json()
+        self.assertIn('start_date', data)
+        self.assertIn('end_date', data)
+
+        # Test /api/tutoring/text-logs endpoint
+        with patch('TutoringCalculator.routes.read_text_logs', return_value='[Log test]'):
+            resp = client.get('/api/tutoring/text-logs')
+            self.assertEqual(resp.status_code, 200)
+            self.assertEqual(resp.data.decode('utf-8'), '[Log test]')
+
+        # Test /api/tutoring/status endpoint without Google credentials
+        with patch('TutoringCalculator.routes.get_credentials', return_value=None):
+            resp = client.get('/api/tutoring/status')
+            self.assertEqual(resp.status_code, 200)
+            status_data = resp.get_json()
+            self.assertFalse(status_data['is_authenticated'])
+            self.assertIn('dates', status_data)
+            self.assertIn('start_date', status_data['dates'])
+
+
 if __name__ == '__main__':
     unittest.main()
+
 
 

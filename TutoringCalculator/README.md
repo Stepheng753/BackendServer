@@ -6,9 +6,49 @@ The `TutoringCalculator` package provides automated billing calculations, Google
 
 ## 1. Endpoints Reference
 
-All endpoints can be accessed at root paths or prefixed with `/TutoringCalculator/`:
+All Tutoring Calculator endpoints use the canonical `/api/tutoring/` prefix (with backwards-compatible aliases at `/tutoring/`, `/api/`, and root paths):
 
-### `GET /dates`
+### `GET /api/tutoring/status`
+* **Purpose**: Fetches dashboard status, current week billing dates, Google OAuth authorization status, and optionally verifies the existence/title of the current week's Google Sheet in Drive.
+* **Query Parameters**: `check_sheet` (`1` or `true` to check Drive).
+* **Response**:
+  ```json
+  {
+    "is_authenticated": true,
+    "auth_url": null,
+    "dates": {
+      "start_date": "08.31.26",
+      "end_date": "09.06.26",
+      "start_date_full": "2026-08-31",
+      "end_date_full": "2026-09-06"
+    },
+    "pay_parent_folder_id": "12hcaaHrab8TCFO8hi_cC67FRBHIU-Xsx",
+    "pay_parent_folder_url": "https://drive.google.com/drive/folders/12hcaaHrab8TCFO8hi_cC67FRBHIU-Xsx",
+    "current_year": "2026",
+    "year_folder_url": "https://drive.google.com/drive/folders/12hcaaHrab8TCFO8hi_cC67FRBHIU-Xsx",
+    "current_sheet": {
+      "id": "1S5f5pKJZAvEW49sOrv-mbA7bqZs9_93WbcUNCNMHJBA",
+      "name": "08.31.26 - 09.06.26",
+      "sheet_url": "https://docs.google.com/spreadsheets/d/1S5f5pKJZAvEW49sOrv-mbA7bqZs9_93WbcUNCNMHJBA/edit",
+      "is_pending_review": false,
+      "status_label": "Approved"
+    },
+    "current_sheets": [...],
+    "has_multiple_sheets": false
+  }
+  ```
+
+### `POST /api/tutoring/run-calc`
+* **Purpose**: One-click orchestration endpoint for weekly pay calculations.
+* **Query/JSON Parameters**: `start_date`, `end_date`, `send_email` (`true`/`false`, default: `true`).
+* **Behavior**: Clones the template, extracts Google Calendar hours, checks previous unpaid balances, populates Google Sheet, and optionally emails calculation summary.
+
+### `POST /api/tutoring/run-send-texts` (or `/api/tutoring/send-texts`)
+* **Purpose**: One-click SMS dispatch to parents with unpaid balances.
+* **Parameters**: `sheet_id` (optional; auto-detected if omitted).
+* **Behavior**: Checks if `CALCULATED` is present in the title (aborts if not yet approved by human), sends Twilio SMS to eligible parents, marks student status as `Need to Pay`, and logs to `logs/text_messages.log`.
+
+### `GET /api/tutoring/dates`
 * **Purpose**: Calculates the billing week range.
 * **Logic**: Calculates the previous Monday (if called on Monday, calculates 7 days back) and the following Sunday.
 * **Response**:
@@ -21,7 +61,7 @@ All endpoints can be accessed at root paths or prefixed with `/TutoringCalculato
   }
   ```
 
-### `POST /copy-template`
+### `POST /api/tutoring/copy-template`
 * **Parameters** (JSON or query): `start_date`, `end_date` (optional; computed automatically if omitted).
 * **Behavior**:
   1. Finds or creates the folder named after the start date's year (e.g., `2026`) inside `Pay Parent Folder`.
@@ -39,7 +79,7 @@ All endpoints can be accessed at root paths or prefixed with `/TutoringCalculato
   }
   ```
 
-### `GET /calc-hours`
+### `GET /api/tutoring/calc-hours`
 * **Parameters**: `start_date`, `end_date`.
 * **Behavior**:
   1. Fetches events from the "Tutoring" calendar between `start_date 00:00:00` and `end_date 23:59:59` PST.
@@ -56,7 +96,7 @@ All endpoints can be accessed at root paths or prefixed with `/TutoringCalculato
   }
   ```
 
-### `GET /previous-balances`
+### `GET /api/tutoring/previous-balances`
 * **Parameters**: `start_date`, `end_date`.
 * **Behavior**:
   1. Locates the sheet from the previous week (7 days prior to `start_date`).
@@ -70,7 +110,7 @@ All endpoints can be accessed at root paths or prefixed with `/TutoringCalculato
   }
   ```
 
-### `POST /update-sheet`
+### `POST /api/tutoring/update-sheet`
 * **Parameters** (JSON or query):
   * `sheet_id` (string, required)
   * `action` (`update_hours` or `update_pay_status`, required)
@@ -83,16 +123,7 @@ All endpoints can be accessed at root paths or prefixed with `/TutoringCalculato
   * `update_pay_status`:
     * Converts blank student statuses in Column B to `"Need to Pay"`.
 
-### `POST /send-texts`
-* **Parameters** (JSON or query): `sheet_id` (string, required).
-* **Behavior**:
-  1. **Approval Guard**: Checks the sheet title. If it contains `CALCULATED`, stops immediately and reports that review/approval is pending.
-  2. **Text Dispatch**: Scans rows where `Total Balance > 0` and `Student Status` is blank.
-  3. Sends SMS via Twilio to Column K (`Phone Number`) with Column L (`Text`).
-  4. Logs each attempt in `logs/text_messages.log`.
-  5. Updates student statuses in Column B to `"Need to Pay"`.
-
-### `GET /text-logs`
+### `GET /api/tutoring/text-logs`
 * **Behavior**: Returns the raw text of `logs/text_messages.log`.
 
 ---

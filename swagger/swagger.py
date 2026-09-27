@@ -77,7 +77,28 @@ OPENAPI_SPEC = {
                 }
             }
         },
-        "/dates": {
+        "/api/tutoring/status": {
+            "get": {
+                "tags": ["Tutoring Calculator"],
+                "summary": "Get Tutoring Service & Sheet Status",
+                "description": "Returns live billing dates, Google auth state, current week sheet metadata, and Drive folder links.",
+                "parameters": [
+                    {
+                        "name": "check_sheet",
+                        "in": "query",
+                        "required": False,
+                        "description": "Pass 1 to search Google Drive for the current week's sheet.",
+                        "schema": {"type": "integer", "enum": [0, 1], "default": 0}
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Tutoring calculation and cloud service status."
+                    }
+                }
+            }
+        },
+        "/api/tutoring/dates": {
             "get": {
                 "tags": ["Tutoring Calculator"],
                 "summary": "Get Billing Date Range",
@@ -99,7 +120,7 @@ OPENAPI_SPEC = {
                 }
             }
         },
-        "/copy-template": {
+        "/api/tutoring/copy-template": {
             "post": {
                 "tags": ["Tutoring Calculator"],
                 "summary": "Copy Student Pay Template Sheet",
@@ -137,7 +158,7 @@ OPENAPI_SPEC = {
                 }
             }
         },
-        "/calc-hours": {
+        "/api/tutoring/calc-hours": {
             "get": {
                 "tags": ["Tutoring Calculator"],
                 "summary": "Calculate Tutoring Hours from Google Calendar",
@@ -176,7 +197,7 @@ OPENAPI_SPEC = {
                 }
             }
         },
-        "/previous-balances": {
+        "/api/tutoring/previous-balances": {
             "get": {
                 "tags": ["Tutoring Calculator"],
                 "summary": "Fetch Prior Week's Unpaid Balances",
@@ -212,7 +233,7 @@ OPENAPI_SPEC = {
                 }
             }
         },
-        "/update-sheet": {
+        "/api/tutoring/update-sheet": {
             "post": {
                 "tags": ["Tutoring Calculator"],
                 "summary": "Update Sheet Hours or Pay Statuses",
@@ -253,7 +274,7 @@ OPENAPI_SPEC = {
                 }
             }
         },
-        "/run-calc": {
+        "/api/tutoring/run-calc": {
             "post": {
                 "tags": ["Tutoring Calculator"],
                 "summary": "Run Weekly Pay Calculation (Full Orchestration)",
@@ -305,7 +326,7 @@ OPENAPI_SPEC = {
                 }
             }
         },
-        "/run-send-texts": {
+        "/api/tutoring/run-send-texts": {
             "post": {
                 "tags": ["Tutoring Calculator"],
                 "summary": "Run SMS Payment Reminders Guarded by Approval",
@@ -340,7 +361,7 @@ OPENAPI_SPEC = {
                 }
             }
         },
-        "/send-texts": {
+        "/api/tutoring/send-texts": {
             "post": {
                 "tags": ["Tutoring Calculator"],
                 "summary": "Send SMS Payment Reminders via Twilio",
@@ -377,7 +398,7 @@ OPENAPI_SPEC = {
                 }
             }
         },
-        "/text-logs": {
+        "/api/tutoring/text-logs": {
             "get": {
                 "tags": ["Tutoring Calculator"],
                 "summary": "Retrieve Text Message Audit Logs",
