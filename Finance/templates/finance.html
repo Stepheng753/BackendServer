@@ -3036,7 +3036,7 @@
                 </div>` : ''}
               ${acc.vested_balance > 0 && acc.vested_balance !== acc.balance ? `
                 <div class="acct-meta-item">
-                  <span class="acct-meta-key">Vested Amount</span>
+                  <span class="acct-meta-key">${acc.account_type === 'retirement' || acc.account_type === 'investment' ? 'Vested Amount' : 'Available Balance'}</span>
                   <span class="acct-meta-val">${formatCurrency(acc.vested_balance)}</span>
                 </div>` : ''}
               ${acc.holdings_summary ? `
