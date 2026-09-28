@@ -175,12 +175,40 @@ def upsert_account(acc):
         conn.commit()
 
 
-def update_account_metadata(account_id, apy_interest=None, rewards_status=None, holdings_summary=None, credit_limit=None):
-    """Updates editable metadata fields on an account."""
+def update_account_metadata(
+    account_id,
+    name=None,
+    institution=None,
+    account_type=None,
+    account_number_mask=None,
+    balance=None,
+    apy_interest=None,
+    rewards_status=None,
+    holdings_summary=None,
+    credit_limit=None,
+    is_asset=None,
+    vested_balance=None
+):
+    """Updates editable fields and metadata on an account."""
     with get_connection() as conn:
         cursor = conn.cursor()
         fields = []
         params = []
+        if name is not None:
+            fields.append("name = ?")
+            params.append(str(name).strip())
+        if institution is not None:
+            fields.append("institution = ?")
+            params.append(str(institution).strip())
+        if account_type is not None:
+            fields.append("account_type = ?")
+            params.append(str(account_type).strip().lower())
+        if account_number_mask is not None:
+            fields.append("account_number_mask = ?")
+            params.append(str(account_number_mask).strip())
+        if balance is not None:
+            fields.append("balance = ?")
+            params.append(float(balance))
         if apy_interest is not None:
             fields.append("apy_interest = ?")
             params.append(apy_interest)
@@ -193,6 +221,12 @@ def update_account_metadata(account_id, apy_interest=None, rewards_status=None, 
         if credit_limit is not None:
             fields.append("credit_limit = ?")
             params.append(float(credit_limit))
+        if is_asset is not None:
+            fields.append("is_asset = ?")
+            params.append(int(is_asset))
+        if vested_balance is not None:
+            fields.append("vested_balance = ?")
+            params.append(float(vested_balance))
 
         if not fields:
             return False
@@ -200,6 +234,16 @@ def update_account_metadata(account_id, apy_interest=None, rewards_status=None, 
         params.append(account_id)
         query = f"UPDATE accounts SET {', '.join(fields)} WHERE id = ?;"
         cursor.execute(query, params)
+        conn.commit()
+        return cursor.rowcount > 0
+
+
+def delete_account(account_id):
+    """Deletes an account (e.g. manual asset/liability or custom investment)."""
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM account_snapshots WHERE account_id = ?;", (account_id,))
+        cursor.execute("DELETE FROM accounts WHERE id = ?;", (account_id,))
         conn.commit()
         return cursor.rowcount > 0
 

@@ -486,11 +486,44 @@
       border-color: var(--primary-blue);
     }
 
-    /* ACCOUNT CARDS GRID */
+    /* ACCOUNT CARDS ROW - 4 IN A ROW MAX WITH HORIZONTAL SCROLLBAR */
     .accounts-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 18px;
+      display: flex;
+      gap: 16px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding: 4px 2px 14px 2px;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+      min-height: 180px;
+    }
+
+    /* Sleek modern horizontal scrollbar */
+    .accounts-grid::-webkit-scrollbar {
+      height: 7px;
+    }
+    .accounts-grid::-webkit-scrollbar-track {
+      background: var(--bg-card);
+      border-radius: 4px;
+    }
+    .accounts-grid::-webkit-scrollbar-thumb {
+      background: var(--card-border);
+      border-radius: 4px;
+      border: 1px solid var(--border);
+    }
+    .accounts-grid::-webkit-scrollbar-thumb:hover {
+      background: var(--text-muted);
+    }
+
+    .accounts-grid.drag-valid-target {
+      background: rgba(99, 102, 241, 0.04);
+      border-radius: var(--radius);
+      outline: 2px dashed rgba(99, 102, 241, 0.3);
+      outline-offset: -2px;
+    }
+
+    .accounts-grid.drag-invalid-target {
+      opacity: 0.55;
     }
 
     .category-group {
@@ -524,7 +557,12 @@
       font-weight: 700;
     }
 
+    /* Card sizing: Exactly 4 in a row on standard screens, with horizontal scroll */
     .account-card {
+      flex: 0 0 calc((100% - (3 * 16px)) / 4);
+      min-width: 280px;
+      max-width: calc((100% - (3 * 16px)) / 4);
+      box-sizing: border-box;
       background: var(--bg-page);
       border: 1px solid var(--card-border);
       border-radius: var(--radius);
@@ -532,14 +570,59 @@
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, opacity 0.18s ease;
       position: relative;
+    }
+
+    @media (max-width: 1300px) {
+      .account-card {
+        flex: 0 0 calc((100% - (2 * 16px)) / 3);
+        max-width: calc((100% - (2 * 16px)) / 3);
+      }
+    }
+
+    @media (max-width: 860px) {
+      .account-card {
+        flex: 0 0 calc((100% - 16px) / 2);
+        max-width: calc((100% - 16px) / 2);
+      }
+    }
+
+    @media (max-width: 580px) {
+      .account-card {
+        flex: 0 0 85vw;
+        max-width: 85vw;
+      }
     }
 
     .account-card:hover {
       border-color: var(--ring);
       box-shadow: var(--card-hover-shadow);
       transform: translateY(-2px);
+    }
+
+    .account-card.dragging {
+      opacity: 0.35 !important;
+      border: 2px dashed var(--primary-blue) !important;
+      transform: scale(0.97) !important;
+      cursor: grabbing !important;
+    }
+
+    .acct-drag-handle {
+      cursor: grab;
+      color: var(--text-muted);
+      opacity: 0.45;
+      transition: opacity 0.15s ease, color 0.15s ease;
+      padding: 2px 4px;
+      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .acct-drag-handle:hover {
+      opacity: 1;
+      color: var(--text-main);
+      background: var(--secondary);
     }
 
     .acct-top {
@@ -1896,12 +1979,18 @@
     <!-- ACCOUNTS SECTION (WITH MORTGAGE & REAL ESTATE ON SAME ROW) -->
     <div class="accounts-section">
       <div class="accounts-header">
-        <h2>Institutional Accounts (<span id="accounts-count">11</span>)</h2>
+        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+          <h2>Institutional Accounts (<span id="accounts-count">11</span>)</h2>
+          <button class="btn btn-outline" style="font-size: 0.78rem; padding: 6px 12px; display: inline-flex; align-items: center; gap: 6px;" onclick="openAddAccountModal()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            Add Manual Account
+          </button>
+        </div>
         <div class="tabs-bar">
           <button class="tab-btn active" onclick="filterAccounts('all')">All Accounts</button>
-          <button class="tab-btn" onclick="filterAccounts('cash')">Cash & HYSA</button>
-          <button class="tab-btn" onclick="filterAccounts('credit')">Credit Cards</button>
-          <button class="tab-btn" onclick="filterAccounts('investment')">Investments & 401(k)</button>
+          <button class="tab-btn" onclick="filterAccounts('cash')">Cash & Liquid Savings</button>
+          <button class="tab-btn" onclick="filterAccounts('credit')">Credit Cards & Revolving Credit</button>
+          <button class="tab-btn" onclick="filterAccounts('investment')">Investments & Retirement Portfolio</button>
           <button class="tab-btn" onclick="filterAccounts('property_mortgage')">Real Estate & Mortgages</button>
         </div>
       </div>
@@ -2185,39 +2274,139 @@
     </div>
   </div>
 
+  <!-- ADD MANUAL ACCOUNT MODAL -->
+  <div id="add-account-modal" class="modal-backdrop">
+    <div class="modal-content" style="max-width: 540px;">
+      <div class="modal-header">
+        <h3 id="add-acct-modal-title">Add Manual Account / Asset</h3>
+        <button class="modal-close" onclick="closeAddAccountModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+          <div class="form-group">
+            <label for="add-acct-name">Account / Asset Name *</label>
+            <input type="text" id="add-acct-name" class="form-control" placeholder="e.g. 25k Loan Note, Beach House, Angel Fund" required />
+          </div>
+          <div class="form-group">
+            <label for="add-acct-institution">Institution / Counterparty</label>
+            <input type="text" id="add-acct-institution" class="form-control" placeholder="e.g. Private Note, Self-Held, John Doe" />
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+          <div class="form-group">
+            <label for="add-acct-type">Category</label>
+            <select id="add-acct-type" class="form-control">
+              <option value="cash">Cash & Liquid Savings</option>
+              <option value="credit">Credit Cards & Revolving Credit</option>
+              <option value="investment" selected>Investments & Retirement Portfolio</option>
+              <option value="property_mortgage">Real Estate & Mortgages</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="add-acct-balance">Current Balance ($) *</label>
+            <input type="number" step="0.01" id="add-acct-balance" class="form-control" placeholder="25000.00" required />
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+          <div class="form-group">
+            <label for="add-acct-apy">Interest Rate / APY / Yield</label>
+            <input type="text" id="add-acct-apy" class="form-control" placeholder="e.g. 15% or 5.25% fixed" />
+          </div>
+          <div class="form-group">
+            <label for="add-acct-mask">Identifier / Note / Address</label>
+            <input type="text" id="add-acct-mask" class="form-control" placeholder="e.g. 15% Loan, 123 Main St, Note #1" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="add-acct-rewards">Terms / Status / Schedule</label>
+          <input type="text" id="add-acct-rewards" class="form-control" placeholder="e.g. Starting Sep 2026, 15% Annual Interest, Monthly Payout" />
+        </div>
+
+        <div class="form-group">
+          <label for="add-acct-holdings">Holdings / Underlying Details</label>
+          <input type="text" id="add-acct-holdings" class="form-control" placeholder="e.g. Promissory Note, Term: 24 Months" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeAddAccountModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveNewAccount()">Create Account</button>
+      </div>
+    </div>
+  </div>
+
   <!-- EDIT ACCOUNT MODAL -->
   <div id="edit-account-modal" class="modal-backdrop">
-    <div class="modal-content">
+    <div class="modal-content" style="max-width: 540px;">
       <div class="modal-header">
         <h3 id="edit-modal-title">Edit Account Details</h3>
         <button class="modal-close" onclick="closeEditModal()">&times;</button>
       </div>
       <div class="modal-body">
         <input type="hidden" id="edit-acct-id" />
-        <div class="form-group">
-          <label>Current Balance ($)</label>
-          <input type="number" step="0.01" id="edit-acct-balance" class="form-control" />
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+          <div class="form-group">
+            <label for="edit-acct-name">Account / Asset Name</label>
+            <input type="text" id="edit-acct-name" class="form-control" />
+          </div>
+          <div class="form-group">
+            <label for="edit-acct-institution">Institution / Counterparty</label>
+            <input type="text" id="edit-acct-institution" class="form-control" />
+          </div>
         </div>
-        <div class="form-group">
-          <label>APY / Interest Rate / Fee</label>
-          <input type="text" id="edit-acct-apy" class="form-control" />
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+          <div class="form-group">
+            <label for="edit-acct-type">Category</label>
+            <select id="edit-acct-type" class="form-control">
+              <option value="cash">Cash & Liquid Savings</option>
+              <option value="credit">Credit Cards & Revolving Credit</option>
+              <option value="investment">Investments & Retirement Portfolio</option>
+              <option value="property_mortgage">Real Estate & Mortgages</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="edit-acct-mask">Identifier / Mask / Address</label>
+            <input type="text" id="edit-acct-mask" class="form-control" />
+          </div>
         </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+          <div class="form-group">
+            <label for="edit-acct-balance">Current Balance ($)</label>
+            <input type="number" step="0.01" id="edit-acct-balance" class="form-control" />
+          </div>
+          <div class="form-group">
+            <label for="edit-acct-apy">APY / Interest Rate</label>
+            <input type="text" id="edit-acct-apy" class="form-control" />
+          </div>
+        </div>
+
         <div class="form-group">
-          <label>Rewards & Status Details</label>
+          <label for="edit-acct-rewards">Rewards & Status Details / Terms</label>
           <input type="text" id="edit-acct-rewards" class="form-control" />
         </div>
         <div class="form-group">
-          <label>Holdings / Note</label>
+          <label for="edit-acct-holdings">Holdings / Underlying Note</label>
           <input type="text" id="edit-acct-holdings" class="form-control" />
         </div>
-        <div class="form-group">
-          <label>Credit Limit ($) (if credit card)</label>
+        <div class="form-group" id="edit-acct-limit-group">
+          <label for="edit-acct-limit">Credit Limit ($) (if credit card)</label>
           <input type="number" step="0.01" id="edit-acct-limit" class="form-control" />
         </div>
       </div>
-      <div class="modal-footer">
-        <button class="btn btn-outline" onclick="closeEditModal()">Cancel</button>
-        <button class="btn btn-primary" onclick="saveAccountDetails()">Save Changes</button>
+      <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
+        <button id="edit-modal-delete-btn" class="btn btn-outline" style="color: var(--negative); border-color: rgba(239,68,68,0.3);" onclick="deleteCurrentEditAccount()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -1px; margin-right: 4px;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+          Delete Account
+        </button>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-outline" onclick="closeEditModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="saveAccountDetails()">Save Changes</button>
+        </div>
       </div>
     </div>
   </div>
@@ -2985,32 +3174,54 @@
       }
     }
 
-    // Render Account Card HTML
-    function renderAccountCardHtml(acc) {
+    // Render Account Card HTML with Drag and Drop Support
+    function renderAccountCardHtml(acc, catKey) {
       const isLiability = !acc.is_asset;
       const balClass = isLiability ? (acc.balance < 0 ? 'negative' : (acc.balance === 0 ? 'positive' : 'negative')) : 'positive';
       const displayBal = formatCurrency(acc.balance);
       const syncStatus = getAccountSyncStatus(acc);
 
-      let typeBadgeClass = 'badge-checking';
-      if (acc.account_type === 'savings') typeBadgeClass = 'badge-savings';
-      else if (acc.account_type === 'mortgage') typeBadgeClass = 'badge-mortgage';
-      else if (acc.account_type === 'credit') typeBadgeClass = 'badge-credit';
-      else if (['retirement', 'investment'].includes(acc.account_type)) typeBadgeClass = 'badge-retirement';
-      else if (['property', 'real_estate'].includes(acc.account_type)) typeBadgeClass = 'badge-property';
+      let typeBadgeClass = 'badge-savings';
+      let typeBadgeLabel = 'Cash';
+      const typeLower = (acc.account_type || '').toLowerCase();
+      if (['savings', 'checking', 'cash'].includes(typeLower)) {
+        typeBadgeClass = 'badge-savings';
+        typeBadgeLabel = 'Cash';
+      } else if (typeLower === 'mortgage') {
+        typeBadgeClass = 'badge-mortgage';
+        typeBadgeLabel = 'Mortgage';
+      } else if (typeLower === 'credit') {
+        typeBadgeClass = 'badge-credit';
+        typeBadgeLabel = 'Credit';
+      } else if (['retirement', 'investment', 'investments'].includes(typeLower)) {
+        typeBadgeClass = 'badge-retirement';
+        typeBadgeLabel = typeLower === 'retirement' ? 'Retirement' : 'Investment';
+      } else if (['property', 'real_estate'].includes(typeLower)) {
+        typeBadgeClass = 'badge-property';
+        typeBadgeLabel = 'Property';
+      }
+
+      const acctIdSafe = escapeHtml(acc.id);
+      const acctNameSafe = escapeHtml(acc.name);
 
       return `
-        <div class="account-card">
+        <div class="account-card" draggable="true" data-id="${acctIdSafe}" data-category="${catKey || ''}">
           <div>
             <div class="acct-top">
-              <div>
+              <div style="flex: 1; min-width: 0;">
                 <div class="acct-brand">
-                  <span class="acct-badge ${typeBadgeClass}">${acc.account_type}</span>
+                  <span class="acct-badge ${typeBadgeClass}">${typeBadgeLabel}</span>
                   ${acc.account_number_mask ? `<span class="acct-mask">${escapeHtml(acc.account_number_mask)}</span>` : ''}
                   ${syncStatus.badge}
                 </div>
-                <h3 class="acct-name" style="margin-top: 6px;">${escapeHtml(acc.name)}</h3>
+                <h3 class="acct-name" style="margin-top: 6px;" title="${escapeHtml(acc.name)}">${escapeHtml(acc.name)}</h3>
                 <div class="acct-inst">${escapeHtml(acc.institution)}</div>
+              </div>
+              <div class="acct-drag-handle" title="Drag to rearrange order within this category">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="9" cy="5" r="1.5"></circle><circle cx="9" cy="12" r="1.5"></circle><circle cx="9" cy="19" r="1.5"></circle>
+                  <circle cx="15" cy="5" r="1.5"></circle><circle cx="15" cy="12" r="1.5"></circle><circle cx="15" cy="19" r="1.5"></circle>
+                </svg>
               </div>
             </div>
 
@@ -3053,8 +3264,14 @@
             </div>
           </div>
 
-          <div class="card-actions">
-            <button class="btn btn-outline" style="padding: 4px 10px; font-size: 0.75rem;" onclick='openEditModal(${JSON.stringify(acc)})'>
+          <div class="card-actions" style="display: flex; gap: 8px; justify-content: flex-end; align-items: center;">
+            ${acc.is_manual ? `
+              <button class="btn btn-outline" style="padding: 4px 8px; font-size: 0.72rem; color: var(--negative); border-color: rgba(239,68,68,0.3);" onclick="deleteAccount('${acctIdSafe}', '${acctNameSafe}')" title="Delete Manual Account">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -1px;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                Delete
+              </button>
+            ` : ''}
+            <button class="btn btn-outline" style="padding: 4px 10px; font-size: 0.75rem;" onclick="openEditModal('${acctIdSafe}')">
               Edit Details
             </button>
           </div>
@@ -3072,25 +3289,25 @@
           key: 'cash',
           title: 'Cash & Liquid Savings',
           icon: '💵',
-          filter: a => ['checking', 'savings'].includes(a.account_type)
+          filter: a => ['cash', 'checking', 'savings'].includes((a.account_type || '').toLowerCase())
         },
         {
           key: 'credit',
           title: 'Credit Cards & Revolving Credit',
           icon: '💳',
-          filter: a => a.account_type === 'credit'
+          filter: a => ['credit', 'credit_card'].includes((a.account_type || '').toLowerCase())
         },
         {
           key: 'investment',
           title: 'Investments & Retirement Portfolio',
           icon: '📈',
-          filter: a => ['investment', 'retirement'].includes(a.account_type)
+          filter: a => ['investment', 'investments', 'retirement'].includes((a.account_type || '').toLowerCase())
         },
         {
           key: 'property_mortgage',
           title: 'Real Estate & Mortgages',
           icon: '🏡',
-          filter: a => ['property', 'real_estate', 'mortgage', 'loan'].includes(a.account_type)
+          filter: a => ['property', 'real_estate', 'mortgage', 'loan'].includes((a.account_type || '').toLowerCase())
         }
       ];
 
@@ -3102,8 +3319,21 @@
       let totalRendered = 0;
 
       catsToRender.forEach(cat => {
-        const catAccounts = allAccounts.filter(cat.filter);
+        let catAccounts = allAccounts.filter(cat.filter);
         if (catAccounts.length === 0) return;
+
+        // Apply saved custom drag-and-drop order
+        const savedOrder = getCategoryOrder(cat.key);
+        if (savedOrder && savedOrder.length > 0) {
+          catAccounts.sort((a, b) => {
+            const idxA = savedOrder.indexOf(a.id);
+            const idxB = savedOrder.indexOf(b.id);
+            if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+            if (idxA !== -1) return -1;
+            if (idxB !== -1) return 1;
+            return 0;
+          });
+        }
 
         totalRendered += catAccounts.length;
 
@@ -3124,8 +3354,8 @@
               Total: ${formatCurrency(catTotal)}
             </div>
           </div>
-          <div class="accounts-grid">
-            ${catAccounts.map(renderAccountCardHtml).join('')}
+          <div class="accounts-grid" data-category="${cat.key}">
+            ${catAccounts.map(acc => renderAccountCardHtml(acc, cat.key)).join('')}
           </div>
         `;
         container.appendChild(groupDiv);
@@ -3133,6 +3363,8 @@
 
       if (totalRendered === 0) {
         container.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);">No accounts found in this category.</div>';
+      } else {
+        setupAccountDragAndDrop();
       }
     }
 
@@ -3441,16 +3673,227 @@
     }
 
     // -------------------------------------------------------------------------
-    // EDIT ACCOUNT MODAL
+    // CATEGORY HELPER & DRAG-AND-DROP REARRANGEMENT
     // -------------------------------------------------------------------------
-    function openEditModal(acc) {
-      document.getElementById('edit-modal-title').innerText = `Edit: ${acc.institution} - ${acc.name}`;
+    function getCategoryForAccountType(type, balance = 0) {
+      type = (type || '').toLowerCase();
+      if (['cash', 'checking', 'savings'].includes(type)) return 'cash';
+      if (['credit', 'credit_card'].includes(type)) return 'credit';
+      if (['investment', 'investments', 'retirement'].includes(type)) return 'investment';
+      if (['property', 'real_estate', 'mortgage', 'loan', 'property_mortgage'].includes(type)) return 'property_mortgage';
+      return 'investment';
+    }
+
+    let draggedCard = null;
+    let draggedCategory = null;
+
+    function setupAccountDragAndDrop() {
+      const grids = document.querySelectorAll('.accounts-grid');
+      
+      grids.forEach(grid => {
+        const gridCategory = grid.getAttribute('data-category');
+
+        grid.addEventListener('dragover', (e) => {
+          // Prevent dropping or reordering across different sections
+          if (!draggedCategory || draggedCategory !== gridCategory) {
+            e.dataTransfer.dropEffect = 'none';
+            return;
+          }
+
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+
+          const afterElement = getDragAfterElement(grid, e.clientX);
+          if (draggedCard && draggedCard.parentElement === grid) {
+            if (afterElement == null) {
+              grid.appendChild(draggedCard);
+            } else if (afterElement !== draggedCard) {
+              grid.insertBefore(draggedCard, afterElement);
+            }
+          }
+        });
+
+        grid.addEventListener('drop', (e) => {
+          if (!draggedCategory || draggedCategory !== gridCategory) {
+            e.preventDefault();
+            return;
+          }
+          e.preventDefault();
+          saveCategoryOrderFromDOM(gridCategory, grid);
+        });
+      });
+
+      const cards = document.querySelectorAll('.account-card');
+      cards.forEach(card => {
+        card.addEventListener('dragstart', (e) => {
+          draggedCard = card;
+          draggedCategory = card.getAttribute('data-category');
+          card.classList.add('dragging');
+          e.dataTransfer.effectAllowed = 'move';
+          try {
+            e.dataTransfer.setData('text/plain', card.getAttribute('data-id'));
+          } catch (err) {}
+
+          // Visual feedback highlighting the current category section
+          document.querySelectorAll('.accounts-grid').forEach(g => {
+            if (g.getAttribute('data-category') === draggedCategory) {
+              g.classList.add('drag-valid-target');
+            } else {
+              g.classList.add('drag-invalid-target');
+            }
+          });
+        });
+
+        card.addEventListener('dragend', () => {
+          if (draggedCard) {
+            draggedCard.classList.remove('dragging');
+          }
+          draggedCard = null;
+          draggedCategory = null;
+          document.querySelectorAll('.accounts-grid').forEach(g => {
+            g.classList.remove('drag-valid-target', 'drag-invalid-target');
+          });
+        });
+      });
+    }
+
+    function getDragAfterElement(container, x) {
+      const draggableElements = [...container.querySelectorAll('.account-card:not(.dragging)')];
+
+      return draggableElements.reduce((closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offset = x - box.left - box.width / 2;
+        if (offset < 0 && offset > closest.offset) {
+          return { offset: offset, element: child };
+        } else {
+          return closest;
+        }
+      }, { offset: Number.NEGATIVE_INFINITY }).element;
+    }
+
+    function saveCategoryOrderFromDOM(category, gridElement) {
+      const cards = gridElement.querySelectorAll('.account-card');
+      const order = Array.from(cards).map(c => c.getAttribute('data-id')).filter(Boolean);
+      
+      try {
+        localStorage.setItem(`finance_order_${category}`, JSON.stringify(order));
+      } catch (e) {
+        console.error('Failed to save order to localStorage:', e);
+      }
+
+      fetch('/api/finance/settings/order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ category, order })
+      }).catch(() => {});
+    }
+
+    function getCategoryOrder(category) {
+      try {
+        const raw = localStorage.getItem(`finance_order_${category}`);
+        if (raw) return JSON.parse(raw);
+      } catch (e) {}
+      return [];
+    }
+
+    // -------------------------------------------------------------------------
+    // ADD & EDIT ACCOUNT MODAL HANDLERS
+    // -------------------------------------------------------------------------
+    function openAddAccountModal() {
+      document.getElementById('add-acct-name').value = '';
+      document.getElementById('add-acct-institution').value = '';
+      document.getElementById('add-acct-type').value = 'investment';
+      document.getElementById('add-acct-balance').value = '';
+      document.getElementById('add-acct-apy').value = '';
+      document.getElementById('add-acct-mask').value = '';
+      document.getElementById('add-acct-rewards').value = '';
+      document.getElementById('add-acct-holdings').value = '';
+      document.getElementById('add-account-modal').classList.add('open');
+      setTimeout(() => document.getElementById('add-acct-name').focus(), 50);
+    }
+
+    function closeAddAccountModal() {
+      document.getElementById('add-account-modal').classList.remove('open');
+    }
+
+    async function saveNewAccount() {
+      const name = document.getElementById('add-acct-name').value.trim();
+      const institution = document.getElementById('add-acct-institution').value.trim() || 'Manual Asset';
+      const account_type = document.getElementById('add-acct-type').value;
+      const balanceStr = document.getElementById('add-acct-balance').value.trim();
+      const balance = parseFloat(balanceStr) || 0;
+      const apy_interest = document.getElementById('add-acct-apy').value.trim();
+      const account_number_mask = document.getElementById('add-acct-mask').value.trim();
+      const rewards_status = document.getElementById('add-acct-rewards').value.trim();
+      const holdings_summary = document.getElementById('add-acct-holdings').value.trim();
+
+      if (!name) {
+        showToast('Please enter an account or asset name.', 'error');
+        return;
+      }
+      if (balanceStr === '') {
+        showToast('Please enter a current balance.', 'error');
+        return;
+      }
+
+      const payload = {
+        name,
+        institution,
+        account_type,
+        balance,
+        apy_interest,
+        account_number_mask,
+        rewards_status,
+        holdings_summary
+      };
+
+      try {
+        const res = await fetch('/api/finance/accounts/add', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast(`Account "${name}" created successfully!`, 'success');
+          closeAddAccountModal();
+          await loadSummaryAndAccounts();
+          await loadHistoryChart(currentTimeframe);
+        } else {
+          showToast(data.error || 'Failed to create account', 'error');
+        }
+      } catch (e) {
+        showToast('Error creating account: ' + e.message, 'error');
+      }
+    }
+
+    function openEditModal(acctId) {
+      let acc = null;
+      if (typeof acctId === 'object') {
+        acc = acctId;
+      } else {
+        acc = allAccounts.find(a => a.id === acctId);
+      }
+      if (!acc) return;
+
+      document.getElementById('edit-modal-title').innerText = `Edit: ${acc.institution || 'Account'} - ${acc.name}`;
       document.getElementById('edit-acct-id').value = acc.id;
+      document.getElementById('edit-acct-name').value = acc.name || '';
+      document.getElementById('edit-acct-institution').value = acc.institution || '';
+      document.getElementById('edit-acct-type').value = getCategoryForAccountType(acc.account_type, acc.balance);
+      document.getElementById('edit-acct-mask').value = acc.account_number_mask || '';
       document.getElementById('edit-acct-balance').value = acc.balance;
       document.getElementById('edit-acct-apy').value = acc.apy_interest || '';
       document.getElementById('edit-acct-rewards').value = acc.rewards_status || '';
       document.getElementById('edit-acct-holdings').value = acc.holdings_summary || '';
       document.getElementById('edit-acct-limit').value = acc.credit_limit || 0;
+
+      // Show/hide delete button for manual accounts
+      const delBtn = document.getElementById('edit-modal-delete-btn');
+      if (delBtn) {
+        delBtn.style.display = acc.is_manual ? 'inline-flex' : 'none';
+      }
+
       document.getElementById('edit-account-modal').classList.add('open');
     }
 
@@ -3461,11 +3904,15 @@
     async function saveAccountDetails() {
       const acctId = document.getElementById('edit-acct-id').value;
       const payload = {
-        balance: document.getElementById('edit-acct-balance').value,
+        name: document.getElementById('edit-acct-name').value.trim(),
+        institution: document.getElementById('edit-acct-institution').value.trim(),
+        account_type: document.getElementById('edit-acct-type').value,
+        account_number_mask: document.getElementById('edit-acct-mask').value.trim(),
+        balance: parseFloat(document.getElementById('edit-acct-balance').value) || 0,
         apy_interest: document.getElementById('edit-acct-apy').value.trim(),
         rewards_status: document.getElementById('edit-acct-rewards').value.trim(),
         holdings_summary: document.getElementById('edit-acct-holdings').value.trim(),
-        credit_limit: document.getElementById('edit-acct-limit').value
+        credit_limit: parseFloat(document.getElementById('edit-acct-limit').value) || 0
       };
 
       try {
@@ -3478,14 +3925,44 @@
         if (data.success) {
           showToast('Account details saved!', 'success');
           closeEditModal();
-          loadSummaryAndAccounts();
-          loadHistoryChart(currentTimeframe);
+          await loadSummaryAndAccounts();
+          await loadHistoryChart(currentTimeframe);
         } else {
           showToast(data.error || 'Failed to save', 'error');
         }
       } catch (e) {
         showToast('Save error: ' + e.message, 'error');
       }
+    }
+
+    async function deleteAccount(acctId, acctName) {
+      if (!confirm(`Are you sure you want to delete the manual account "${acctName || acctId}"? This will remove all associated historical snapshots.`)) {
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/finance/account/${acctId}`, {
+          method: 'DELETE'
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast(`Account "${acctName || acctId}" deleted!`, 'success');
+          closeEditModal();
+          await loadSummaryAndAccounts();
+          await loadHistoryChart(currentTimeframe);
+        } else {
+          showToast(data.error || 'Failed to delete account', 'error');
+        }
+      } catch (e) {
+        showToast('Delete error: ' + e.message, 'error');
+      }
+    }
+
+    function deleteCurrentEditAccount() {
+      const acctId = document.getElementById('edit-acct-id').value;
+      const acc = allAccounts.find(a => a.id === acctId);
+      const name = acc ? acc.name : acctId;
+      deleteAccount(acctId, name);
     }
 
     function escapeHtml(str) {

@@ -1,3 +1,6 @@
+import json
+import re
+import time
 from flask import Blueprint, jsonify, render_template, request
 from .db import (
     init_db,
@@ -5,6 +8,7 @@ from .db import (
     get_account_by_id,
     update_account_metadata,
     upsert_account,
+    delete_account,
     get_historical_snapshots,
     get_summary,
     record_snapshot,
@@ -151,34 +155,170 @@ def api_disconnect():
     return jsonify({"success": True, "message": "SimpleFIN credentials removed."})
 
 
+@finance_bp.route("/api/finance/settings/order", methods=["GET", "POST"])
+def api_account_order():
+    """Gets or sets custom user account display order per category."""
+    if request.method == "POST":
+        payload = request.get_json(silent=True) or {}
+        category = payload.get("category")
+        order = payload.get("order", [])
+        if category and isinstance(order, list):
+            set_setting(f"account_order_{category}", json.dumps(order))
+            return jsonify({"success": True, "category": category, "order": order})
+        return jsonify({"success": False, "error": "Invalid order payload"}), 400
+    else:
+        categories = ["cash", "credit", "investment", "property_mortgage"]
+        result = {}
+        for cat in categories:
+            raw = get_setting(f"account_order_{cat}", "[]")
+            try:
+                result[cat] = json.loads(raw)
+            except Exception:
+                result[cat] = []
+        return jsonify({"success": True, "orders": result})
+
+
+@finance_bp.route("/api/finance/accounts/add", methods=["POST"])
+@finance_bp.route("/api/finance/account/add", methods=["POST"])
+def api_add_account():
+    """Creates a new manual account (e.g. Real Estate, Private Loan Note, Crypto, etc.)."""
+    payload = request.get_json(silent=True) or {}
+    name = (payload.get("name") or "").strip()
+    if not name:
+        return jsonify({"success": False, "error": "Account Name is required."}), 400
+
+    institution = (payload.get("institution") or "Manual Asset").strip()
+    raw_type = (payload.get("account_type") or "investment").strip().lower()
+    
+    try:
+        balance = float(payload.get("balance", 0.0))
+    except (ValueError, TypeError):
+        balance = 0.0
+
+    # Normalize category
+    if raw_type in ("cash", "checking", "savings"):
+        account_type = "savings" if raw_type == "cash" else raw_type
+        is_asset = 1
+    elif raw_type in ("credit", "credit_card"):
+        account_type = "credit"
+        is_asset = 0
+    elif raw_type in ("investment", "investments", "retirement"):
+        account_type = "investment"
+        is_asset = 1
+    elif raw_type in ("property_mortgage", "property", "real_estate", "mortgage", "loan"):
+        if balance < 0:
+            account_type = "mortgage"
+            is_asset = 0
+        else:
+            account_type = "property"
+            is_asset = 1
+    else:
+        account_type = raw_type
+        is_asset = 0 if account_type in ("mortgage", "credit", "loan") else 1
+
+    clean_slug = re.sub(r'[^a-zA-Z0-9_]', '_', name.lower())[:20]
+    unique_id = f"manual_{clean_slug}_{int(time.time())}"
+
+    account_data = {
+        "id": unique_id,
+        "institution": institution,
+        "name": name,
+        "account_number_mask": payload.get("account_number_mask") or "Manual",
+        "account_type": account_type,
+        "balance": balance,
+        "currency": payload.get("currency") or "USD",
+        "apy_interest": payload.get("apy_interest") or "",
+        "rewards_status": payload.get("rewards_status") or "",
+        "credit_limit": float(payload.get("credit_limit", 0.0) or 0.0),
+        "vested_balance": float(payload.get("vested_balance", balance) or balance),
+        "holdings_summary": payload.get("holdings_summary") or "",
+        "is_asset": is_asset,
+        "is_manual": 1
+    }
+
+    upsert_account(account_data)
+    record_snapshot(note=f"Added manual account: {name}")
+
+    return jsonify({"success": True, "message": "Manual account created successfully.", "account": account_data})
+
+
 @finance_bp.route("/api/finance/account/<account_id>", methods=["POST"])
 def api_update_account(account_id):
-    """Updates account metadata, custom note, credit limit, or balance."""
+    """Updates account details (name, institution, type, metadata, balance)."""
     payload = request.get_json(silent=True) or {}
     acc = get_account_by_id(account_id)
     if not acc:
         return jsonify({"success": False, "error": "Account not found."}), 404
 
-    # If updating balance directly for manual adjustments
-    if "balance" in payload:
-        try:
-            acc["balance"] = float(payload["balance"])
-            upsert_account(acc)
-        except ValueError:
-            return jsonify({"success": False, "error": "Invalid balance value."}), 400
+    name = payload.get("name")
+    institution = payload.get("institution")
+    raw_type = payload.get("account_type")
+    account_number_mask = payload.get("account_number_mask")
+    balance = payload.get("balance")
+    apy_interest = payload.get("apy_interest")
+    rewards_status = payload.get("rewards_status")
+    holdings_summary = payload.get("holdings_summary")
+    credit_limit = payload.get("credit_limit")
+    vested_balance = payload.get("vested_balance")
+
+    account_type = raw_type
+    is_asset = None
+    if raw_type:
+        raw_type = raw_type.strip().lower()
+        if raw_type in ("cash", "checking", "savings"):
+            account_type = "savings" if raw_type == "cash" else raw_type
+            is_asset = 1
+        elif raw_type in ("credit", "credit_card"):
+            account_type = "credit"
+            is_asset = 0
+        elif raw_type in ("investment", "investments", "retirement"):
+            account_type = "investment"
+            is_asset = 1
+        elif raw_type in ("property_mortgage", "property", "real_estate", "mortgage", "loan"):
+            try:
+                bal_val = float(balance) if balance is not None else float(acc["balance"])
+            except (ValueError, TypeError):
+                bal_val = 0.0
+            if bal_val < 0:
+                account_type = "mortgage"
+                is_asset = 0
+            else:
+                account_type = "property"
+                is_asset = 1
 
     update_account_metadata(
         account_id,
-        apy_interest=payload.get("apy_interest"),
-        rewards_status=payload.get("rewards_status"),
-        holdings_summary=payload.get("holdings_summary"),
-        credit_limit=payload.get("credit_limit")
+        name=name,
+        institution=institution,
+        account_type=account_type,
+        account_number_mask=account_number_mask,
+        balance=balance,
+        apy_interest=apy_interest,
+        rewards_status=rewards_status,
+        holdings_summary=holdings_summary,
+        credit_limit=credit_limit,
+        is_asset=is_asset,
+        vested_balance=vested_balance
     )
 
     # Re-calculate snapshot
-    record_snapshot(note=f"Manual update on account {account_id}")
+    record_snapshot(note=f"Updated account: {account_id}")
 
     return jsonify({"success": True, "message": "Account updated successfully."})
+
+
+@finance_bp.route("/api/finance/account/<account_id>", methods=["DELETE"])
+@finance_bp.route("/api/finance/account/<account_id>/delete", methods=["POST"])
+def api_delete_account(account_id):
+    """Deletes an account from the database."""
+    acc = get_account_by_id(account_id)
+    if not acc:
+        return jsonify({"success": False, "error": "Account not found."}), 404
+
+    delete_account(account_id)
+    record_snapshot(note=f"Deleted account: {acc.get('name', account_id)}")
+
+    return jsonify({"success": True, "message": "Account deleted successfully."})
 
 
 # ---------------------------------------------------------------------------
