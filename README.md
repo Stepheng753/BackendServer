@@ -108,6 +108,7 @@
 | **[`TutoringCalculator/`](./TutoringCalculator/)** | Weekly invoicing engine, web dashboard (`/tutoring`), Google APIs integration, and Twilio SMS client. | `/tutoring`, `/api/tutoring/*` |
 | **[`ToDo/`](./ToDo/)** | Categorized task board, drag-and-drop reordering, and Monday 2:00 AM PST auto-archive scheduler. | `/todo`, `/api/tasks`, `/api/categories` |
 | **[`InvoiceGenerator/`](./InvoiceGenerator/)** | In-memory vector PDF invoice builder, client presets, multi-sender directory, and history tracker. | `/invoices`, `/api/invoices/*` |
+| **[`Finance/`](./Finance/)** | Personal financial dashboard with SimpleFIN Bridge, SQLite history, and interactive growth charts. | `/finance`, `/api/finance/*` |
 | **[`swagger/`](./swagger/)** | Interactive OpenAPI 3.0 Swagger documentation console and JSON spec generator. | `/`, `/docs`, `/openapi.json` |
 | **[`index/`](./index/)** | HTTP Basic Auth middleware, security checkers, and route protection decorators. | Application middleware |
 | **[`config/`](./config/)** | Environment configuration files, database files (`todo.db`, `invoices.db`), and secret schemas. | Application configuration |
@@ -301,6 +302,7 @@ Explore the following modular documentation files for end-to-end setup and archi
 
 Each package maintains its own internal technical README:
 * **[Invoice Generator Documentation](InvoiceGenerator/README.md)** — Vector PDF Platypus architecture, database schema, presets, and route reference.
+* **[Finance Module Documentation](Finance/README.md)** — SimpleFIN Bridge integration, SQLite history engine, Net Worth tracking, and interactive growth charts.
 * **[To-Do Module Documentation](ToDo/README.md)** — Category schema, Eisenhower sorting, drag-and-drop indexing, and the Monday 2 AM auto-archive daemon.
 * **[Tutoring Calculator Documentation](TutoringCalculator/README.md)** — Google Drive/Sheets integration, calendar hour parsing, Twilio SMS safeguards, and CLI scripts.
 * **[Monitoring Module Documentation](Monitoring/README.md)** — Telemetry package, collector functions, process table sort controls, and UI templates.

@@ -73,66 +73,6 @@ def init_db():
     normalize_active_tasks_order()
 
 
-def get_last_monday_2am(now_dt=None):
-    """
-    Computes the most recent Monday at 02:00:00 AM in the application timezone (America/Los_Angeles).
-    Any task completed before this cutoff belongs to a previous week and should be archived.
-    """
-    if now_dt is None:
-        now_dt = datetime.now(APP_TIMEZONE)
-    elif now_dt.tzinfo is None:
-        now_dt = APP_TIMEZONE.localize(now_dt)
-    else:
-        now_dt = now_dt.astimezone(APP_TIMEZONE)
-
-    days_since_monday = now_dt.weekday()  # Monday is 0, Sunday is 6
-    candidate = now_dt.replace(hour=2, minute=0, second=0, microsecond=0) - timedelta(days=days_since_monday)
-    if now_dt < candidate:
-        # It is Monday before 02:00:00 AM, cutoff was the previous Monday
-        candidate -= timedelta(days=7)
-    return candidate
-
-
-def auto_archive_expired_tasks(now_dt=None):
-    """
-    Finds active tasks with completed=1 where completed_at is older than the latest Monday 2am cutoff,
-    and updates their status to 'archived'.
-    """
-    cutoff = get_last_monday_2am(now_dt)
-    now_iso = datetime.now(APP_TIMEZONE).isoformat()
-    archived_count = 0
-
-    with get_connection() as conn:
-        cursor = conn.cursor()
-        cursor.execute("""
-            SELECT id, completed_at FROM tasks
-            WHERE status = 'active' AND completed = 1 AND completed_at IS NOT NULL
-        """)
-        rows = cursor.fetchall()
-
-        to_archive_ids = []
-        for row in rows:
-            try:
-                task_completed_dt = datetime.fromisoformat(row["completed_at"])
-                if task_completed_dt.tzinfo is None:
-                    task_completed_dt = APP_TIMEZONE.localize(task_completed_dt)
-                else:
-                    task_completed_dt = task_completed_dt.astimezone(APP_TIMEZONE)
-
-                if task_completed_dt < cutoff:
-                    to_archive_ids.append(row["id"])
-            except Exception as e:
-                print(f"[ToDo] Error parsing completed_at for task {row['id']}: {e}")
-
-        if to_archive_ids:
-            cursor.executemany(
-                "UPDATE tasks SET status = 'archived', archived_at = ? WHERE id = ?",
-                [(now_iso, tid) for tid in to_archive_ids]
-            )
-            conn.commit()
-            archived_count = len(to_archive_ids)
-
-    return archived_count
 
 
 def normalize_active_tasks_order():
@@ -476,9 +416,7 @@ def task_row_to_dict(row):
 def get_tasks(status="active", category=None):
     """
     Retrieves tasks by status ('active' or 'archived'), optionally filtered by category.
-    Always runs auto_archive_expired_tasks() first to ensure consistency.
     """
-    auto_archive_expired_tasks()
     if status == "active":
         normalize_active_tasks_order()
 

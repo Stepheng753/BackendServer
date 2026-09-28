@@ -126,6 +126,16 @@ CRON_LOGS = [
         "name": "Weekly SMS Dispatch",
         "schedule": "Every Monday at 12:00 PM UTC",
         "path": "/home/flash-server/.logs/cron_texts.log"
+    },
+    {
+        "name": "Finance Daily Sync",
+        "schedule": "Every night at 11:50 PM",
+        "path": "/home/flash-server/.logs/cron_finance_sync.log"
+    },
+    {
+        "name": "Recurring Invoices",
+        "schedule": "Daily at 05:00 AM",
+        "path": "/home/flash-server/.logs/cron_invoices.log"
     }
 ]
 

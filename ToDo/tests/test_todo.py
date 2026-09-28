@@ -22,8 +22,6 @@ from ToDo.db import (
     restore_task,
     delete_task,
     delete_all,
-    get_last_monday_2am,
-    auto_archive_expired_tasks,
     get_categories,
     get_category_by_id,
     get_category_by_name,
@@ -118,43 +116,18 @@ class TestToDoApp(unittest.TestCase):
         self.assertEqual(restored["status"], "active")
         self.assertFalse(restored["completed"])
 
-    def test_monday_2am_auto_archive(self):
-        now = datetime.now(APP_TIMEZONE)
-        cutoff = get_last_monday_2am(now)
-        self.assertEqual(cutoff.weekday(), 0)  # Monday
-        self.assertEqual(cutoff.hour, 2)
-        self.assertEqual(cutoff.minute, 0)
+    def test_manual_archive_completed(self):
+        # Create completed task
+        task = add_task("[TEST] Manual Archive Task", "Category 3")
+        update_task(task["id"], completed=True)
 
-        # Create a task completed 2 weeks ago (prior to cutoff)
-        task_old = add_task("[TEST] Old Completed Task", "Category 3")
-        old_completed_dt = (cutoff - timedelta(days=2)).isoformat()
-        with get_connection() as conn:
-            conn.cursor().execute(
-                "UPDATE tasks SET completed = 1, completed_at = ? WHERE id = ?",
-                (old_completed_dt, task_old["id"])
-            )
-            conn.commit()
-
-        # Create a task completed 10 minutes ago (assuming within current week)
-        task_recent = add_task("[TEST] Recent Completed Task", "Category 3")
-        recent_completed_dt = (now).isoformat()
-        with get_connection() as conn:
-            conn.cursor().execute(
-                "UPDATE tasks SET completed = 1, completed_at = ? WHERE id = ?",
-                (recent_completed_dt, task_recent["id"])
-            )
-            conn.commit()
-
-        # Run auto archive
-        auto_archive_expired_tasks()
+        # Run manual archive
+        count = archive_completed_now()
+        self.assertGreaterEqual(count, 1)
 
         # Check statuses
-        active_ids = [t["id"] for t in get_tasks(status="active", category="Category 3")]
         archived_ids = [t["id"] for t in get_tasks(status="archived", category="Category 3")]
-
-        self.assertIn(task_old["id"], archived_ids)
-        self.assertNotIn(task_old["id"], active_ids)
-        self.assertIn(task_recent["id"], active_ids)
+        self.assertIn(task["id"], archived_ids)
 
     def test_flask_routes(self):
         client = app.test_client()

@@ -1,0 +1,2720 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Financial Dashboard - Flash Server Backend & Services</title>
+  <link rel="icon" type="image/png" href="/static/flash.png" />
+  <link rel="shortcut icon" type="image/png" href="/static/flash.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="/css/shared.css" />
+  <!-- Chart.js for smooth interactive growth visualization -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <style>
+    /* --------------------------------------------------------------------------
+       FINANCE DASHBOARD PAGE-SPECIFIC STYLES
+       -------------------------------------------------------------------------- */
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-page);
+      color: var(--text-main);
+      padding: 24px 32px 60px 32px;
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 1440px;
+      margin: 0 auto;
+    }
+
+    /* TOP NAVBAR */
+    .top-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      padding: 12px 20px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      box-shadow: var(--card-shadow);
+      margin-bottom: 20px;
+    }
+
+    .brand-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .brand-left img {
+      width: 38px;
+      height: 38px;
+      object-fit: contain;
+      border-radius: 6px;
+    }
+
+    .brand-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-main);
+      line-height: 1.2;
+    }
+
+    .brand-subtitle {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    /* HEADER CARD */
+    .header-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 20px;
+      padding: 24px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      box-shadow: var(--card-shadow);
+      margin-bottom: 24px;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .pulse-icon-box {
+      width: 52px;
+      height: 52px;
+      border-radius: 12px;
+      background: rgba(16, 185, 129, 0.12);
+      color: #10b981;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .header-titles h1 {
+      margin: 0 0 4px 0;
+      font-size: 1.55rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .header-titles p {
+      margin: 0;
+      font-size: 0.88rem;
+      color: var(--text-muted);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    /* BUTTONS */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border-radius: var(--radius);
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: var(--primary-blue);
+      color: #ffffff;
+      border-color: var(--primary-blue);
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-blue-hover);
+      border-color: var(--primary-blue-hover);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: var(--secondary);
+      color: var(--text-main);
+      border-color: var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: var(--accent);
+      border-color: var(--ring);
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--text-main);
+      border-color: var(--card-border);
+    }
+
+    .btn-outline:hover {
+      background: var(--secondary);
+    }
+
+    .spin {
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* HERO NET WORTH CARD (CENTERED & PROMINENT) */
+    .net-worth-hero-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: 32px 24px;
+      box-shadow: var(--card-shadow);
+      margin-bottom: 22px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .net-worth-hero-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--card-hover-shadow);
+    }
+
+    .net-worth-hero-title {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .net-worth-hero-value {
+      font-size: 3.25rem;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      letter-spacing: -0.04em;
+      margin: 6px 0 14px 0;
+      line-height: 1.1;
+    }
+
+    .net-worth-hero-meta {
+      display: inline-flex;
+      align-items: center;
+      gap: 14px;
+      padding: 8px 20px;
+      background: var(--secondary);
+      border: 1px solid var(--card-border);
+      border-radius: 999px;
+      font-size: 0.84rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .net-worth-hero-meta span {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    /* KPI METRICS ROWS */
+    .metrics-row {
+      display: grid;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .metrics-row-4 {
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    .metrics-row-3 {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    @media (max-width: 1100px) {
+      .metrics-row-4 {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .metrics-row-3 {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .metrics-row-4,
+      .metrics-row-3 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .metric-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--card-shadow);
+      position: relative;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .metric-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--card-hover-shadow);
+    }
+
+    .metric-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .metric-title {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .metric-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+    }
+
+    .metric-value {
+      font-size: 1.75rem;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      letter-spacing: -0.03em;
+      margin-bottom: 6px;
+    }
+
+    .metric-sub {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .positive {
+      color: #10b981;
+    }
+
+    .negative {
+      color: #ef4444;
+    }
+
+    .neutral {
+      color: var(--primary-blue);
+    }
+
+    /* INTERACTIVE GROWTH CHART SECTION */
+    .chart-section {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: var(--card-shadow);
+      margin-bottom: 24px;
+    }
+
+    .chart-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    .chart-titles h2 {
+      margin: 0 0 4px 0;
+      font-size: 1.25rem;
+      font-weight: 700;
+    }
+
+    .chart-titles p {
+      margin: 0;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    .chart-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn-group {
+      display: inline-flex;
+      background: var(--secondary);
+      border-radius: var(--radius);
+      padding: 3px;
+      border: 1px solid var(--card-border);
+    }
+
+    .btn-group button {
+      background: transparent;
+      border: none;
+      padding: 6px 12px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn-group button.active {
+      background: var(--card-bg);
+      color: var(--text-main);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .chart-wrapper {
+      position: relative;
+      width: 100%;
+      height: 380px;
+    }
+
+    /* ACCOUNTS FILTER TABS & SECTION */
+    .accounts-section {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: var(--card-shadow);
+      margin-bottom: 24px;
+    }
+
+    .accounts-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .accounts-header h2 {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 700;
+    }
+
+    .tabs-bar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      padding: 8px 14px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      background: var(--secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tab-btn:hover {
+      background: var(--accent);
+      color: var(--text-main);
+    }
+
+    .tab-btn.active {
+      background: var(--primary-blue);
+      color: #ffffff;
+      border-color: var(--primary-blue);
+    }
+
+    /* ACCOUNT CARDS GRID */
+    .accounts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 18px;
+    }
+
+    .category-group {
+      margin-bottom: 30px;
+    }
+
+    .category-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .category-row-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    .category-row-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .category-row-total {
+      font-family: var(--font-mono);
+      font-size: 0.95rem;
+      font-weight: 700;
+    }
+
+    .account-card {
+      background: var(--bg-page);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+      position: relative;
+    }
+
+    .account-card:hover {
+      border-color: var(--ring);
+      box-shadow: var(--card-hover-shadow);
+      transform: translateY(-2px);
+    }
+
+    .acct-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .acct-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .acct-badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .badge-mortgage {
+      background: rgba(239, 68, 68, 0.12);
+      color: #ef4444;
+      border: 1px solid rgba(239, 68, 68, 0.25);
+    }
+
+    .badge-savings {
+      background: rgba(16, 185, 129, 0.12);
+      color: #10b981;
+      border: 1px solid rgba(16, 185, 129, 0.25);
+    }
+
+    .badge-checking {
+      background: rgba(107, 163, 214, 0.15);
+      color: #3b82f6;
+      border: 1px solid rgba(107, 163, 214, 0.3);
+    }
+
+    .badge-credit {
+      background: rgba(245, 158, 11, 0.15);
+      color: #f59e0b;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .badge-retirement,
+    .badge-investment {
+      background: rgba(168, 85, 247, 0.15);
+      color: #a855f7;
+      border: 1px solid rgba(168, 85, 247, 0.3);
+    }
+
+    .badge-property {
+      background: rgba(16, 185, 129, 0.14);
+      color: #10b981;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .acct-name {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin: 0 0 2px 0;
+    }
+
+    .acct-inst {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .acct-mask {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      background: var(--secondary);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .acct-balance-row {
+      margin: 14px 0 10px 0;
+    }
+
+    .acct-bal {
+      font-size: 1.55rem;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      letter-spacing: -0.02em;
+    }
+
+    .acct-meta-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px dashed var(--card-border);
+    }
+
+    .acct-meta-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .acct-meta-key {
+      color: var(--text-muted);
+    }
+
+    .acct-meta-val {
+      font-weight: 600;
+      text-align: right;
+    }
+
+    .card-actions {
+      margin-top: 12px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    /* MODAL */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-content {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.25);
+      width: 100%;
+      max-width: 580px;
+      overflow: hidden;
+      animation: modalIn 0.2s ease-out;
+    }
+
+    @keyframes modalIn {
+      from {
+        opacity: 0;
+        transform: scale(0.96);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .modal-header {
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-header h3 {
+      margin: 0;
+      font-size: 1.15rem;
+      font-weight: 700;
+    }
+
+    .modal-close {
+      background: transparent;
+      border: none;
+      font-size: 1.3rem;
+      cursor: pointer;
+      color: var(--text-muted);
+    }
+
+    .modal-body {
+      padding: 24px;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--text-main);
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 9px 12px;
+      font-size: 0.88rem;
+      font-family: inherit;
+      background: var(--bg-page);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      color: var(--text-main);
+      box-sizing: border-box;
+      outline: none;
+      transition: border-color 0.15s ease;
+    }
+
+    .form-control:focus {
+      border-color: var(--ring);
+      box-shadow: 0 0 0 3px rgba(107, 163, 214, 0.15);
+    }
+
+    .form-help {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      margin-top: 5px;
+    }
+
+    .modal-footer {
+      padding: 16px 24px;
+      border-top: 1px solid var(--card-border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      background: var(--secondary);
+    }
+
+    /* TOAST */
+    #toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 2000;
+    }
+
+    .toast {
+      padding: 12px 18px;
+      border-radius: var(--radius);
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #ffffff;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+      animation: toastIn 0.2s ease-out;
+    }
+
+    .toast.success {
+      background: #10b981;
+    }
+
+    .toast.error {
+      background: #ef4444;
+    }
+
+    .toast.info {
+      background: var(--primary-blue);
+    }
+
+    @keyframes toastIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* UTILIZATION PROGRESS */
+    .progress-bar-wrap {
+      width: 100%;
+      height: 6px;
+      background: var(--secondary);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      transition: width 0.4s ease;
+    }
+
+    /* BUDGET & CASH FLOW SECTION */
+    .budget-section {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: var(--card-shadow);
+    }
+
+    .budget-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .budget-header h2 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin: 0 0 4px 0;
+    }
+
+    .budget-header p {
+      font-size: 0.84rem;
+      color: var(--text-muted);
+      margin: 0;
+    }
+
+    .budget-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .budget-kpis-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+
+    .budget-kpi-card {
+      background: var(--bg-page);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-sm);
+      padding: 16px 20px;
+    }
+
+    .budget-kpi-card.highlight {
+      border-color: rgba(59, 130, 246, 0.4);
+      background: rgba(59, 130, 246, 0.04);
+    }
+
+    .budget-kpi-label {
+      font-size: 0.76rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .budget-kpi-val {
+      font-size: 1.6rem;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      margin-bottom: 4px;
+    }
+
+    .budget-kpi-sub {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .budget-columns-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 950px) {
+      .budget-columns-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .budget-column-card {
+      background: var(--bg-page);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-sm);
+      padding: 18px;
+    }
+
+    .budget-col-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    .budget-col-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .budget-items-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .budget-item-row {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      transition: all 0.2s ease;
+    }
+
+    .budget-item-row:hover {
+      border-color: var(--ring);
+      transform: translateY(-1px);
+    }
+
+    .budget-item-row.inactive {
+      opacity: 0.5;
+      filter: grayscale(0.5);
+    }
+
+    .budget-item-left {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+    }
+
+    .budget-item-name-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .budget-item-name {
+      font-size: 0.92rem;
+      font-weight: 700;
+    }
+
+    .budget-item-notes {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    .budget-item-right {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .budget-item-amount {
+      font-family: var(--font-mono);
+      font-size: 1.15rem;
+      font-weight: 700;
+      text-align: right;
+    }
+
+    .budget-item-period {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      text-align: right;
+    }
+
+    .budget-item-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .icon-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      border-radius: 6px;
+      border: 1px solid var(--card-border);
+      background: var(--bg-page);
+      color: var(--text-secondary);
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.15s ease;
+    }
+
+    .icon-btn:hover {
+      background: var(--primary-blue);
+      color: #ffffff;
+      border-color: var(--primary-blue);
+    }
+
+    .icon-btn.danger:hover {
+      background: #ef4444;
+      color: #ffffff;
+      border-color: #ef4444;
+    }
+
+    .icon-btn.warning:hover {
+      background: #f59e0b;
+      color: #ffffff;
+      border-color: #f59e0b;
+    }
+
+    .budget-item-name.link-title {
+      color: var(--text-main);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: color 0.15s ease;
+      cursor: pointer;
+    }
+
+    .budget-item-name.link-title:hover {
+      color: var(--primary-blue);
+      text-decoration: underline;
+    }
+
+    .paystub-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+      margin: 10px 0;
+    }
+
+    .paystub-table th, .paystub-table td {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    .paystub-table th {
+      text-align: left;
+      color: var(--text-muted);
+      font-weight: 600;
+      background: var(--secondary);
+    }
+
+    .paystub-table td.amount {
+      text-align: right;
+      font-family: var(--font-mono);
+      font-weight: 600;
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+      body {
+        padding: 16px;
+      }
+      .header-card {
+        padding: 16px;
+      }
+      .chart-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .chart-controls {
+        width: 100%;
+        justify-content: space-between;
+      }
+      .chart-wrapper {
+        height: 280px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+
+    <!-- TOP NAVBAR -->
+    <nav class="top-nav">
+      <a href="/finance" class="brand-left">
+        <img src="/static/flash.png" alt="Flash Logo" />
+        <div>
+          <div class="brand-title">Flash Server</div>
+          <div class="brand-subtitle">Financial Dashboard & Portfolio</div>
+        </div>
+      </a>
+      <div class="nav-actions">
+        <a href="/docs" class="nav-btn" title="View Swagger API Documentation">Docs</a>
+        <a href="/tutoring" class="nav-btn" title="Open Tutoring Calculator Console">Tutoring Calc</a>
+        <a href="/monitoring" class="nav-btn" title="Flash Server Monitoring">System Monitor</a>
+        <a href="/todo" class="nav-btn" title="Crossroads To-Do Board">To Do</a>
+        <a href="/invoices" class="nav-btn" title="Invoice Generator & History">Invoices</a>
+        <a href="/finance" class="nav-btn active" title="Financial Dashboard & SimpleFIN">Finance</a>
+        <button id="theme-toggle" class="nav-btn" style="cursor: pointer;" aria-label="Toggle Theme"
+          title="Toggle Theme">
+          <img src="/static/day-and-night.svg" alt="Theme" class="theme-icon" />
+        </button>
+      </div>
+    </nav>
+
+    <!-- HEADER CARD -->
+    <div class="header-card">
+      <div class="header-left">
+        <div class="pulse-icon-box">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="1" x2="12" y2="23"></line>
+            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+          </svg>
+        </div>
+        <div class="header-titles">
+          <h1>Financial Dashboard & Portfolio</h1>
+          <p id="header-subtitle">SimpleFIN Bridge Integration • Real-Time Institutional Balances & Growth</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button id="btn-sync" class="btn btn-primary" onclick="syncAccounts()">
+          <svg id="sync-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+          </svg>
+          <span id="sync-btn-text">Sync Now</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- HERO NET WORTH (DEDICATED CENTERED ROW) -->
+    <div class="net-worth-hero-card">
+      <div class="net-worth-hero-title">
+        <span>Total Estimated Net Worth</span>
+      </div>
+      <div class="net-worth-hero-value" id="kpi-net-worth">--</div>
+      <div class="net-worth-hero-meta">
+        <span>Assets: <strong id="kpi-hero-total-assets" style="color: var(--positive);">$0.00</strong></span>
+        <span style="opacity: 0.4;">•</span>
+        <span>Liabilities: <strong id="kpi-hero-total-liab" style="color: var(--negative);">$0.00</strong></span>
+        <span style="opacity: 0.4;">•</span>
+        <span>Home Equity: <strong id="kpi-hero-home-equity" style="color: var(--primary-blue);">$0.00</strong></span>
+        <span style="opacity: 0.4;">•</span>
+        <span>Monthly Income: <strong id="kpi-hero-monthly-income" style="color: var(--positive);">$0.00</strong></span>
+        <span style="opacity: 0.4;">•</span>
+        <span>Monthly Expenses: <strong id="kpi-hero-monthly-expenses" style="color: var(--negative);">$0.00</strong></span>
+      </div>
+    </div>
+
+    <!-- ROW 1 METRICS (CASH, CREDIT CARDS, INCOME, EXPENSES) -->
+    <div class="metrics-row metrics-row-4">
+      <!-- Liquid Cash -->
+      <div class="metric-card">
+        <div class="metric-header">
+          <span class="metric-title">Liquid Cash (Operating + HYSA)</span>
+          <div class="metric-icon" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">💵</div>
+        </div>
+        <div class="metric-value positive" id="kpi-liquid-cash">--</div>
+        <div class="metric-sub">
+          <span>Wealthfront HYSA + Wells Fargo</span>
+        </div>
+      </div>
+
+      <!-- Credit Cards -->
+      <div class="metric-card">
+        <div class="metric-header">
+          <span class="metric-title">Credit Card Balances</span>
+          <div class="metric-icon" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b;">💳</div>
+        </div>
+        <div class="metric-value" id="kpi-credit-debt">$0.00</div>
+        <div class="metric-sub">
+          <span id="kpi-credit-sub">0.0% util • Total Limit: $0.00</span>
+        </div>
+        <div class="progress-bar-wrap" title="Credit Utilization">
+          <div id="credit-util-bar" class="progress-bar-fill" style="width: 1%; background: #10b981;"></div>
+        </div>
+      </div>
+
+      <!-- Total Monthly Income -->
+      <div class="metric-card">
+        <div class="metric-header">
+          <span class="metric-title">Total Monthly Income</span>
+          <div class="metric-icon" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">💰</div>
+        </div>
+        <div class="metric-value positive" id="kpi-grid-income">--</div>
+        <div class="metric-sub">
+          <span id="kpi-grid-income-sub">Take-home pay & cashflow</span>
+        </div>
+      </div>
+
+      <!-- Total Monthly Expenses -->
+      <div class="metric-card">
+        <div class="metric-header">
+          <span class="metric-title">Total Monthly Expenses</span>
+          <div class="metric-icon" style="background: rgba(239, 68, 68, 0.15); color: #ef4444;">💸</div>
+        </div>
+        <div class="metric-value negative" id="kpi-grid-expenses">--</div>
+        <div class="metric-sub">
+          <span id="kpi-grid-expenses-sub">Recurring obligations</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROW 2 METRICS (INVESTED PORTFOLIO, REAL ESTATE, TOTAL LOANS) -->
+    <div class="metrics-row metrics-row-3" style="margin-bottom: 24px;">
+      <!-- Total Investments -->
+      <div class="metric-card">
+        <div class="metric-header">
+          <span class="metric-title">Invested Portfolio</span>
+          <div class="metric-icon" style="background: rgba(168, 85, 247, 0.15); color: #a855f7;">📈</div>
+        </div>
+        <div class="metric-value neutral" id="kpi-investments">--</div>
+        <div class="metric-sub">
+          <span id="kpi-vested-sub">Schwab IRAs + Fidelity 401(k)</span>
+        </div>
+      </div>
+
+      <!-- Real Estate Asset -->
+      <div class="metric-card">
+        <div class="metric-header">
+          <span class="metric-title">Real Estate Asset</span>
+          <div class="metric-icon" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">🏡</div>
+        </div>
+        <div class="metric-value positive" id="kpi-property-val">$500,000.00</div>
+        <div class="metric-sub">
+          <span id="kpi-home-equity-sub">211 Woodland Pkwy (San Marcos)</span>
+        </div>
+      </div>
+
+      <!-- Total Loans -->
+      <div class="metric-card">
+        <div class="metric-header">
+          <span class="metric-title">Total Loans</span>
+          <div class="metric-icon" style="background: rgba(239, 68, 68, 0.15); color: #ef4444;">🏠</div>
+        </div>
+        <div class="metric-value negative" id="kpi-loans-debt">--</div>
+        <div class="metric-sub">
+          <span id="kpi-loans-sub">Rocket Mortgage (Primary Residence)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- INTERACTIVE GROWTH CHART SECTION -->
+    <div class="chart-section">
+      <div class="chart-header">
+        <div class="chart-titles">
+          <h2>Portfolio & Net Worth Trajectory</h2>
+          <p>Interactive SQLite historical snapshots showing asset growth, debt amortization, and net worth progress</p>
+        </div>
+        <div class="chart-controls">
+          <!-- View Modes -->
+          <div class="btn-group" id="chart-mode-group">
+            <button class="active" onclick="setChartMode('net_worth')">Net Worth</button>
+            <button onclick="setChartMode('assets_vs_liab')">Assets vs Liabilities</button>
+            <button onclick="setChartMode('asset_breakdown')">Liquid vs Invested</button>
+          </div>
+          <!-- Timeframes -->
+          <div class="btn-group" id="chart-timeframe-group">
+            <button onclick="setTimeframe('1m')">1M</button>
+            <button onclick="setTimeframe('3m')">3M</button>
+            <button onclick="setTimeframe('6m')">6M</button>
+            <button onclick="setTimeframe('1y')">1Y</button>
+            <button class="active" onclick="setTimeframe('all')">ALL</button>
+          </div>
+        </div>
+      </div>
+      <div class="chart-wrapper">
+        <canvas id="growthChart"></canvas>
+      </div>
+    </div>
+
+    <!-- MONTHLY BUDGET & CASH FLOW SECTION -->
+    <div class="budget-section">
+      <div class="budget-header">
+        <div>
+          <h2>Monthly Cash Flow & Budget Planning</h2>
+          <p>Normalized take-home income streams, biweekly paystub breakdowns, and recurring obligations</p>
+        </div>
+        <div class="budget-actions">
+          <button class="btn btn-outline" onclick="openAddBudgetModal('income')">
+            + Add Income
+          </button>
+          <button class="btn btn-primary" onclick="openAddBudgetModal('expense')">
+            + Add Expense
+          </button>
+        </div>
+      </div>
+
+      <!-- Budget Summary KPIs -->
+      <div class="budget-kpis-grid">
+        <div class="budget-kpi-card">
+          <div class="budget-kpi-label">Take-Home Monthly Income</div>
+          <div class="budget-kpi-val positive" id="bgt-total-posttax-income">$0.00</div>
+          <div class="budget-kpi-sub" id="bgt-pretax-sub">+ $8,500.00/mo pre-tax</div>
+        </div>
+        <div class="budget-kpi-card">
+          <div class="budget-kpi-label">Total Monthly Expenses</div>
+          <div class="budget-kpi-val negative" id="bgt-total-expenses">$0.00</div>
+          <div class="budget-kpi-sub" id="bgt-expenses-count">6 recurring obligations</div>
+        </div>
+        <div class="budget-kpi-card highlight">
+          <div class="budget-kpi-label">Net Monthly Cash Flow</div>
+          <div class="budget-kpi-val" id="bgt-net-cashflow">$0.00</div>
+          <div class="budget-kpi-sub">Take-Home Income − Monthly Expenses</div>
+        </div>
+      </div>
+
+      <!-- 2 Columns: Incomes & Expenses -->
+      <div class="budget-columns-grid">
+        <!-- Incomes Column -->
+        <div class="budget-column-card">
+          <div class="budget-col-header">
+            <div class="budget-col-title">
+              <span>💰 Monthly Income Streams</span>
+              <span class="acct-mask" id="bgt-incomes-count">0</span>
+            </div>
+          </div>
+          <div class="budget-items-list" id="budget-incomes-list">
+            <!-- Dynamic Incomes List -->
+          </div>
+        </div>
+
+        <!-- Expenses Column -->
+        <div class="budget-column-card">
+          <div class="budget-col-header">
+            <div class="budget-col-title">
+              <span>🧾 Recurring Expenses & Bills</span>
+              <span class="acct-mask" id="bgt-expenses-count-pill">0</span>
+            </div>
+          </div>
+          <div class="budget-items-list" id="budget-expenses-list">
+            <!-- Dynamic Expenses List -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACCOUNTS SECTION (WITH MORTGAGE & REAL ESTATE ON SAME ROW) -->
+    <div class="accounts-section">
+      <div class="accounts-header">
+        <h2>Institutional Accounts (<span id="accounts-count">11</span>)</h2>
+        <div class="tabs-bar">
+          <button class="tab-btn active" onclick="filterAccounts('all')">All Accounts</button>
+          <button class="tab-btn" onclick="filterAccounts('cash')">Cash & HYSA</button>
+          <button class="tab-btn" onclick="filterAccounts('credit')">Credit Cards</button>
+          <button class="tab-btn" onclick="filterAccounts('investment')">Investments & 401(k)</button>
+          <button class="tab-btn" onclick="filterAccounts('property_mortgage')">Real Estate & Mortgages</button>
+        </div>
+      </div>
+
+      <div id="accounts-container">
+        <!-- Rendered dynamically by category rows -->
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SIMPLEFIN SETTINGS MODAL -->
+  <div id="settings-modal" class="modal-backdrop">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>SimpleFIN Bridge Connection</h3>
+        <button class="modal-close" onclick="closeSettingsModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0;">
+          SimpleFIN Bridge connects to banks via MX Open Banking. To connect live:
+        </p>
+        <ol style="font-size: 0.82rem; color: var(--text-secondary); padding-left: 20px; line-height: 1.6;">
+          <li>Visit <a href="https://bridge.simplefin.org/" target="_blank" style="color: var(--primary-blue);">bridge.simplefin.org</a> and link your financial institutions.</li>
+          <li>Generate a <strong>Claim Token</strong> or copy your permanent <strong>Access URL</strong>.</li>
+          <li>Paste below to link directly to this server.</li>
+        </ol>
+
+        <div class="form-group" style="margin-top: 18px;">
+          <label for="claim-token-input">SimpleFIN Claim Token or Access URL</label>
+          <input type="text" id="claim-token-input" class="form-control" placeholder="Paste claim token (base64) or https://user:pass@beta-bridge..." />
+          <div class="form-help">Tokens are stored securely in SQLite and never transmitted externally except to SimpleFIN.</div>
+        </div>
+
+        <div id="connection-status-box" style="margin-top: 14px; padding: 12px; border-radius: var(--radius); background: var(--secondary); font-size: 0.82rem;">
+          <strong>Status:</strong> <span id="status-conn-text">Checking...</span><br/>
+          <span id="status-url-text" style="color: var(--text-muted);"></span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="disconnectSimpleFin()">Disconnect</button>
+        <button class="btn btn-primary" onclick="submitClaimToken()">Save & Connect</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- EDIT ACCOUNT MODAL -->
+  <div id="edit-account-modal" class="modal-backdrop">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="edit-modal-title">Edit Account Details</h3>
+        <button class="modal-close" onclick="closeEditModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="edit-acct-id" />
+        <div class="form-group">
+          <label>Current Balance ($)</label>
+          <input type="number" step="0.01" id="edit-acct-balance" class="form-control" />
+        </div>
+        <div class="form-group">
+          <label>APY / Interest Rate / Fee</label>
+          <input type="text" id="edit-acct-apy" class="form-control" />
+        </div>
+        <div class="form-group">
+          <label>Rewards & Status Details</label>
+          <input type="text" id="edit-acct-rewards" class="form-control" />
+        </div>
+        <div class="form-group">
+          <label>Holdings / Note</label>
+          <input type="text" id="edit-acct-holdings" class="form-control" />
+        </div>
+        <div class="form-group">
+          <label>Credit Limit ($) (if credit card)</label>
+          <input type="number" step="0.01" id="edit-acct-limit" class="form-control" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeEditModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveAccountDetails()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BUDGET ITEM MODAL (ADD / EDIT) -->
+  <div id="budget-modal" class="modal-backdrop">
+    <div class="modal-content" style="max-width: 540px;">
+      <div class="modal-header">
+        <h3 id="bgt-modal-title">Add Budget Item</h3>
+        <button class="modal-close" onclick="closeBudgetModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="bgt-id" />
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+          <div class="form-group">
+            <label for="bgt-category">Category</label>
+            <select id="bgt-category" class="form-control">
+              <option value="income">Income Stream</option>
+              <option value="expense">Expense / Recurring Bill</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="bgt-tax-status">Tax Status</label>
+            <select id="bgt-tax-status" class="form-control">
+              <option value="post-tax">Post-Tax (Take-Home)</option>
+              <option value="pre-tax">Pre-Tax (Gross)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="bgt-name">Item / Source Name *</label>
+          <input type="text" id="bgt-name" class="form-control" placeholder="e.g. ASH, Rocket Mortgage, SDG&E" required />
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+          <div class="form-group">
+            <label for="bgt-amount">Monthly Normalized ($) *</label>
+            <input type="number" step="0.01" id="bgt-amount" class="form-control" placeholder="3227.97" required />
+            <div class="form-help">Amount budgeted per calendar month.</div>
+          </div>
+          <div class="form-group">
+            <label for="bgt-frequency">Frequency / Schedule</label>
+            <select id="bgt-frequency" class="form-control" onchange="handleFrequencyChange()">
+              <option value="monthly">Monthly</option>
+              <option value="biweekly">Biweekly (Every 2 wks)</option>
+              <option value="weekly">Weekly</option>
+              <option value="annual">Annual</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+          <div class="form-group">
+            <label for="bgt-raw-amount">Raw Amount / Paycheck ($)</label>
+            <input type="number" step="0.01" id="bgt-raw-amount" class="form-control" placeholder="2048.27" />
+          </div>
+          <div class="form-group">
+            <label for="bgt-due-date">Due Date / Payday</label>
+            <input type="text" id="bgt-due-date" class="form-control" placeholder="e.g. 1st of month, 9th, Friday" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="bgt-portal-url">Payment Portal / Login URL</label>
+          <input type="url" id="bgt-portal-url" class="form-control" placeholder="https://rocket.com/mortgage/servicing" />
+        </div>
+
+        <div class="form-group">
+          <label for="bgt-notes">Notes & Details</label>
+          <input type="text" id="bgt-notes" class="form-control" placeholder="Notes, account number, or breakdown summary" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeBudgetModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveBudgetItem()">Save Item</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ASH PAYSTUB BREAKDOWN MODAL -->
+  <div id="paystub-modal" class="modal-backdrop">
+    <div class="modal-content" style="max-width: 620px;">
+      <div class="modal-header">
+        <div>
+          <h3 style="margin: 0;">American Specialty Health (ASHI) Pay Statement</h3>
+          <p style="margin: 2px 0 0 0; font-size: 0.8rem; color: var(--text-muted);">Software Eng in Test II • Biweekly Earnings & Deductions</p>
+        </div>
+        <button class="modal-close" onclick="closePaystubModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="paystub-modal-content">
+        <!-- Dynamically rendered detailed paystub summary -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closePaystubModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST CONTAINER -->
+  <div id="toast-container"></div>
+
+  <script>
+    // -------------------------------------------------------------------------
+    // THEME MANAGEMENT (Matches InvoiceGenerator & Crossroads Shared Theme)
+    // -------------------------------------------------------------------------
+    function initTheme() {
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme) {
+        setTheme(savedTheme, false);
+      } else {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        setTheme(prefersDark ? 'dark' : 'light', false);
+      }
+      document.getElementById('theme-toggle').addEventListener('click', () => {
+        const current = document.documentElement.getAttribute('data-theme') || 'light';
+        setTheme(current === 'dark' ? 'light' : 'dark', true);
+      });
+    }
+
+    function setTheme(theme, save = true) {
+      document.documentElement.setAttribute('data-theme', theme);
+      document.documentElement.classList.toggle('dark', theme === 'dark');
+      if (save) localStorage.setItem('theme', theme);
+      if (chartInstance) {
+        updateChartTheme();
+      }
+    }
+
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.innerText = message;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 250);
+      }, 3500);
+    }
+
+    // -------------------------------------------------------------------------
+    // DASHBOARD STATE & CHART MANAGEMENT
+    // -------------------------------------------------------------------------
+    let allAccounts = [];
+    let currentCategoryFilter = 'all';
+    let currentChartMode = 'net_worth';
+    let currentTimeframe = 'all';
+    let chartInstance = null;
+    let historyRawData = null;
+
+    let budgetData = null;
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initTheme();
+      loadSummaryAndAccounts();
+      loadBudgetSummary();
+      loadHistoryChart(currentTimeframe);
+      checkSettingsStatus();
+    });
+
+    // Formatting utilities
+    function formatCurrency(num, showSign = false) {
+      const val = parseFloat(num) || 0;
+      const formatted = Math.abs(val).toLocaleString('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+      if (val < 0) return '-' + formatted;
+      if (showSign && val > 0) return '+' + formatted;
+      return formatted;
+    }
+
+    // Fetch Summary & Accounts
+    async function loadSummaryAndAccounts() {
+      try {
+        const res = await fetch('/api/finance/summary');
+        const json = await res.json();
+        if (json.status !== 'success') return;
+        const data = json.data;
+
+        // Populate Hero Net Worth Card (Centered & Prominent)
+        const nwElem = document.getElementById('kpi-net-worth');
+        nwElem.innerText = formatCurrency(data.net_worth);
+        nwElem.className = `net-worth-hero-value ${data.net_worth >= 0 ? 'positive' : 'negative'}`;
+
+        // Sub-metrics on Hero Card
+        document.getElementById('kpi-hero-total-assets').innerText = formatCurrency(data.total_assets);
+        document.getElementById('kpi-hero-total-liab').innerText = formatCurrency(data.total_liabilities);
+        document.getElementById('kpi-hero-home-equity').innerText = formatCurrency(data.home_equity);
+
+        // Populate Secondary Metric Cards
+        document.getElementById('kpi-liquid-cash').innerText = formatCurrency(data.liquid_cash);
+        document.getElementById('kpi-investments').innerText = formatCurrency(data.investments);
+        document.getElementById('kpi-vested-sub').innerText = `Vested: ${formatCurrency(data.vested_investments)}`;
+        
+        const loansDebt = data.mortgage_debt || 0;
+        const loansElem = document.getElementById('kpi-loans-debt');
+        if (loansElem) {
+          loansElem.innerText = formatCurrency(loansDebt);
+        }
+
+        if (data.property_value != null) {
+          document.getElementById('kpi-property-val').innerText = formatCurrency(data.property_value);
+        }
+
+        // Credit utilization & debt (no rewards points)
+        const ccDebt = data.credit_debt || 0;
+        const totalLimit = data.total_credit_limit || 0;
+        const utilPct = data.credit_utilization || 0;
+
+        document.getElementById('kpi-credit-debt').innerText = formatCurrency(ccDebt);
+        const utilBar = document.getElementById('credit-util-bar');
+        if (utilBar) {
+          utilBar.style.width = Math.max(1, Math.min(utilPct, 100)) + '%';
+          utilBar.style.background = utilPct > 30 ? '#ef4444' : (utilPct > 10 ? '#f59e0b' : '#10b981');
+        }
+        const creditSub = document.getElementById('kpi-credit-sub');
+        if (creditSub) {
+          creditSub.innerText = totalLimit > 0
+            ? `${utilPct.toFixed(1)}% util • Limit: ${formatCurrency(totalLimit)}`
+            : `${utilPct.toFixed(1)}% util`;
+        }
+
+        if (data.last_sync) {
+          try {
+            const dt = new Date(data.last_sync);
+            document.getElementById('header-subtitle').innerText =
+              `SimpleFIN Bridge • Last synced: ${dt.toLocaleDateString()} ${dt.toLocaleTimeString()}`;
+          } catch(e) {}
+        }
+
+        // Fetch accounts
+        const acctRes = await fetch('/api/finance/accounts');
+        const acctJson = await acctRes.json();
+        if (acctJson.status === 'success') {
+          allAccounts = acctJson.accounts;
+          document.getElementById('accounts-count').innerText = allAccounts.length;
+          renderAccountsGrid();
+        }
+      } catch (err) {
+        console.error('Error loading finance summary:', err);
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // BUDGET & RECURRING EXPENSES / INCOMES MANAGEMENT
+    // -------------------------------------------------------------------------
+    async function loadBudgetSummary() {
+      try {
+        const res = await fetch('/api/finance/budget');
+        const json = await res.json();
+        if (json.status !== 'success') return;
+        budgetData = json.data;
+
+        // Top-most Hero Header Monthly Incomes & Expenses
+        document.getElementById('kpi-hero-monthly-income').innerText = formatCurrency(budgetData.total_monthly_income_posttax);
+        document.getElementById('kpi-hero-monthly-expenses').innerText = formatCurrency(budgetData.total_monthly_expenses);
+
+        // Secondary Metrics Grid Income & Expenses Cards
+        const gridIncome = document.getElementById('kpi-grid-income');
+        if (gridIncome) {
+          gridIncome.innerText = formatCurrency(budgetData.total_monthly_income_posttax);
+        }
+        const gridIncomeSub = document.getElementById('kpi-grid-income-sub');
+        if (gridIncomeSub) {
+          gridIncomeSub.innerText = `+ ${formatCurrency(budgetData.total_monthly_income_pretax)}/mo pre-tax`;
+        }
+
+        const gridExpenses = document.getElementById('kpi-grid-expenses');
+        if (gridExpenses) {
+          gridExpenses.innerText = formatCurrency(budgetData.total_monthly_expenses);
+        }
+        const gridExpensesSub = document.getElementById('kpi-grid-expenses-sub');
+        if (gridExpensesSub) {
+          const flowPrefix = budgetData.net_monthly_cash_flow >= 0 ? '+' : '';
+          gridExpensesSub.innerText = `Net Flow: ${flowPrefix}${formatCurrency(budgetData.net_monthly_cash_flow)}/mo`;
+        }
+
+        // Budget Section KPIs
+        document.getElementById('bgt-total-posttax-income').innerText = formatCurrency(budgetData.total_monthly_income_posttax);
+        document.getElementById('bgt-pretax-sub').innerText = `+ ${formatCurrency(budgetData.total_monthly_income_pretax)}/mo pre-tax`;
+        document.getElementById('bgt-total-expenses').innerText = formatCurrency(budgetData.total_monthly_expenses);
+        document.getElementById('bgt-expenses-count').innerText = `${budgetData.expenses.length} recurring obligations`;
+
+        const netCashElem = document.getElementById('bgt-net-cashflow');
+        netCashElem.innerText = formatCurrency(budgetData.net_monthly_cash_flow, true);
+        netCashElem.className = `budget-kpi-val ${budgetData.net_monthly_cash_flow >= 0 ? 'positive' : 'negative'}`;
+
+        document.getElementById('bgt-incomes-count').innerText = budgetData.incomes.length;
+        document.getElementById('bgt-expenses-count-pill').innerText = budgetData.expenses.length;
+
+        renderBudgetList(budgetData.incomes, budgetData.expenses);
+      } catch (e) {
+        console.error('Error loading budget data:', e);
+      }
+    }
+
+    function renderBudgetList(incomes, expenses) {
+      const incContainer = document.getElementById('budget-incomes-list');
+      const expContainer = document.getElementById('budget-expenses-list');
+
+      // Render Incomes
+      if (!incomes || incomes.length === 0) {
+        incContainer.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--text-muted); font-size: 0.85rem;">No income streams added yet.</div>';
+      } else {
+        incContainer.innerHTML = incomes.map(item => {
+          const isPretax = item.tax_status === 'pre-tax';
+          const taxBadge = isPretax
+            ? '<span class="acct-badge badge-retirement" style="font-size: 0.68rem; padding: 2px 6px;">Pre-Tax</span>'
+            : '<span class="acct-badge badge-savings" style="font-size: 0.68rem; padding: 2px 6px;">Take-Home</span>';
+
+          const freqBadge = item.frequency
+            ? `<span class="acct-mask" style="font-size: 0.7rem; text-transform: capitalize;">${escapeHtml(item.frequency)}</span>`
+            : '';
+
+          const hasDetails = item.details != null;
+          const inactiveClass = item.is_active ? '' : 'inactive';
+
+          return `
+            <div class="budget-item-row ${inactiveClass}">
+              <div class="budget-item-left">
+                <div class="budget-item-name-row">
+                  <span class="budget-item-name">${escapeHtml(item.name)}</span>
+                  ${taxBadge}
+                  ${freqBadge}
+                  ${hasDetails ? `<button class="icon-btn" onclick='openPaystubModal(${JSON.stringify(item.details)})' style="width: auto; height: 26px; padding: 0 8px; font-size: 0.74rem; font-weight: 600; gap: 4px;" title="View Pay Statement Breakdown"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> Paystub Details</button>` : ''}
+                </div>
+                ${item.notes ? `<div class="budget-item-notes">${escapeHtml(item.notes)}</div>` : ''}
+              </div>
+              <div class="budget-item-right">
+                <div>
+                  <div class="budget-item-amount positive">+${formatCurrency(item.amount)}</div>
+                  <div class="budget-item-period">/ month</div>
+                </div>
+                <div class="budget-item-actions">
+                  <button type="button" class="icon-btn" onclick='openEditBudgetModal(${JSON.stringify(item)})' title="Edit Income">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                  </button>
+                  <button type="button" class="icon-btn warning" onclick="toggleBudgetItem(${item.id})" title="${item.is_active ? 'Disable Income' : 'Enable Income'}">
+                    ${item.is_active ? `
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+                      </svg>
+                    ` : `
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                      </svg>
+                    `}
+                  </button>
+                  <button type="button" class="icon-btn danger" onclick="deleteBudgetItem(${item.id})" title="Delete Income">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="3 6 5 6 21 6"></polyline>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // Render Expenses (with title linking directly to portal)
+      if (!expenses || expenses.length === 0) {
+        expContainer.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--text-muted); font-size: 0.85rem;">No recurring expenses added yet.</div>';
+      } else {
+        expContainer.innerHTML = expenses.map(item => {
+          const dueBadge = item.due_date
+            ? `<span class="acct-badge badge-checking" style="font-size: 0.68rem; padding: 2px 6px;">📅 Due: ${escapeHtml(item.due_date)}</span>`
+            : '';
+
+          const inactiveClass = item.is_active ? '' : 'inactive';
+
+          // Clickable title opening portal
+          const nameHtml = item.portal_url ? `
+            <a href="${escapeHtml(item.portal_url)}" target="_blank" rel="noopener noreferrer" class="budget-item-name link-title" title="Open ${escapeHtml(item.name)} portal in new tab">
+              ${escapeHtml(item.name)}
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.6; margin-left: 2px;">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                <polyline points="15 3 21 3 21 9"></polyline>
+                <line x1="10" y1="14" x2="21" y2="3"></line>
+              </svg>
+            </a>
+          ` : `<span class="budget-item-name">${escapeHtml(item.name)}</span>`;
+
+          return `
+            <div class="budget-item-row ${inactiveClass}">
+              <div class="budget-item-left">
+                <div class="budget-item-name-row">
+                  ${nameHtml}
+                  ${dueBadge}
+                </div>
+                ${item.notes ? `<div class="budget-item-notes">${escapeHtml(item.notes)}</div>` : ''}
+              </div>
+              <div class="budget-item-right">
+                <div>
+                  <div class="budget-item-amount negative">-${formatCurrency(item.amount)}</div>
+                  <div class="budget-item-period">/ month</div>
+                </div>
+                <div class="budget-item-actions">
+                  <button type="button" class="icon-btn" onclick='openEditBudgetModal(${JSON.stringify(item)})' title="Edit Expense">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                  </button>
+                  <button type="button" class="icon-btn warning" onclick="toggleBudgetItem(${item.id})" title="${item.is_active ? 'Disable Expense' : 'Enable Expense'}">
+                    ${item.is_active ? `
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+                      </svg>
+                    ` : `
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                      </svg>
+                    `}
+                  </button>
+                  <button type="button" class="icon-btn danger" onclick="deleteBudgetItem(${item.id})" title="Delete Expense">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="3 6 5 6 21 6"></polyline>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    // Paystub Modal display with 401(k) separated from total deductions
+    function openPaystubModal(details) {
+      if (!details) return;
+      const modalContent = document.getElementById('paystub-modal-content');
+
+      const rothAmt = details.deductions_breakdown?.['401k_roth'] || 1178.59;
+      const matchAmt = details.employer_contributions?.['401k_match'] || 141.43;
+      const totalInvested = rothAmt + matchAmt;
+
+      const medAmt = details.deductions_breakdown?.medical_pretax || 78.36;
+      const dentAmt = details.deductions_breakdown?.dental_pretax || 10.57;
+      const visAmt = details.deductions_breakdown?.vision_pretax || 8.33;
+      const gtlAmt = details.deductions_breakdown?.gtl_posttax || 4.14;
+      const totalBenefitsDeductions = medAmt + dentAmt + visAmt + gtlAmt;
+
+      modalContent.innerHTML = `
+        <div style="background: var(--secondary); padding: 12px 16px; border-radius: var(--radius-sm); margin-bottom: 16px; font-size: 0.85rem;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+            <strong>${escapeHtml(details.employer || 'American Specialty Health')}</strong>
+            <span class="acct-badge badge-checking">${escapeHtml(details.pay_frequency || 'Biweekly')}</span>
+          </div>
+          <div style="color: var(--text-secondary); font-size: 0.8rem;">
+            ${escapeHtml(details.title || '')} • ${escapeHtml(details.department || '')}<br/>
+            Rate: <strong>$${(details.pay_rate_hourly || 58.9294).toFixed(4)}/hr</strong> • Hours: <strong>${details.hours_per_period || 80} hrs</strong>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 16px; text-align: center;">
+          <div style="background: var(--bg-page); border: 1px solid var(--card-border); padding: 10px; border-radius: 6px;">
+            <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;">Biweekly Gross</div>
+            <div style="font-size: 1.15rem; font-weight: 700; font-family: var(--font-mono);">${formatCurrency(details.gross_pay_period)}</div>
+          </div>
+          <div style="background: var(--bg-page); border: 1px solid var(--card-border); padding: 10px; border-radius: 6px;">
+            <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;">Biweekly Take-Home</div>
+            <div style="font-size: 1.15rem; font-weight: 700; font-family: var(--font-mono); color: var(--positive);">${formatCurrency(details.biweekly_net_pay)}</div>
+          </div>
+          <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); padding: 10px; border-radius: 6px;">
+            <div style="font-size: 0.72rem; color: #10b981; font-weight: 600; text-transform: uppercase;">Monthly Take-Home</div>
+            <div style="font-size: 1.25rem; font-weight: 800; font-family: var(--font-mono); color: #10b981;">${formatCurrency(details.monthly_net_pay)}</div>
+          </div>
+        </div>
+
+        <!-- 1. RETIREMENT SAVINGS (401K ROTH) - SEPARATE CATEGORY -->
+        <h4 style="margin: 14px 0 6px 0; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: #a855f7; display: flex; align-items: center; justify-content: space-between;">
+          <span>📈 401(k) Roth Retirement Savings</span>
+          <span style="font-family: var(--font-mono); font-size: 0.8rem; font-weight: 700;">${formatCurrency(totalInvested)} / period</span>
+        </h4>
+        <table class="paystub-table">
+          <tr><th>Contribution Type</th><th style="text-align: right;">Amount (Biweekly)</th></tr>
+          <tr style="background: rgba(168, 85, 247, 0.06);">
+            <td><strong>Employee 401(k) Roth Contribution</strong></td>
+            <td class="amount" style="color: #a855f7; font-weight: 700;">${formatCurrency(rothAmt)}</td>
+          </tr>
+          <tr>
+            <td>Company 401(k) Match (Direct into NetBenefits)</td>
+            <td class="amount" style="color: #10b981;">+${formatCurrency(matchAmt)}</td>
+          </tr>
+        </table>
+
+        <!-- 2. TAXES WITHHELD -->
+        <h4 style="margin: 14px 0 6px 0; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); display: flex; align-items: center; justify-content: space-between;">
+          <span>🏛️ Taxes Withheld</span>
+          <span style="font-family: var(--font-mono); font-size: 0.8rem; font-weight: 700;">${formatCurrency(details.taxes_breakdown ? details.taxes_breakdown.total_taxes : 1390.24)}</span>
+        </h4>
+        <table class="paystub-table">
+          <tr><th>Tax Category</th><th style="text-align: right;">Amount (Biweekly)</th></tr>
+          <tr><td>Federal Income Tax</td><td class="amount">${formatCurrency(details.taxes_breakdown?.federal_income_tax || 677.06)}</td></tr>
+          <tr><td>Social Security Tax (OASDI)</td><td class="amount">${formatCurrency(details.taxes_breakdown?.social_security || 286.51)}</td></tr>
+          <tr><td>CA State Income Tax</td><td class="amount">${formatCurrency(details.taxes_breakdown?.ca_state_tax || 299.63)}</td></tr>
+          <tr><td>Medicare</td><td class="amount">${formatCurrency(details.taxes_breakdown?.medicare || 67.01)}</td></tr>
+          <tr><td>CA State Disability (SDI)</td><td class="amount">${formatCurrency(details.taxes_breakdown?.ca_disability_sdi || 60.03)}</td></tr>
+        </table>
+
+        <!-- 3. HEALTH & BENEFIT DEDUCTIONS -->
+        <h4 style="margin: 14px 0 6px 0; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); display: flex; align-items: center; justify-content: space-between;">
+          <span>🩺 Pre-Tax Benefits & Insurance Deductions</span>
+          <span style="font-family: var(--font-mono); font-size: 0.8rem; font-weight: 700;">${formatCurrency(totalBenefitsDeductions)}</span>
+        </h4>
+        <table class="paystub-table">
+          <tr><th>Benefit Item</th><th style="text-align: right;">Employee Amount</th></tr>
+          <tr><td>Medical Health Coverage (Pre-tax)</td><td class="amount">${formatCurrency(medAmt)}</td></tr>
+          <tr><td>Dental Coverage (Pre-tax)</td><td class="amount">${formatCurrency(dentAmt)}</td></tr>
+          <tr><td>Vision Coverage (Pre-tax)</td><td class="amount">${formatCurrency(visAmt)}</td></tr>
+          <tr><td>Group Term Life (GTL)</td><td class="amount">${formatCurrency(gtlAmt)}</td></tr>
+        </table>
+
+        <div style="margin-top: 14px; padding: 10px 14px; border-radius: var(--radius-sm); background: var(--secondary); font-size: 0.78rem; color: var(--text-secondary); line-height: 1.5;">
+          <strong>Employer Company Subsidies:</strong> ASH pays <strong>$326.33/biweekly</strong> medical coverage + <strong>$10.57/biweekly</strong> dental coverage + <strong>$141.43</strong> 401(k) match ($509.65 total employer benefits per pay period).
+        </div>
+      `;
+
+      document.getElementById('paystub-modal').classList.add('open');
+    }
+
+    function closePaystubModal() {
+      document.getElementById('paystub-modal').classList.remove('open');
+    }
+
+    // Close any modal when clicking on the backdrop outside the dialog
+    window.addEventListener('click', (e) => {
+      if (e.target && e.target.classList && e.target.classList.contains('modal-backdrop')) {
+        e.target.classList.remove('open');
+      }
+    });
+
+    // Budget Item Add / Edit Modal
+    function openAddBudgetModal(type = 'income') {
+      document.getElementById('bgt-modal-title').innerText = type === 'income' ? 'Add Income Stream' : 'Add Recurring Expense';
+      document.getElementById('bgt-id').value = '';
+      document.getElementById('bgt-category').value = type;
+      document.getElementById('bgt-tax-status').value = type === 'income' ? 'post-tax' : 'post-tax';
+      document.getElementById('bgt-name').value = '';
+      document.getElementById('bgt-amount').value = '';
+      document.getElementById('bgt-frequency').value = 'monthly';
+      document.getElementById('bgt-raw-amount').value = '';
+      document.getElementById('bgt-due-date').value = type === 'expense' ? '1st of month' : '';
+      document.getElementById('bgt-portal-url').value = '';
+      document.getElementById('bgt-notes').value = '';
+      document.getElementById('budget-modal').classList.add('open');
+    }
+
+    function openEditBudgetModal(item) {
+      document.getElementById('bgt-modal-title').innerText = `Edit: ${item.name}`;
+      document.getElementById('bgt-id').value = item.id;
+      document.getElementById('bgt-category').value = item.category;
+      document.getElementById('bgt-tax-status').value = item.tax_status || 'post-tax';
+      document.getElementById('bgt-name').value = item.name;
+      document.getElementById('bgt-amount').value = item.amount;
+      document.getElementById('bgt-frequency').value = item.frequency || 'monthly';
+      document.getElementById('bgt-raw-amount').value = item.raw_amount || item.amount;
+      document.getElementById('bgt-due-date').value = item.due_date || '';
+      document.getElementById('bgt-portal-url').value = item.portal_url || '';
+      document.getElementById('bgt-notes').value = item.notes || '';
+      document.getElementById('budget-modal').classList.add('open');
+    }
+
+    function closeBudgetModal() {
+      document.getElementById('budget-modal').classList.remove('open');
+    }
+
+    function handleFrequencyChange() {
+      const freq = document.getElementById('bgt-frequency').value;
+      const raw = parseFloat(document.getElementById('bgt-raw-amount').value);
+      if (!raw || isNaN(raw)) return;
+
+      let normalized = raw;
+      if (freq === 'biweekly') normalized = raw * 26.0 / 12.0;
+      else if (freq === 'weekly') normalized = raw * 52.0 / 12.0;
+      else if (freq === 'annual') normalized = raw / 12.0;
+
+      document.getElementById('bgt-amount').value = normalized.toFixed(2);
+    }
+
+    async function saveBudgetItem() {
+      const name = document.getElementById('bgt-name').value.trim();
+      const amount = parseFloat(document.getElementById('bgt-amount').value);
+      if (!name) {
+        showToast('Please provide a name', 'error');
+        return;
+      }
+      if (isNaN(amount)) {
+        showToast('Please enter a valid monthly amount', 'error');
+        return;
+      }
+
+      const id = document.getElementById('bgt-id').value;
+      const payload = {
+        id: id ? parseInt(id) : null,
+        category: document.getElementById('bgt-category').value,
+        tax_status: document.getElementById('bgt-tax-status').value,
+        name: name,
+        amount: amount,
+        frequency: document.getElementById('bgt-frequency').value,
+        raw_amount: parseFloat(document.getElementById('bgt-raw-amount').value) || amount,
+        due_date: document.getElementById('bgt-due-date').value.trim(),
+        portal_url: document.getElementById('bgt-portal-url').value.trim(),
+        notes: document.getElementById('bgt-notes').value.trim()
+      };
+
+      try {
+        const res = await fetch('/api/finance/budget/item', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('Budget item saved!', 'success');
+          closeBudgetModal();
+          loadBudgetSummary();
+        } else {
+          showToast(data.error || 'Failed to save item', 'error');
+        }
+      } catch (e) {
+        showToast('Save error: ' + e.message, 'error');
+      }
+    }
+
+    async function deleteBudgetItem(id) {
+      if (!confirm('Are you sure you want to delete this budget item?')) return;
+      try {
+        const res = await fetch(`/api/finance/budget/item/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+          showToast('Budget item deleted', 'info');
+          loadBudgetSummary();
+        } else {
+          showToast(data.error || 'Failed to delete', 'error');
+        }
+      } catch (e) {
+        showToast('Delete error: ' + e.message, 'error');
+      }
+    }
+
+    async function toggleBudgetItem(id) {
+      try {
+        const res = await fetch(`/api/finance/budget/toggle/${id}`, { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          loadBudgetSummary();
+        }
+      } catch (e) {}
+    }
+
+    // Format institutional sync timestamp
+    function getAccountSyncStatus(acc) {
+      if (acc.is_manual) {
+        return {
+          badge: '<span class="acct-mask" style="font-size: 0.68rem; color: var(--text-muted); background: var(--border-light);">Manual Asset</span>',
+          text: 'Manual Tracking',
+          isStale: false,
+          title: 'Manually tracked account / asset'
+        };
+      }
+      if (!acc.last_synced) {
+        return {
+          badge: '<span class="acct-badge" style="background: rgba(239, 68, 68, 0.15); color: var(--negative); font-size: 0.68rem;">Not Synced</span>',
+          text: 'Never synced',
+          isStale: true,
+          title: 'No sync recorded'
+        };
+      }
+      try {
+        const dt = new Date(acc.last_synced);
+        const now = new Date();
+        const diffMs = now - dt;
+        const diffHours = diffMs / (1000 * 60 * 60);
+        const diffDays = diffHours / 24;
+
+        const fullDate = dt.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) + ' ' +
+                         dt.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+
+        // Stale if SimpleFIN has not refreshed from the bank in > 3 days (72 hours)
+        const isStale = diffDays > 3;
+
+        let relative = '';
+        if (diffHours < 1) {
+          const mins = Math.max(1, Math.round(diffMs / (1000 * 60)));
+          relative = `${mins}m ago`;
+        } else if (diffHours < 24) {
+          const hrs = Math.round(diffHours);
+          relative = `${hrs}h ago`;
+        } else {
+          const days = Math.round(diffDays);
+          relative = `${days}d ago`;
+        }
+
+        if (isStale) {
+          return {
+            badge: `<span class="acct-badge" style="background: rgba(239, 68, 68, 0.15); color: var(--negative); font-size: 0.68rem;" title="Bank API connection may be stale. SimpleFIN last polled bank on: ${fullDate}">⚠️ Sync Stale (${relative})</span>`,
+            text: `${relative} (${fullDate})`,
+            isStale: true,
+            title: `SimpleFIN last polled bank: ${fullDate}`
+          };
+        }
+
+        return {
+          badge: '',
+          text: `${relative} • ${fullDate}`,
+          isStale: false,
+          title: `SimpleFIN last pulled data from bank API: ${fullDate}`
+        };
+      } catch (e) {
+        return { badge: '', text: 'Synced', isStale: false, title: '' };
+      }
+    }
+
+    // Render Account Card HTML
+    function renderAccountCardHtml(acc) {
+      const isLiability = !acc.is_asset;
+      const balClass = isLiability ? (acc.balance < 0 ? 'negative' : (acc.balance === 0 ? 'positive' : 'negative')) : 'positive';
+      const displayBal = formatCurrency(acc.balance);
+      const syncStatus = getAccountSyncStatus(acc);
+
+      let typeBadgeClass = 'badge-checking';
+      if (acc.account_type === 'savings') typeBadgeClass = 'badge-savings';
+      else if (acc.account_type === 'mortgage') typeBadgeClass = 'badge-mortgage';
+      else if (acc.account_type === 'credit') typeBadgeClass = 'badge-credit';
+      else if (['retirement', 'investment'].includes(acc.account_type)) typeBadgeClass = 'badge-retirement';
+      else if (['property', 'real_estate'].includes(acc.account_type)) typeBadgeClass = 'badge-property';
+
+      return `
+        <div class="account-card">
+          <div>
+            <div class="acct-top">
+              <div>
+                <div class="acct-brand">
+                  <span class="acct-badge ${typeBadgeClass}">${acc.account_type}</span>
+                  ${acc.account_number_mask ? `<span class="acct-mask">${escapeHtml(acc.account_number_mask)}</span>` : ''}
+                  ${syncStatus.badge}
+                </div>
+                <h3 class="acct-name" style="margin-top: 6px;">${escapeHtml(acc.name)}</h3>
+                <div class="acct-inst">${escapeHtml(acc.institution)}</div>
+              </div>
+            </div>
+
+            <div class="acct-balance-row">
+              <div class="acct-bal ${balClass}">${displayBal}</div>
+            </div>
+
+            <div class="acct-meta-list">
+              ${acc.apy_interest ? `
+                <div class="acct-meta-item">
+                  <span class="acct-meta-key">Rate / APY</span>
+                  <span class="acct-meta-val">${escapeHtml(acc.apy_interest)}</span>
+                </div>` : ''}
+              ${acc.rewards_status ? `
+                <div class="acct-meta-item">
+                  <span class="acct-meta-key">Status / Rewards</span>
+                  <span class="acct-meta-val">${escapeHtml(acc.rewards_status)}</span>
+                </div>` : ''}
+              ${acc.credit_limit > 0 ? `
+                <div class="acct-meta-item">
+                  <span class="acct-meta-key">Credit Limit</span>
+                  <span class="acct-meta-val">${formatCurrency(acc.credit_limit)}</span>
+                </div>` : ''}
+              ${acc.vested_balance > 0 && acc.vested_balance !== acc.balance ? `
+                <div class="acct-meta-item">
+                  <span class="acct-meta-key">Vested Amount</span>
+                  <span class="acct-meta-val">${formatCurrency(acc.vested_balance)}</span>
+                </div>` : ''}
+              ${acc.holdings_summary ? `
+                <div class="acct-meta-item">
+                  <span class="acct-meta-key">Holdings</span>
+                  <span class="acct-meta-val">${escapeHtml(acc.holdings_summary)}</span>
+                </div>` : ''}
+              <div class="acct-meta-item">
+                <span class="acct-meta-key">Bank API Sync</span>
+                <span class="acct-meta-val" title="${syncStatus.title}" style="${syncStatus.isStale ? 'color: var(--negative); font-weight: 600;' : 'color: var(--text-muted); font-size: 0.76rem;'}">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 3px; vertical-align: -1px; opacity: 0.7;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>${syncStatus.text}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-actions">
+            <button class="btn btn-outline" style="padding: 4px 10px; font-size: 0.75rem;" onclick='openEditModal(${JSON.stringify(acc)})'>
+              Edit Details
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    // Render Accounts Separated by Category Rows (MORTGAGE & REAL ESTATE TOGETHER)
+    function renderAccountsGrid() {
+      const container = document.getElementById('accounts-container');
+      container.innerHTML = '';
+
+      const categories = [
+        {
+          key: 'cash',
+          title: 'Cash & Liquid Savings',
+          icon: '💵',
+          filter: a => ['checking', 'savings'].includes(a.account_type)
+        },
+        {
+          key: 'credit',
+          title: 'Credit Cards & Revolving Credit',
+          icon: '💳',
+          filter: a => a.account_type === 'credit'
+        },
+        {
+          key: 'investment',
+          title: 'Investments & Retirement Portfolio',
+          icon: '📈',
+          filter: a => ['investment', 'retirement'].includes(a.account_type)
+        },
+        {
+          key: 'property_mortgage',
+          title: 'Real Estate & Mortgages',
+          icon: '🏡',
+          filter: a => ['property', 'real_estate', 'mortgage', 'loan'].includes(a.account_type)
+        }
+      ];
+
+      let catsToRender = categories;
+      if (currentCategoryFilter !== 'all') {
+        catsToRender = categories.filter(c => c.key === currentCategoryFilter);
+      }
+
+      let totalRendered = 0;
+
+      catsToRender.forEach(cat => {
+        const catAccounts = allAccounts.filter(cat.filter);
+        if (catAccounts.length === 0) return;
+
+        totalRendered += catAccounts.length;
+
+        // Calculate category total balance
+        const catTotal = catAccounts.reduce((sum, a) => sum + (parseFloat(a.balance) || 0), 0);
+        const totalClass = catTotal >= 0 ? 'positive' : 'negative';
+
+        const groupDiv = document.createElement('div');
+        groupDiv.className = 'category-group';
+        groupDiv.innerHTML = `
+          <div class="category-row-header">
+            <div class="category-row-title">
+              <span>${cat.icon}</span>
+              <span>${cat.title}</span>
+              <span class="acct-mask" style="margin-left: 6px; font-size: 0.72rem;">${catAccounts.length}</span>
+            </div>
+            <div class="category-row-total ${totalClass}">
+              Total: ${formatCurrency(catTotal)}
+            </div>
+          </div>
+          <div class="accounts-grid">
+            ${catAccounts.map(renderAccountCardHtml).join('')}
+          </div>
+        `;
+        container.appendChild(groupDiv);
+      });
+
+      if (totalRendered === 0) {
+        container.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);">No accounts found in this category.</div>';
+      }
+    }
+
+    function filterAccounts(category) {
+      currentCategoryFilter = category;
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      if (event && event.target) event.target.classList.add('active');
+      renderAccountsGrid();
+    }
+
+    // -------------------------------------------------------------------------
+    // CHART.JS INTERACTIVE VISUALIZATION
+    // -------------------------------------------------------------------------
+    async function loadHistoryChart(timeframe = 'all') {
+      try {
+        const res = await fetch(`/api/finance/history?timeframe=${timeframe}`);
+        const json = await res.json();
+        if (json.status !== 'success') return;
+        historyRawData = json.data;
+        renderGrowthChart();
+      } catch (e) {
+        console.error('Error fetching historical growth data:', e);
+      }
+    }
+
+    function setChartMode(mode) {
+      currentChartMode = mode;
+      document.querySelectorAll('#chart-mode-group button').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+      renderGrowthChart();
+    }
+
+    function setTimeframe(tf) {
+      currentTimeframe = tf;
+      document.querySelectorAll('#chart-timeframe-group button').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+      loadHistoryChart(tf);
+    }
+
+    function getChartThemeColors() {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      return {
+        textColor: isDark ? '#f3f4f6' : '#111827',
+        mutedColor: isDark ? '#9ca3af' : '#6b7280',
+        gridColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)',
+        tooltipBg: isDark ? '#1f2937' : '#ffffff',
+        tooltipBorder: isDark ? '#374151' : '#e5e7eb'
+      };
+    }
+
+    function renderGrowthChart() {
+      if (!historyRawData || !historyRawData.labels) return;
+
+      const theme = getChartThemeColors();
+      const ctx = document.getElementById('growthChart').getContext('2d');
+
+      if (chartInstance) {
+        chartInstance.destroy();
+      }
+
+      let datasets = [];
+
+      if (currentChartMode === 'net_worth') {
+        // Net Worth Area
+        const gradient = ctx.createLinearGradient(0, 0, 0, 360);
+        gradient.addColorStop(0, 'rgba(59, 130, 246, 0.35)');
+        gradient.addColorStop(1, 'rgba(59, 130, 246, 0.01)');
+
+        datasets = [{
+          label: 'Estimated Net Worth ($)',
+          data: historyRawData.net_worth,
+          borderColor: '#3b82f6',
+          backgroundColor: gradient,
+          fill: true,
+          tension: 0.35,
+          borderWidth: 3,
+          pointRadius: 4,
+          pointHoverRadius: 7,
+          pointBackgroundColor: '#3b82f6'
+        }];
+      } else if (currentChartMode === 'assets_vs_liab') {
+        // Dual lines
+        datasets = [
+          {
+            label: 'Total Assets ($)',
+            data: historyRawData.assets,
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16, 185, 129, 0.08)',
+            fill: true,
+            tension: 0.35,
+            borderWidth: 2.5,
+            pointRadius: 4,
+            pointBackgroundColor: '#10b981'
+          },
+          {
+            label: 'Total Liabilities ($)',
+            data: historyRawData.liabilities,
+            borderColor: '#ef4444',
+            backgroundColor: 'rgba(239, 68, 68, 0.08)',
+            fill: true,
+            tension: 0.35,
+            borderWidth: 2.5,
+            pointRadius: 4,
+            pointBackgroundColor: '#ef4444'
+          }
+        ];
+      } else if (currentChartMode === 'asset_breakdown') {
+        // Liquid cash vs Invested portfolio
+        datasets = [
+          {
+            label: 'Liquid Cash ($)',
+            data: historyRawData.liquid_cash,
+            borderColor: '#06b6d4',
+            backgroundColor: 'rgba(6, 182, 212, 0.1)',
+            fill: true,
+            tension: 0.35,
+            borderWidth: 2.5,
+            pointRadius: 4,
+            pointBackgroundColor: '#06b6d4'
+          },
+          {
+            label: 'Investments ($)',
+            data: historyRawData.investments,
+            borderColor: '#a855f7',
+            backgroundColor: 'rgba(168, 85, 247, 0.1)',
+            fill: true,
+            tension: 0.35,
+            borderWidth: 2.5,
+            pointRadius: 4,
+            pointBackgroundColor: '#a855f7'
+          }
+        ];
+      }
+
+      chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: historyRawData.labels,
+          datasets: datasets
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            mode: 'index',
+            intersect: false
+          },
+          plugins: {
+            legend: {
+              labels: {
+                color: theme.textColor,
+                font: { family: 'Inter', weight: 600, size: 12 },
+                boxWidth: 14,
+                boxHeight: 14,
+                usePointStyle: true
+              }
+            },
+            tooltip: {
+              backgroundColor: theme.tooltipBg,
+              titleColor: theme.textColor,
+              bodyColor: theme.textColor,
+              borderColor: theme.tooltipBorder,
+              borderWidth: 1,
+              padding: 12,
+              boxPadding: 6,
+              usePointStyle: true,
+              callbacks: {
+                label: function(ctx) {
+                  return ` ${ctx.dataset.label}: ${formatCurrency(ctx.parsed.y)}`;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { color: theme.gridColor },
+              ticks: { color: theme.mutedColor, font: { family: 'JetBrains Mono', size: 11 } }
+            },
+            y: {
+              grid: { color: theme.gridColor },
+              ticks: {
+                color: theme.mutedColor,
+                font: { family: 'JetBrains Mono', size: 11 },
+                callback: function(val) {
+                  return (val / 1000).toFixed(0) + 'k';
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function updateChartTheme() {
+      if (chartInstance) {
+        renderGrowthChart();
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // SYNC & SETTINGS MANAGEMENT
+    // -------------------------------------------------------------------------
+    async function syncAccounts() {
+      const btn = document.getElementById('btn-sync');
+      const icon = document.getElementById('sync-icon');
+      const text = document.getElementById('sync-btn-text');
+
+      btn.disabled = true;
+      icon.classList.add('spin');
+      text.innerText = 'Syncing...';
+
+      try {
+        const res = await fetch('/api/finance/sync', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          showToast(data.message || 'Accounts synced successfully!', 'success');
+          loadSummaryAndAccounts();
+          loadHistoryChart(currentTimeframe);
+        } else {
+          showToast(data.error || 'Failed to sync SimpleFIN', 'error');
+        }
+      } catch (e) {
+        showToast('Sync request error: ' + e.message, 'error');
+      } finally {
+        setTimeout(() => {
+          btn.disabled = false;
+          icon.classList.remove('spin');
+          text.innerText = 'Sync Now';
+        }, 500);
+      }
+    }
+
+    async function checkSettingsStatus() {
+      try {
+        const res = await fetch('/api/finance/settings');
+        const data = await res.json();
+        const connText = document.getElementById('status-conn-text');
+        const urlText = document.getElementById('status-url-text');
+
+        if (data.connected) {
+          connText.innerText = 'Connected to SimpleFIN Bridge';
+          connText.style.color = '#10b981';
+          urlText.innerText = `Access URL: ${data.masked_url || 'Configured'}`;
+        } else {
+          connText.innerText = 'Not Connected (Using local baseline)';
+          connText.style.color = '#f59e0b';
+          urlText.innerText = 'Paste your claim token or access URL above to connect.';
+        }
+      } catch (e) {}
+    }
+
+    function openSettingsModal() {
+      checkSettingsStatus();
+      document.getElementById('settings-modal').classList.add('open');
+    }
+
+    function closeSettingsModal() {
+      document.getElementById('settings-modal').classList.remove('open');
+    }
+
+    async function submitClaimToken() {
+      const token = document.getElementById('claim-token-input').value.trim();
+      if (!token) {
+        showToast('Please enter a claim token or access URL', 'error');
+        return;
+      }
+
+      showToast('Contacting SimpleFIN Bridge...', 'info');
+      try {
+        const payload = token.startsWith('http') && token.includes('@')
+          ? { access_url: token }
+          : { claim_token: token };
+
+        const res = await fetch('/api/finance/claim', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast(data.message || 'Connected successfully!', 'success');
+          closeSettingsModal();
+          loadSummaryAndAccounts();
+          loadHistoryChart(currentTimeframe);
+        } else {
+          showToast(data.error || 'Failed to claim access token', 'error');
+        }
+      } catch (e) {
+        showToast('Claim error: ' + e.message, 'error');
+      }
+    }
+
+    async function disconnectSimpleFin() {
+      if (!confirm('Are you sure you want to disconnect SimpleFIN Bridge?')) return;
+      try {
+        const res = await fetch('/api/finance/disconnect', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          showToast('Disconnected from SimpleFIN.', 'info');
+          closeSettingsModal();
+          checkSettingsStatus();
+        }
+      } catch (e) {
+        showToast('Error: ' + e.message, 'error');
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // EDIT ACCOUNT MODAL
+    // -------------------------------------------------------------------------
+    function openEditModal(acc) {
+      document.getElementById('edit-modal-title').innerText = `Edit: ${acc.institution} - ${acc.name}`;
+      document.getElementById('edit-acct-id').value = acc.id;
+      document.getElementById('edit-acct-balance').value = acc.balance;
+      document.getElementById('edit-acct-apy').value = acc.apy_interest || '';
+      document.getElementById('edit-acct-rewards').value = acc.rewards_status || '';
+      document.getElementById('edit-acct-holdings').value = acc.holdings_summary || '';
+      document.getElementById('edit-acct-limit').value = acc.credit_limit || 0;
+      document.getElementById('edit-account-modal').classList.add('open');
+    }
+
+    function closeEditModal() {
+      document.getElementById('edit-account-modal').classList.remove('open');
+    }
+
+    async function saveAccountDetails() {
+      const acctId = document.getElementById('edit-acct-id').value;
+      const payload = {
+        balance: document.getElementById('edit-acct-balance').value,
+        apy_interest: document.getElementById('edit-acct-apy').value.trim(),
+        rewards_status: document.getElementById('edit-acct-rewards').value.trim(),
+        holdings_summary: document.getElementById('edit-acct-holdings').value.trim(),
+        credit_limit: document.getElementById('edit-acct-limit').value
+      };
+
+      try {
+        const res = await fetch(`/api/finance/account/${acctId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('Account details saved!', 'success');
+          closeEditModal();
+          loadSummaryAndAccounts();
+          loadHistoryChart(currentTimeframe);
+        } else {
+          showToast(data.error || 'Failed to save', 'error');
+        }
+      } catch (e) {
+        showToast('Save error: ' + e.message, 'error');
+      }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+  </script>
+</body>
+
+</html>

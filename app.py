@@ -10,8 +10,8 @@ from swagger.swagger import swagger_bp
 from TutoringCalculator.routes import tutoring_bp
 from Monitoring.routes import monitoring_bp
 from ToDo.routes import todo_bp
-from ToDo.scheduler import start_todo_scheduler
 from InvoiceGenerator.routes import invoice_bp
+from Finance.routes import finance_bp
 
 app = Flask(__name__)
 CORS(app)
@@ -33,8 +33,9 @@ app.register_blueprint(todo_bp)
 app.register_blueprint(invoice_bp)
 app.register_blueprint(invoice_bp, name='invoice_generator', url_prefix='/InvoiceGenerator')
 
-# Start background auto-archive scheduler
-start_todo_scheduler()
+# Register Financial Dashboard & SimpleFIN endpoints
+app.register_blueprint(finance_bp)
+app.register_blueprint(finance_bp, name='finance_dashboard', url_prefix='/Finance')
 
 
 @app.before_request

@@ -50,6 +50,10 @@ OPENAPI_SPEC = {
         {
             "name": "Invoices",
             "description": "Pure-Python on-demand vector PDF invoice generation, multi-company profiles, clients, presets, and history."
+        },
+        {
+            "name": "Finance",
+            "description": "SimpleFIN Bridge integration, live account balances, SQLite history keeping, net worth tracking, and interactive growth charts."
         }
     ],
     "components": {
@@ -1326,6 +1330,83 @@ OPENAPI_SPEC = {
                     }
                 }
             }
+        },
+        "/api/finance/summary": {
+            "get": {
+                "tags": ["Finance"],
+                "summary": "Financial KPI Summary",
+                "description": "Returns calculated Net Worth, Total Assets, Total Liabilities, Liquid Cash, Investments, Debts, and categorized accounts.",
+                "responses": {
+                    "200": {"description": "Financial summary data."}
+                }
+            }
+        },
+        "/api/finance/accounts": {
+            "get": {
+                "tags": ["Finance"],
+                "summary": "List All Financial Accounts",
+                "description": "Returns all 10 institutions and accounts with current balances, rates, and rewards metadata.",
+                "responses": {
+                    "200": {"description": "List of accounts."}
+                }
+            }
+        },
+        "/api/finance/history": {
+            "get": {
+                "tags": ["Finance"],
+                "summary": "Historical Growth Trajectory",
+                "description": "Returns time-series snapshots for the interactive growth chart. Query param timeframe: 1m, 3m, 6m, 1y, all.",
+                "parameters": [
+                    {"name": "timeframe", "in": "query", "required": False, "schema": {"type": "string", "enum": ["1m", "3m", "6m", "1y", "all"]}}
+                ],
+                "responses": {
+                    "200": {"description": "Historical snapshot data formatted for Chart.js."}
+                }
+            }
+        },
+        "/api/finance/sync": {
+            "post": {
+                "tags": ["Finance"],
+                "summary": "Sync Accounts from SimpleFIN",
+                "description": "Fetches latest balances from SimpleFIN Bridge and stores a new historical snapshot in SQLite.",
+                "responses": {
+                    "200": {"description": "Sync status and count of updated accounts."}
+                }
+            }
+        },
+        "/api/finance/claim": {
+            "post": {
+                "tags": ["Finance"],
+                "summary": "Claim SimpleFIN Token / Save Access URL",
+                "description": "Exchanges a one-time SimpleFIN claim token for an access URL or saves an access URL directly.",
+                "requestBody": {
+                    "required": True,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "claim_token": {"type": "string"},
+                                    "access_url": {"type": "string"}
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {"description": "Claim status."}
+                }
+            }
+        },
+        "/api/finance/settings": {
+            "get": {
+                "tags": ["Finance"],
+                "summary": "SimpleFIN Connection Settings",
+                "description": "Returns current connection status, masked access URL, and last sync timestamp.",
+                "responses": {
+                    "200": {"description": "Connection settings status."}
+                }
+            }
         }
     }
 }
@@ -1948,6 +2029,7 @@ SWAGGER_HTML_TEMPLATE = """<!DOCTYPE html>
           <a href="/monitoring" class="nav-btn" title="Flash Server Monitoring">System Monitor</a>
           <a href="/todo" class="nav-btn" title="Crossroads To-Do Board">To Do</a>
           <a href="/invoices" class="nav-btn" title="Invoice Generator & History">Invoices</a>
+          <a href="/finance" class="nav-btn" title="Financial Dashboard & SimpleFIN">Finance</a>
           <button id="swagger-theme-toggle" class="nav-btn" aria-label="Toggle Theme" title="Toggle Theme">
             <img src="/static/day-and-night.svg" alt="Theme" class="theme-icon" />
           </button>
