@@ -106,9 +106,6 @@ def init_db():
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_budget_category ON budget_items(category, is_active);")
         conn.commit()
 
-    # Seed baseline budget items if empty
-    seed_budget_items_if_empty()
-
 
 def get_accounts():
     """Returns all accounts sorted by category and balance."""
@@ -237,17 +234,12 @@ def record_snapshot(note=""):
         elif atype == "mortgage":
             mortgage_debt += abs(bal)
         elif atype == "credit":
-            # If balance > 0, it's debt. If negative, it's a statement credit
-            if bal > 0:
-                credit_debt += bal
-            else:
-                # Credit balance acts as cash asset
-                liquid_cash += abs(bal)
+            credit_debt += bal
         elif atype == "loan":
             mortgage_debt += abs(bal)
 
     total_assets = liquid_cash + investments + property_value
-    total_liabilities = mortgage_debt + credit_debt
+    total_liabilities = mortgage_debt + abs(credit_debt)
     net_worth = total_assets - total_liabilities
 
     with get_connection() as conn:
@@ -410,8 +402,7 @@ def get_summary():
         elif atype == "credit":
             limit = float(a.get("credit_limit") or 0.0)
             total_credit_limit += limit
-            if bal > 0:
-                credit_debt += bal
+            credit_debt += bal
             categorized["credit"].append(a)
         elif atype in ("investment", "retirement"):
             investments += bal
@@ -425,13 +416,13 @@ def get_summary():
             categorized["mortgage"].append(a)
 
     total_assets = liquid_cash + investments + property_value
-    total_liabilities = mortgage_debt + credit_debt
+    total_liabilities = mortgage_debt + abs(credit_debt)
     net_worth = total_assets - total_liabilities
     home_equity = property_value - mortgage_debt
 
     credit_utilization = 0.0
     if total_credit_limit > 0:
-        credit_utilization = (credit_debt / total_credit_limit) * 100.0
+        credit_utilization = (abs(credit_debt) / total_credit_limit) * 100.0
 
     return {
         "net_worth": round(net_worth, 2),
@@ -480,233 +471,6 @@ def set_setting(key, value):
 # BUDGET & RECURRING EXPENSES / INCOMES
 # ===========================================================================
 
-def seed_budget_items_if_empty():
-    """Seeds default budget items (ASH paystub, Tutoring, Guidant, Private Wealth, and recurring bills)."""
-    with get_connection() as conn:
-        cursor = conn.cursor()
-        cursor.execute("SELECT COUNT(*) as cnt FROM budget_items;")
-        if cursor.fetchone()["cnt"] > 0:
-            return
-
-        now = datetime.now(APP_TIMEZONE).isoformat()
-
-        # ASH Paystub detailed metadata
-        ash_details = {
-            "employer": "American Specialty Health Incorporated (ASHI)",
-            "title": "Software Eng in Test II",
-            "department": "DOP - DevOps / ADM",
-            "pay_rate_hourly": 58.9294,
-            "hours_per_period": 80.0,
-            "pay_frequency": "Biweekly",
-            "gross_pay_period": 4718.50,
-            "fit_taxable_wages": 4621.24,
-            "biweekly_net_pay": 2048.27,
-            "monthly_net_pay": 4437.92,
-            "annual_net_pay": 53255.02,
-            "taxes_breakdown": {
-                "federal_income_tax": 677.06,
-                "social_security": 286.51,
-                "ca_state_tax": 299.63,
-                "medicare": 67.01,
-                "ca_disability_sdi": 60.03,
-                "total_taxes": 1390.24
-            },
-            "deductions_breakdown": {
-                "401k_roth": 1178.59,
-                "medical_pretax": 78.36,
-                "dental_pretax": 10.57,
-                "vision_pretax": 8.33,
-                "gtl_posttax": 4.14,
-                "total_deductions": 1279.99
-            },
-            "employer_contributions": {
-                "401k_match": 141.43,
-                "medical": 326.33,
-                "dental": 10.57,
-                "std_ltd_life_eap": 31.32
-            },
-            "pto_balance": {
-                "pto_hours": 47.30,
-                "float_holiday": 0.0,
-                "personal_holiday": 0.0
-            }
-        }
-
-        default_incomes = [
-            (
-                "income",
-                "ASH (American Specialty Health)",
-                round(2048.27 * 26.0 / 12.0, 2), # 4,437.92 / mo
-                "biweekly",
-                2048.27,
-                "post-tax",
-                "Biweekly (Every 2 wks)",
-                "",
-                "Software Eng in Test II • $58.9294/hr • 80 hrs/pay period • Post-tax net pay shown ($2,048.27 × 26 ÷ 12)",
-                json.dumps(ash_details),
-                1,
-                1,
-                now,
-                now
-            ),
-            (
-                "income",
-                "Tutoring",
-                round(1740.0 * 52.0 / 12.0, 2), # 7,540.00 / mo
-                "weekly",
-                1740.00,
-                "post-tax",
-                "Weekly",
-                "",
-                "$1,740 / week post-tax (normalized monthly: $1,740 × 52 ÷ 12)",
-                None,
-                1,
-                2,
-                now,
-                now
-            ),
-            (
-                "income",
-                "Guidant MSO",
-                6500.00,
-                "monthly",
-                6500.00,
-                "pre-tax",
-                "Monthly",
-                "",
-                "$6,500 / month pretax consulting / retainer",
-                None,
-                1,
-                3,
-                now,
-                now
-            ),
-            (
-                "income",
-                "PRIVATE Wealth Law",
-                2000.00,
-                "monthly",
-                2000.00,
-                "pre-tax",
-                "Monthly",
-                "",
-                "$2,000 / month pretax legal / consulting retainer",
-                None,
-                1,
-                4,
-                now,
-                now
-            )
-        ]
-
-        default_expenses = [
-            (
-                "expense",
-                "Rocket Mortgage",
-                3227.97,
-                "monthly",
-                3227.97,
-                "post-tax",
-                "1st of month",
-                "https://rocket.com/mortgage/servicing",
-                "30-Year Fixed Note • 5.999% • San Marcos Primary Residence",
-                None,
-                1,
-                1,
-                now,
-                now
-            ),
-            (
-                "expense",
-                "HOA (Property Advantage)",
-                437.50,
-                "monthly",
-                437.50,
-                "post-tax",
-                "9th of month",
-                "https://home.propadvantage.com/dashboard",
-                "211 Woodland Pkwy HOA dues & community amenities",
-                None,
-                1,
-                2,
-                now,
-                now
-            ),
-            (
-                "expense",
-                "SDG&E (San Diego Gas & Electric)",
-                150.00,
-                "monthly",
-                150.00,
-                "post-tax",
-                "1st of month",
-                "https://myenergycenter.com/portal/Dashboard/index",
-                "Electric and natural gas utility",
-                None,
-                1,
-                3,
-                now,
-                now
-            ),
-            (
-                "expense",
-                "Cox Internet",
-                94.00,
-                "monthly",
-                94.00,
-                "post-tax",
-                "1st of month",
-                "https://www.cox.com/resaccount/home.html",
-                "High-speed residential fiber/cable internet",
-                None,
-                1,
-                4,
-                now,
-                now
-            ),
-            (
-                "expense",
-                "Wawanesa Auto Insurance",
-                150.77,
-                "monthly",
-                150.77,
-                "post-tax",
-                "1st of month",
-                "https://myaccount.w-insurance.com/account-management/account-policy-details/38063360/11",
-                "Auto policy #38063360/11",
-                None,
-                1,
-                5,
-                now,
-                now
-            ),
-            (
-                "expense",
-                "Visible Mobile",
-                37.50,
-                "monthly",
-                37.50,
-                "post-tax",
-                "1st of month",
-                "https://www.visible.com/account/overview",
-                "Unlimited Verizon-network mobile plan",
-                None,
-                1,
-                6,
-                now,
-                now
-            )
-        ]
-
-        cursor.executemany("""
-            INSERT INTO budget_items (
-                category, name, amount, frequency, raw_amount,
-                tax_status, due_date, portal_url, notes, details_json,
-                is_active, sort_order, created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-        """, default_incomes + default_expenses)
-
-        conn.commit()
 
 
 def get_budget_items(category=None):

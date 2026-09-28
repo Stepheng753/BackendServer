@@ -8,18 +8,18 @@ Accessible at `http://localhost:5000/finance`.
 
 ## 1. Features & Architecture
 
-* **SimpleFIN Bridge Open Banking Integration**: Connects seamlessly with SimpleFIN Bridge to ingest live balances from institutions like Rocket Mortgage, Wealthfront, Wells Fargo, Charles Schwab, Fidelity NetBenefits, and Chase.
+* **SimpleFIN Bridge Open Banking Integration**: Connects seamlessly with SimpleFIN Bridge to ingest live balances from linked financial institutions.
 * **SQLite Time-Series History Engine (`config/finance.db`)**: Stores point-in-time snapshots of Net Worth, Total Assets, Total Liabilities, Liquid Cash, Investments, and Debts with Write-Ahead Logging (`WAL`).
 * **Interactive Growth & Amortization Visualizations**: Chart.js dynamic area and multi-line charts supporting timeframes (`1M`, `3M`, `6M`, `1Y`, `ALL`) and visualization modes:
   * **Net Worth Trajectory**: Historical progress towards debt freedom and wealth growth.
   * **Assets vs. Liabilities**: Comparative view of accumulated assets against mortgage & liabilities.
   * **Liquid vs. Invested Portfolio**: Breakdown between emergency liquidity and invested wealth.
 * **Granular Account Categories**:
-  * **Liquid Cash & HYSA**: Wealthfront HYSA (3.55% APY), Wells Fargo Everyday Checking.
-  * **Credit Cards & Rewards**: Wells Fargo Active Cash, Chase Sapphire Preferred, Chase Freedom Unlimited with credit utilization gauge and pooled rewards points tracking (72k+ Ultimate Rewards points).
-  * **Investments & Retirement**: Charles Schwab Brokerage & IRAs (IVV), Fidelity 401(k) (FXAIX) with vested vs. unvested equity indicators.
-  * **Real Estate & Loans**: Rocket Mortgage 30-year fixed note with remaining term, monthly payment, and interest rate.
-* **Direct Metadata & Notes Editor**: In-place modal to tweak APY notes, rewards points, holdings notes, and credit limits.
+  * **Liquid Cash & HYSA**: Checking, high-yield savings, and operating cash.
+  * **Credit Cards**: Revolving balances, credit utilization progress bar, and credit limits.
+  * **Investments & Retirement**: Taxable brokerages, Roth/Traditional IRAs, and 401(k) plans with vested tracking.
+  * **Real Estate & Loans**: Property valuation tracking and mortgage notes.
+* **Direct Metadata & Notes Editor**: In-place modal to customize APY notes, status, holdings summary, and credit limits.
 * **Shared Theme & Dark Mode**: Fully responsive, dark/light theme aware matching Crossroads / Flash Server Backend design tokens.
 
 ---

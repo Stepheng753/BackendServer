@@ -79,19 +79,19 @@ def get_stored_access_url() -> str:
 
 
 def infer_account_type(name: str, org_name: str, balance: float) -> str:
-    """Heuristic helper to classify SimpleFIN accounts."""
+    """Heuristic helper to classify accounts based on standard financial terms."""
     combined = f"{org_name} {name}".lower()
-    if any(k in combined for k in ["mortgage", "home loan", "rocket"]):
+    if any(k in combined for k in ["mortgage", "home loan"]):
         return "mortgage"
-    if any(k in combined for k in ["401k", "401(k)", "ira", "roth", "fidelity"]):
+    if any(k in combined for k in ["401k", "401(k)", "ira", "roth", "retirement", "pension", "superannuation"]):
         return "retirement"
-    if any(k in combined for k in ["brokerage", "schwab", "investment", "stock"]):
+    if any(k in combined for k in ["brokerage", "investment", "stock", "trading", "securities"]):
         return "investment"
-    if any(k in combined for k in ["card", "credit", "cash®", "sapphire", "freedom"]):
+    if any(k in combined for k in ["card", "credit", "visa", "mastercard", "amex"]):
         return "credit"
-    if any(k in combined for k in ["savings", "hysa", "wealthfront"]):
+    if any(k in combined for k in ["savings", "hysa", "money market"]):
         return "savings"
-    if any(k in combined for k in ["checking", "everyday"]):
+    if any(k in combined for k in ["checking", "share draft", "deposit"]):
         return "checking"
     if balance < -1000:
         return "loan"
@@ -100,51 +100,21 @@ def infer_account_type(name: str, org_name: str, balance: float) -> str:
 
 def match_existing_account(existing_accounts, sf_account):
     """
-    Attempts to match an incoming SimpleFIN account to an existing seeded account
-    to preserve friendly notes, APYs, rewards status, and credit limits.
+    Attempts to match an incoming SimpleFIN account to an existing account in SQLite
+    to preserve user-configured notes, APYs, rewards status, and credit limits.
     """
-    sf_name = (sf_account.get("name") or "").lower()
-    org_name = (sf_account.get("org", {}).get("name") or "").lower()
+    sf_id = str(sf_account.get("id") or "").strip()
+    sf_name = (sf_account.get("name") or "").strip().lower()
+    org_name = (sf_account.get("org", {}).get("name") or "").strip().lower()
 
     for acc in existing_accounts:
-        acc_name = acc["name"].lower()
-        acc_org = acc["institution"].lower()
-
-        # Match mortgage
-        if ("rocket" in org_name or "rocket" in sf_name or "mortgage" in sf_name) and acc["account_type"] == "mortgage":
+        # Match by direct account ID
+        if sf_id and (acc["id"] == sf_id or acc["id"] == f"sf_{sf_id}"):
             return acc
-        # Match wealthfront
-        if "wealthfront" in org_name or "wealthfront" in sf_name:
-            if acc["account_type"] == "savings":
-                return acc
-        # Match fidelity 401k
-        if "fidelity" in org_name or "401" in sf_name or "5830" in sf_name:
-            if "401" in acc_name:
-                return acc
-        # Match Schwab IRAs & Brokerage
-        if "schwab" in org_name or "schwab" in sf_name:
-            if ("roth" in sf_name or "476" in sf_name) and "roth" in acc_name:
-                return acc
-            if ("trad" in sf_name or "traditional" in sf_name or "378" in sf_name) and "trad" in acc_name:
-                return acc
-            if ("309" in sf_name or "individual" in sf_name or "brokerage" in sf_name) and ("brokerage" in acc_name or "309" in acc["id"]):
-                return acc
-        # Match Wells Fargo
-        if "wells" in org_name or "wells" in sf_name:
-            if ("checking" in sf_name or "3484" in sf_name) and acc["account_type"] == "checking":
-                return acc
-            if ("active" in sf_name or "credit" in sf_name or "4615" in sf_name) and acc["account_type"] == "credit":
-                return acc
-        # Match Chase
-        if "chase" in org_name or "chase" in sf_name:
-            if ("sapphire" in sf_name or "6527" in sf_name) and "sapphire" in acc_name:
-                return acc
-            if ("freedom" in sf_name or "6019" in sf_name) and "freedom" in acc_name:
-                return acc
-        # Match Wealthfront
-        if "wealthfront" in org_name or "wealthfront" in sf_name or "6100" in sf_name:
-            if acc["account_type"] == "savings":
-                return acc
+
+        # Match by exact institution and account name
+        if acc["name"].strip().lower() == sf_name and acc["institution"].strip().lower() == org_name:
+            return acc
 
     return None
 
