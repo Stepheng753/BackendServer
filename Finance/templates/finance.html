@@ -2782,10 +2782,24 @@
       document.getElementById('paystub-modal').classList.remove('open');
     }
 
-    // Close any modal when clicking on the backdrop outside the dialog
-    window.addEventListener('click', (e) => {
-      if (e.target && e.target.classList && e.target.classList.contains('modal-backdrop')) {
-        e.target.classList.remove('open');
+    // Close modal ONLY when mouse down and up both occur directly on the backdrop outside the dialog
+    document.querySelectorAll('.modal-backdrop').forEach(modal => {
+      let isMouseDownOnBackdrop = false;
+      modal.addEventListener('mousedown', (e) => {
+        isMouseDownOnBackdrop = (e.target === modal);
+      });
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal && isMouseDownOnBackdrop) {
+          modal.classList.remove('open');
+        }
+        isMouseDownOnBackdrop = false;
+      });
+    });
+
+    // Support ESC key to close open modals
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        document.querySelectorAll('.modal-backdrop.open').forEach(m => m.classList.remove('open'));
       }
     });
 
