@@ -338,8 +338,9 @@ def sync_simplefin_accounts() -> dict:
         sf_accounts = data.get("accounts", [])
         existing_accounts = get_accounts()
 
-        updated_count = 0
+        refreshed_count = 0
         matched_ids = set()
+        sync_details = []
 
         for sf_acc in sf_accounts:
             sf_id = str(sf_acc.get("id") or "").strip()
@@ -382,6 +383,7 @@ def sync_simplefin_accounts() -> dict:
                 mask = f"...{sf_masks[0]}" if sf_masks else None
 
             # Extract institutional sync timestamp from SimpleFIN (balance-date)
+            # This is the exact time MX/SimpleFIN connected to the bank's API
             bdate_epoch = sf_acc.get("balance-date")
             if bdate_epoch:
                 try:
@@ -395,10 +397,33 @@ def sync_simplefin_accounts() -> dict:
             if account_type == "mortgage" and balance > 0:
                 balance = -abs(balance)
 
+            final_inst = org_name if not matched else matched["institution"]
+            final_name = name if not matched else matched["name"]
+
+            # Compare incoming bank_api_polled_at and balance against DB state
+            prev_synced_at = matched.get("last_synced") if matched else None
+            try:
+                prev_balance = float(matched.get("balance", 0.0)) if matched else None
+            except (ValueError, TypeError):
+                prev_balance = None
+
+            is_fresh = False
+            if matched is None:
+                is_fresh = True  # New account discovered
+            elif not prev_synced_at:
+                is_fresh = True  # First time getting bank_api_polled_at
+            elif str(prev_synced_at).strip() != str(acct_synced_at).strip():
+                is_fresh = True  # Upstream bank poll timestamp changed
+            elif prev_balance is not None and abs(balance - prev_balance) > 0.001:
+                is_fresh = True  # Balance updated even if timestamp identical
+
+            if is_fresh:
+                refreshed_count += 1
+
             upsert_account({
                 "id": target_id,
-                "institution": org_name if not matched else matched["institution"],
-                "name": name if not matched else matched["name"],
+                "institution": final_inst,
+                "name": final_name,
                 "account_number_mask": mask,
                 "account_type": account_type,
                 "balance": balance,
@@ -413,19 +438,42 @@ def sync_simplefin_accounts() -> dict:
                 "last_synced": acct_synced_at,
                 "simplefin_id": sf_id
             })
-            updated_count += 1
+
+            sync_details.append({
+                "account_id": target_id,
+                "institution": final_inst,
+                "name": final_name,
+                "balance": balance,
+                "currency": currency,
+                "bank_api_polled_at": acct_synced_at,
+                "prev_polled_at": prev_synced_at,
+                "is_fresh": is_fresh,
+                "bridge_pull_time": now_iso,
+                "simplefin_id": sf_id,
+                "matched": matched is not None
+            })
+
+        total_checked = len(sf_accounts)
 
         # Record a fresh historical snapshot
-        snapshot_id = record_snapshot(note=f"SimpleFIN live sync ({updated_count} accounts)")
+        snapshot_id = record_snapshot(note=f"SimpleFIN sync ({refreshed_count} refreshed, {total_checked} checked)")
         set_setting(SIMPLEFIN_LAST_SYNC_KEY, now_iso)
+
+        if refreshed_count > 0:
+            summary_message = f"Synced {refreshed_count} refreshed account{'s' if refreshed_count != 1 else ''} from bank API ({total_checked} accounts verified)."
+        else:
+            summary_message = f"All {total_checked} accounts verified. Bank data is up to date (0 accounts refreshed since last poll)."
 
         return {
             "success": True,
             "is_simulated": False,
-            "updated_count": updated_count,
+            "updated_count": refreshed_count,
+            "refreshed_count": refreshed_count,
+            "total_checked": total_checked,
             "snapshot_id": snapshot_id,
-            "message": f"Successfully synced {updated_count} accounts from SimpleFIN Bridge!",
-            "synced_at": now_iso
+            "message": summary_message,
+            "synced_at": now_iso,
+            "accounts": sync_details
         }
 
     except requests.exceptions.RequestException as e:
