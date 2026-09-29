@@ -19,7 +19,8 @@ from .db import (
     upsert_budget_item,
     delete_budget_item,
     toggle_budget_item_active,
-    get_budget_summary
+    get_budget_summary,
+    deduplicate_database_accounts
 )
 from .config import (
     SIMPLEFIN_AUTH_KEY,
@@ -261,6 +262,8 @@ def api_update_account(account_id):
     credit_limit = payload.get("credit_limit")
     vested_balance = payload.get("vested_balance")
 
+    simplefin_id = payload.get("simplefin_id")
+
     account_type = raw_type
     is_asset = None
     if raw_type:
@@ -298,13 +301,24 @@ def api_update_account(account_id):
         holdings_summary=holdings_summary,
         credit_limit=credit_limit,
         is_asset=is_asset,
-        vested_balance=vested_balance
+        vested_balance=vested_balance,
+        simplefin_id=simplefin_id
     )
 
     # Re-calculate snapshot
     record_snapshot(note=f"Updated account: {account_id}")
 
     return jsonify({"success": True, "message": "Account updated successfully."})
+
+
+@finance_bp.route("/api/finance/deduplicate", methods=["POST"])
+def api_deduplicate():
+    """Merges any duplicate accounts in the database and links SimpleFIN IDs."""
+    try:
+        res = deduplicate_database_accounts()
+        return jsonify({"success": True, "data": res, "message": f"Deduplication complete. Merged {res.get('merged_count', 0)} accounts."})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
 
 
 @finance_bp.route("/api/finance/account/<account_id>", methods=["DELETE"])

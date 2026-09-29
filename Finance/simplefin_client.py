@@ -16,7 +16,8 @@ from .db import (
     set_setting,
     get_accounts,
     upsert_account,
-    record_snapshot
+    record_snapshot,
+    deduplicate_database_accounts
 )
 
 
@@ -78,6 +79,156 @@ def get_stored_access_url() -> str:
     return get_setting(SIMPLEFIN_AUTH_KEY, "")
 
 
+def normalize_institution_name(name: str) -> str:
+    """Normalizes financial institution name for fuzzy/token comparison."""
+    if not name:
+        return ""
+    s = name.lower()
+    stopwords = [
+        "national association", "credit union", "netbenefits", "investments",
+        "investment", "financial", "services", "corporation", "bank",
+        "corp", "inc", "llc", "usa", "us", "n.a.", "na", "online", "co", "by quicken loans"
+    ]
+    for w in stopwords:
+        s = re.sub(r'\b' + re.escape(w) + r'\b', ' ', s)
+    s = re.sub(r'[^a-z0-9]', '', s)
+    return s.strip()
+
+
+def extract_masks_and_digits(text: str) -> list[str]:
+    """Extracts potential account number mask digits (3 to 8 digits)."""
+    if not text:
+        return []
+    results = []
+    for m in re.finditer(r'(?:\.\.\.|\*|x|-|\bending in\s*|\()(\d{3,8})\)?', text, re.IGNORECASE):
+        results.append(m.group(1))
+    for m in re.finditer(r'\b(\d{3,6})\b', text):
+        val = m.group(1)
+        if val not in results:
+            results.append(val)
+    return results
+
+
+def calculate_match_score(acc, sf_acc) -> float:
+    """
+    Computes a deterministic match confidence score between an existing DB account
+    and an incoming SimpleFIN account object.
+    """
+    sf_id = str(sf_acc.get("id") or "").strip()
+    sf_name = str(sf_acc.get("name") or "").strip()
+    sf_org = str(sf_acc.get("org", {}).get("name") if isinstance(sf_acc.get("org"), dict) else sf_acc.get("institution") or "").strip()
+    try:
+        sf_balance = float(sf_acc.get("balance", 0.0))
+    except (ValueError, TypeError):
+        sf_balance = 0.0
+
+    acc_id = str(acc.get("id") or "").strip()
+    acc_sfin_id = str(acc.get("simplefin_id") or "").strip()
+    acc_name = str(acc.get("name") or "").strip()
+    acc_inst = str(acc.get("institution") or "").strip()
+    acc_mask = str(acc.get("account_number_mask") or "").strip()
+    try:
+        acc_balance = float(acc.get("balance", 0.0))
+    except (ValueError, TypeError):
+        acc_balance = 0.0
+
+    # 1. Exact SimpleFIN ID Match -> Tier 1 (10,000 pts)
+    if sf_id:
+        if acc_sfin_id and (acc_sfin_id == sf_id or acc_sfin_id == f"sf_{sf_id}"):
+            return 10000.0
+        if acc_id == sf_id or acc_id == f"sf_{sf_id}":
+            return 10000.0
+        clean_sf_id = sf_id.replace("ACT-", "").replace("sf_", "")
+        if clean_sf_id and (clean_sf_id in acc_id or clean_sf_id in acc_sfin_id):
+            return 9500.0
+
+    score = 0.0
+
+    # 2. Institution Match
+    norm_sf_org = normalize_institution_name(sf_org)
+    norm_acc_inst = normalize_institution_name(acc_inst)
+    
+    inst_matched = False
+    if norm_sf_org and norm_acc_inst:
+        if norm_sf_org == norm_acc_inst or norm_sf_org in norm_acc_inst or norm_acc_inst in norm_sf_org:
+            inst_matched = True
+            score += 400.0
+        elif any(k in norm_sf_org and k in norm_acc_inst for k in ["schwab", "wells", "chase", "fidelity", "wealthfront", "rocket"]):
+            inst_matched = True
+            score += 400.0
+
+    # If institutions are completely different and both exist, do not match
+    if not inst_matched and norm_sf_org and norm_acc_inst:
+        return 0.0
+
+    # 3. Account Mask / Number Matching (Tier 2 - 500-600 pts)
+    sf_masks = extract_masks_and_digits(sf_name)
+    acc_masks = extract_masks_and_digits(acc_mask) + extract_masks_and_digits(acc_id)
+    
+    mask_matched = False
+    for sm in sf_masks:
+        for am in acc_masks:
+            if sm == am:
+                score += 600.0
+                mask_matched = True
+                break
+            elif len(sm) >= 3 and len(am) >= 3 and (sm.endswith(am) or am.endswith(sm)):
+                score += 500.0
+                mask_matched = True
+                break
+        if mask_matched:
+            break
+
+    # 4. Product Name Keyword Overlap (Tier 3 - 200-350 pts)
+    lower_sf_name = sf_name.lower()
+    lower_acc_name = acc_name.lower()
+    
+    keywords = [
+        ("freedom unlimited", 350.0),
+        ("sapphire preferred", 350.0),
+        ("active cash", 350.0),
+        ("everyday checking", 350.0),
+        ("high-yield savings", 300.0),
+        ("high yield savings", 300.0),
+        ("roth ira", 350.0),
+        ("traditional ira", 350.0),
+        ("traditonal ira", 350.0),
+        ("taxable brokerage", 300.0),
+        ("brokerage", 250.0),
+        ("401k", 250.0),
+        ("401(k)", 250.0),
+        ("savings", 100.0),
+        ("checking", 100.0),
+        ("mortgage", 200.0)
+    ]
+    for kw, pts in keywords:
+        if kw in lower_sf_name and kw in lower_acc_name:
+            score += pts
+        elif kw in lower_sf_name and kw in acc_id.lower():
+            score += pts
+
+    # Acronym matching: E.g., ASH in local name vs American Specialty Health in SF name
+    if "ash" in lower_acc_name and "american specialty health" in lower_sf_name:
+        score += 400.0
+
+    # Rate/APY text matching: E.g. "3.55%" in SF name matches "3.55%" in acc APY
+    acc_apy = str(acc.get("apy_interest") or "")
+    if "3.55" in lower_sf_name and "3.55" in acc_apy:
+        score += 200.0
+
+    # 5. Balance Match / Proximity (Tiebreaker)
+    if sf_balance != 0.0 and acc_balance != 0.0:
+        if abs(sf_balance - acc_balance) < 0.01 or abs(abs(sf_balance) - abs(acc_balance)) < 0.01:
+            score += 150.0
+
+    # Prevent matching manual-only assets (property, promissory notes)
+    if acc.get("is_manual") and ("property" in acc_id or "promissory" in acc_id or "real_estate" in acc.get("account_type", "") or "note" in acc_id):
+        if not inst_matched:
+            return 0.0
+
+    return score
+
+
 def infer_account_type(name: str, org_name: str, balance: float) -> str:
     """Heuristic helper to classify accounts based on standard financial terms."""
     combined = f"{org_name} {name}".lower()
@@ -85,11 +236,11 @@ def infer_account_type(name: str, org_name: str, balance: float) -> str:
         return "mortgage"
     if any(k in combined for k in ["401k", "401(k)", "ira", "roth", "retirement", "pension", "superannuation"]):
         return "retirement"
-    if any(k in combined for k in ["brokerage", "investment", "stock", "trading", "securities"]):
+    if any(k in combined for k in ["brokerage", "stock", "trading", "securities"]) or ("schwab" in combined and "individual" in combined):
         return "investment"
-    if any(k in combined for k in ["card", "credit", "visa", "mastercard", "amex"]):
+    if any(k in combined for k in ["card", "credit", "visa", "mastercard", "amex", "freedom", "sapphire", "active cash"]):
         return "credit"
-    if any(k in combined for k in ["savings", "hysa", "money market"]):
+    if any(k in combined for k in ["savings", "hysa", "money market", "wealthfront"]):
         return "savings"
     if any(k in combined for k in ["checking", "share draft", "deposit"]):
         return "checking"
@@ -98,23 +249,43 @@ def infer_account_type(name: str, org_name: str, balance: float) -> str:
     return "checking"
 
 
-def match_existing_account(existing_accounts, sf_account):
+def match_existing_account(existing_accounts, sf_account, used_ids=None):
     """
-    Attempts to match an incoming SimpleFIN account to an existing account in SQLite
-    to preserve user-configured notes, APYs, rewards status, and credit limits.
+    Matches an incoming SimpleFIN account to an existing account in SQLite.
+    Primary rule: Direct SimpleFIN ID match (simplefin_id or account id).
+    Secondary fallback: Matches newly created unlinked accounts by institution & mask.
     """
+    if used_ids is None:
+        used_ids = set()
+
     sf_id = str(sf_account.get("id") or "").strip()
-    sf_name = (sf_account.get("name") or "").strip().lower()
-    org_name = (sf_account.get("org", {}).get("name") or "").strip().lower()
+    if not sf_id:
+        return None
 
+    # 1. Primary: Direct SimpleFIN ID match
     for acc in existing_accounts:
-        # Match by direct account ID
-        if sf_id and (acc["id"] == sf_id or acc["id"] == f"sf_{sf_id}"):
+        if acc["id"] in used_ids:
+            continue
+        acc_sfin = str(acc.get("simplefin_id") or "").strip()
+        acc_id = str(acc.get("id") or "").strip()
+        if acc_sfin and (acc_sfin == sf_id or acc_sfin == f"sf_{sf_id}"):
+            return acc
+        if acc_id == sf_id or acc_id == f"sf_{sf_id}":
             return acc
 
-        # Match by exact institution and account name
-        if acc["name"].strip().lower() == sf_name and acc["institution"].strip().lower() == org_name:
-            return acc
+    # 2. Secondary fallback for unlinked base accounts (where simplefin_id is not yet set)
+    best_score = 0.0
+    best_match = None
+    for acc in existing_accounts:
+        if acc["id"] in used_ids or acc.get("simplefin_id"):
+            continue
+        score = calculate_match_score(acc, sf_account)
+        if score > best_score:
+            best_score = score
+            best_match = acc
+
+    if best_match and best_score >= 450.0:
+        return best_match
 
     return None
 
@@ -122,13 +293,20 @@ def match_existing_account(existing_accounts, sf_account):
 def sync_simplefin_accounts() -> dict:
     """
     Connects to SimpleFIN Bridge, fetches live account data,
-    updates local accounts, and records a new historical snapshot.
+    deterministically updates local accounts (avoiding duplicate creation),
+    and records a new historical snapshot.
     """
     access_url = get_stored_access_url()
     now_iso = datetime.now(APP_TIMEZONE).isoformat()
 
+    # Pre-sync deduplication pass to ensure DB state is clean
+    try:
+        deduplicate_database_accounts()
+    except Exception as e:
+        print(f"[SimpleFIN Sync] Deduplication pass error: {e}")
+
     if not access_url:
-        # If no access URL is configured yet, record current seeded snapshot as a fresh sync
+        # If no access URL is configured yet, record current baseline snapshot
         record_snapshot(note="Manual sync (Pre-SimpleFIN baseline)")
         set_setting(SIMPLEFIN_LAST_SYNC_KEY, now_iso)
         return {
@@ -140,7 +318,6 @@ def sync_simplefin_accounts() -> dict:
 
     # Fetch from SimpleFIN Bridge
     try:
-        # Parse basic auth from access_url if present
         parsed = urlparse(access_url)
         auth = None
         clean_url = access_url
@@ -162,7 +339,10 @@ def sync_simplefin_accounts() -> dict:
         existing_accounts = get_accounts()
 
         updated_count = 0
+        matched_ids = set()
+
         for sf_acc in sf_accounts:
+            sf_id = str(sf_acc.get("id") or "").strip()
             org = sf_acc.get("org", {})
             org_name = org.get("name") or "Financial Institution"
             name = sf_acc.get("name") or "Account"
@@ -173,9 +353,12 @@ def sync_simplefin_accounts() -> dict:
             except (ValueError, TypeError):
                 balance = 0.0
 
-            matched = match_existing_account(existing_accounts, sf_acc)
+            matched = match_existing_account(existing_accounts, sf_acc, used_ids=matched_ids)
+
+            sf_masks = extract_masks_and_digits(name)
 
             if matched:
+                matched_ids.add(matched["id"])
                 target_id = matched["id"]
                 account_type = matched["account_type"]
                 is_asset = matched["is_asset"]
@@ -185,8 +368,10 @@ def sync_simplefin_accounts() -> dict:
                 vested = float(matched.get("vested_balance") or balance)
                 holdings = matched.get("holdings_summary")
                 mask = matched.get("account_number_mask")
+                if (not mask or mask.lower() in ("manual", "none", "")) and sf_masks:
+                    mask = f"...{sf_masks[0]}"
             else:
-                target_id = f"sf_{sf_acc.get('id', re.sub(r'[^a-zA-Z0-9_]', '_', name.lower()))}"
+                target_id = f"sf_{sf_id}" if sf_id else f"sf_{re.sub(r'[^a-zA-Z0-9_]', '_', name.lower())}"
                 account_type = infer_account_type(name, org_name, balance)
                 is_asset = 0 if account_type in ("mortgage", "credit", "loan") else 1
                 apy = None
@@ -194,10 +379,9 @@ def sync_simplefin_accounts() -> dict:
                 limit = 0.0
                 vested = balance if is_asset else 0.0
                 holdings = None
-                mask = None
+                mask = f"...{sf_masks[0]}" if sf_masks else None
 
             # Extract institutional sync timestamp from SimpleFIN (balance-date)
-            # This represents the exact time SimpleFIN connected to the bank's API
             bdate_epoch = sf_acc.get("balance-date")
             if bdate_epoch:
                 try:
@@ -226,7 +410,8 @@ def sync_simplefin_accounts() -> dict:
                 "holdings_summary": holdings,
                 "is_asset": is_asset,
                 "is_manual": 0 if matched is None else matched.get("is_manual", 0),
-                "last_synced": acct_synced_at
+                "last_synced": acct_synced_at,
+                "simplefin_id": sf_id
             })
             updated_count += 1
 
