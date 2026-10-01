@@ -1193,15 +1193,16 @@
             </div>
 
             <!-- ACTION BUTTONS -->
-            <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 20px;">
-              <button type="button" id="btn-save-draft" class="btn btn-secondary" style="justify-content: center;">
+            <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 20px;">
+              <label
+                style="display: flex; align-items: center; gap: 8px; font-size: 0.88rem; font-weight: 500; color: var(--text-main); cursor: pointer; user-select: none;">
+                <input type="checkbox" id="chk-download-pdf"
+                  style="width: 16px; height: 16px; accent-color: var(--primary-blue); cursor: pointer;">
+                <span>Download as PDF</span>
+              </label>
+              <button type="button" id="btn-save-draft" class="btn btn-primary"
+                style="justify-content: center; font-weight: 600;">
                 Save as Draft
-              </button>
-              <button type="button" id="btn-save-sent" class="btn btn-primary" style="justify-content: center;">
-                Save & Mark Sent
-              </button>
-              <button type="button" id="btn-save-pdf" class="btn btn-secondary" style="justify-content: center;">
-                Save & Download PDF
               </button>
               <button type="button" id="btn-builder-reset" class="btn btn-sm"
                 style="color: var(--text-muted); justify-content: center; background: transparent; border: none;">
@@ -1230,8 +1231,10 @@
             <span id="badge-recurring-presets" class="status-badge sent" style="font-size: 0.75rem;">0 Recurring</span>
           </div>
           <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-            <button type="button" id="btn-presets-run-recurring" class="btn btn-secondary btn-sm" title="Trigger recurring invoice check now">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <button type="button" id="btn-presets-run-recurring" class="btn btn-secondary btn-sm"
+              title="Trigger recurring invoice check now">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="10"></circle>
                 <polyline points="12 6 12 12 16 14"></polyline>
               </svg>
@@ -1248,7 +1251,8 @@
         </p>
 
         <!-- PRESETS FILTER BAR -->
-        <div class="form-row-3" style="margin-bottom: 16px; background: var(--muted); padding: 12px; border-radius: var(--radius);">
+        <div class="form-row-3"
+          style="margin-bottom: 16px; background: var(--muted); padding: 12px; border-radius: var(--radius);">
           <div>
             <label class="form-label" style="font-size: 0.78rem;">Filter by Client</label>
             <select id="filter-preset-client" class="form-select">
@@ -1265,7 +1269,8 @@
           </div>
           <div>
             <label class="form-label" style="font-size: 0.78rem;">Search</label>
-            <input type="text" id="filter-preset-search" class="form-input" placeholder="Search preset name or service..." />
+            <input type="text" id="filter-preset-search" class="form-input"
+              placeholder="Search preset name or service..." />
           </div>
         </div>
 
@@ -1477,9 +1482,11 @@
         <div class="form-group">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
             <label class="form-label" style="margin: 0;">Preset Line Items</label>
-            <button type="button" id="btn-modal-preset-add-item" class="btn btn-secondary btn-sm" style="padding: 2px 8px; font-size: 0.74rem;">+ Add Line Item</button>
+            <button type="button" id="btn-modal-preset-add-item" class="btn btn-secondary btn-sm"
+              style="padding: 2px 8px; font-size: 0.74rem;">+ Add Line Item</button>
           </div>
-          <div style="border: 1px solid var(--border); border-radius: var(--radius); overflow-x: auto; background: var(--bg-hover);">
+          <div
+            style="border: 1px solid var(--border); border-radius: var(--radius); overflow-x: auto; background: var(--bg-hover);">
             <table class="table" style="margin: 0; font-size: 0.84rem;">
               <thead>
                 <tr>
@@ -2099,7 +2106,7 @@
     function populateModalPresetSelects() {
       const senderSelect = document.getElementById('modal-preset-sender-id');
       const clientSelect = document.getElementById('modal-preset-client-id');
-      
+
       const curSender = senderSelect.value;
       const curClient = clientSelect.value;
 
@@ -2144,7 +2151,7 @@
       document.getElementById('modal-preset-tax-rate').value = '0.0';
       document.getElementById('modal-preset-payment').value = '';
       document.getElementById('modal-preset-notes').value = '';
-      
+
       document.getElementById('modal-preset-is-recurring').checked = false;
       document.getElementById('modal-preset-recurring-options').style.display = 'none';
       document.getElementById('modal-preset-recurrence-type').value = 'monthly';
@@ -2593,11 +2600,11 @@
                     </svg>
                   </button>
                 ` : ''}
-                ${inv.status !== 'void' ? `
-                  <button type="button" class="icon-btn" onclick="updateInvoiceStatus(${inv.id}, 'void')" title="Void Invoice">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2">
-                      <circle cx="12" cy="12" r="10"></circle>
-                      <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+                ${inv.status !== 'sent' ? `
+                  <button type="button" class="icon-btn" onclick="updateInvoiceStatus(${inv.id}, 'sent')" title="Mark as Sent">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <line x1="22" y1="2" x2="11" y2="13"></line>
+                      <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
                     </svg>
                   </button>
                 ` : ''}
@@ -2780,6 +2787,9 @@
 
       clearItemRows();
       addItemRow('Tutoring Session', 1, 60.00);
+
+      const chkDownload = document.getElementById('chk-download-pdf');
+      if (chkDownload) chkDownload.checked = false;
 
       // Senders default
       renderSenderSelects();
@@ -2969,9 +2979,10 @@
       }
     }
 
-    document.getElementById('btn-save-draft').addEventListener('click', () => saveInvoice('draft', false));
-    document.getElementById('btn-save-sent').addEventListener('click', () => saveInvoice('sent', false));
-    document.getElementById('btn-save-pdf').addEventListener('click', () => saveInvoice(null, true));
+    document.getElementById('btn-save-draft').addEventListener('click', () => {
+      const downloadPdf = document.getElementById('chk-download-pdf')?.checked || false;
+      saveInvoice(currentEditingInvoiceId ? null : 'draft', downloadPdf);
+    });
 
     // -----------------------------------------------------------------------
     // SENDER PROFILES & CLIENTS MANAGEMENT

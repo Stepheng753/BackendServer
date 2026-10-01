@@ -63,6 +63,13 @@ def init_db():
             cursor.execute("UPDATE categories SET status = 'active' WHERE status != 'active' AND status != 'archived';")
             conn.commit()
 
+        # Schema evolution: Ensure day_tag exists on tasks table
+        cursor.execute("PRAGMA table_info(tasks);")
+        task_col_names = [r["name"] for r in cursor.fetchall()]
+        if "day_tag" not in task_col_names:
+            cursor.execute("ALTER TABLE tasks ADD COLUMN day_tag TEXT DEFAULT '';")
+            conn.commit()
+
         # Seed default categories if table is empty
         seed_default_categories_if_needed(conn)
 
@@ -400,6 +407,9 @@ def set_category_status(category, status):
 
 def task_row_to_dict(row):
     """Converts a sqlite3.Row to a clean Python dictionary."""
+    day_tag = ""
+    if "day_tag" in row.keys() and row["day_tag"] is not None:
+        day_tag = str(row["day_tag"])
     return {
         "id": row["id"],
         "category": row["category"],
@@ -409,7 +419,8 @@ def task_row_to_dict(row):
         "status": row["status"],
         "display_order": row["display_order"],
         "archived_at": row["archived_at"],
-        "created_at": row["created_at"]
+        "created_at": row["created_at"],
+        "day_tag": day_tag
     }
 
 
@@ -443,10 +454,11 @@ def get_task_by_id(task_id):
         return task_row_to_dict(row) if row else None
 
 
-def add_task(text, category):
+def add_task(text, category, day_tag=""):
     """Adds a new active task to a category, always placed above completed tasks."""
     text = (text or "").strip()
     category = (category or "Misc").strip()
+    day_tag_val = (day_tag or "").strip()
     if not text:
         raise ValueError("Task text cannot be empty.")
 
@@ -468,9 +480,9 @@ def add_task(text, category):
         new_order = len(uncompleted_ids) + 1
 
         cursor.execute("""
-            INSERT INTO tasks (category, text, completed, status, display_order, created_at)
-            VALUES (?, ?, 0, 'active', ?, ?)
-        """, (category, text, new_order, now_iso))
+            INSERT INTO tasks (category, text, completed, status, display_order, created_at, day_tag)
+            VALUES (?, ?, 0, 'active', ?, ?, ?)
+        """, (category, text, new_order, now_iso, day_tag_val))
         task_id = cursor.lastrowid
 
         # Normalize uncompleted tasks before new task
@@ -486,8 +498,8 @@ def add_task(text, category):
     return get_task_by_id(task_id)
 
 
-def update_task(task_id, text=None, category=None, completed=None, display_order=None):
-    """Updates a task's text, category, completion status, or display order."""
+def update_task(task_id, text=None, category=None, completed=None, display_order=None, day_tag=None):
+    """Updates a task's text, category, completion status, display order, or day tag."""
     task = get_task_by_id(task_id)
     if not task:
         return None
@@ -521,6 +533,10 @@ def update_task(task_id, text=None, category=None, completed=None, display_order
     if display_order is not None:
         updates.append("display_order = ?")
         params.append(int(display_order))
+
+    if day_tag is not None:
+        updates.append("day_tag = ?")
+        params.append(day_tag.strip() if isinstance(day_tag, str) else "")
 
     if not updates:
         return task

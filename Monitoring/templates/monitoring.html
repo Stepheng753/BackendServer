@@ -974,7 +974,6 @@
       <div class="header-headings">
         <div class="title-row">
           <h1>System Health & Operational Telemetry</h1>
-          <span class="status-badge badge-nominal" id="header-overall-badge">All Systems Nominal</span>
           <span class="status-badge badge-normal" id="env-badge">Detecting...</span>
         </div>
         <p class="header-description">
@@ -1528,8 +1527,10 @@
       const data = await res.json();
 
       const badge = document.getElementById('header-overall-badge');
-      badge.innerText = data.overall_status;
-      badge.className = 'status-badge ' + data.overall_badge_class;
+      if (badge) {
+        badge.innerText = data.overall_status;
+        badge.className = 'status-badge ' + data.overall_badge_class;
+      }
     } catch (e) {
       console.error('Diagnostics summary error:', e);
     }

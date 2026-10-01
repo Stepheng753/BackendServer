@@ -433,5 +433,55 @@ class TestToDoApp(unittest.TestCase):
         self.assertIn("/api/todo/categories/archived-summary", spec.get("paths", {}))
 
 
+    def test_task_day_tags(self):
+        client = app.test_client()
+        from index.index import get_auth_credentials
+        import base64
+        u, p = get_auth_credentials()
+        auth_headers = {}
+        if u and p:
+            token = base64.b64encode(f"{u}:{p}".encode()).decode()
+            auth_headers = {"Authorization": f"Basic {token}"}
+
+        # Create task with day tag
+        res = client.post(
+            "/api/todo/items",
+            json={"text": "[TEST] Monday Task", "category": "Category 1", "day_tag": "Monday"},
+            headers=auth_headers
+        )
+        self.assertEqual(res.status_code, 201)
+        task = res.get_json().get("task", {})
+        self.assertEqual(task.get("day_tag"), "Monday")
+        task_id = task.get("id")
+
+        # Update day tag to Wednesday
+        res_patch = client.patch(
+            f"/api/todo/items/{task_id}",
+            json={"day_tag": "Wednesday"},
+            headers=auth_headers
+        )
+        self.assertEqual(res_patch.status_code, 200)
+        updated_task = res_patch.get_json().get("task", {})
+        self.assertEqual(updated_task.get("day_tag"), "Wednesday")
+
+        # Fetch items and verify day_tag is returned
+        res_get = client.get("/api/todo/items?status=active", headers=auth_headers)
+        self.assertEqual(res_get.status_code, 200)
+        items_data = res_get.get_json()
+        target = next((t for t in items_data.get("tasks", []) if t["id"] == task_id), None)
+        self.assertIsNotNone(target)
+        self.assertEqual(target.get("day_tag"), "Wednesday")
+
+        # Clear day tag
+        res_clear = client.patch(
+            f"/api/todo/items/{task_id}",
+            json={"day_tag": ""},
+            headers=auth_headers
+        )
+        self.assertEqual(res_clear.status_code, 200)
+        self.assertEqual(res_clear.get_json().get("task", {}).get("day_tag"), "")
+
+
 if __name__ == "__main__":
     unittest.main()
+

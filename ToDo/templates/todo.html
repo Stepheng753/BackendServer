@@ -647,6 +647,198 @@
       color: #a5b4fc;
     }
 
+    /* DAY OF THE WEEK TAGS */
+    .task-meta-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 4px;
+      flex-wrap: wrap;
+    }
+
+    .day-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.70rem;
+      font-weight: 600;
+      padding: 1px 7px;
+      border-radius: 9999px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s ease;
+      letter-spacing: 0.01em;
+    }
+
+    .day-tag:hover {
+      transform: scale(1.04);
+      filter: brightness(0.96);
+    }
+
+    .day-tag-sunday {
+      background: rgba(239, 68, 68, 0.12);
+      color: #dc2626;
+      border-color: rgba(239, 68, 68, 0.28);
+    }
+    [data-theme="dark"] .day-tag-sunday {
+      background: rgba(239, 68, 68, 0.22);
+      color: #fca5a5;
+      border-color: rgba(239, 68, 68, 0.4);
+    }
+
+    .day-tag-monday {
+      background: rgba(245, 158, 11, 0.12);
+      color: #d97706;
+      border-color: rgba(245, 158, 11, 0.28);
+    }
+    [data-theme="dark"] .day-tag-monday {
+      background: rgba(245, 158, 11, 0.22);
+      color: #fcd34d;
+      border-color: rgba(245, 158, 11, 0.4);
+    }
+
+    .day-tag-tuesday {
+      background: rgba(16, 185, 129, 0.12);
+      color: #059669;
+      border-color: rgba(16, 185, 129, 0.28);
+    }
+    [data-theme="dark"] .day-tag-tuesday {
+      background: rgba(16, 185, 129, 0.22);
+      color: #6ee7b7;
+      border-color: rgba(16, 185, 129, 0.4);
+    }
+
+    .day-tag-wednesday {
+      background: rgba(6, 182, 212, 0.12);
+      color: #0891b2;
+      border-color: rgba(6, 182, 212, 0.28);
+    }
+    [data-theme="dark"] .day-tag-wednesday {
+      background: rgba(6, 182, 212, 0.22);
+      color: #67e8f9;
+      border-color: rgba(6, 182, 212, 0.4);
+    }
+
+    .day-tag-thursday {
+      background: rgba(59, 130, 246, 0.12);
+      color: #2563eb;
+      border-color: rgba(59, 130, 246, 0.28);
+    }
+    [data-theme="dark"] .day-tag-thursday {
+      background: rgba(59, 130, 246, 0.22);
+      color: #93c5fd;
+      border-color: rgba(59, 130, 246, 0.4);
+    }
+
+    .day-tag-friday {
+      background: rgba(139, 92, 246, 0.12);
+      color: #7c3aed;
+      border-color: rgba(139, 92, 246, 0.28);
+    }
+    [data-theme="dark"] .day-tag-friday {
+      background: rgba(139, 92, 246, 0.22);
+      color: #c4b5fd;
+      border-color: rgba(139, 92, 246, 0.4);
+    }
+
+    .day-tag-saturday {
+      background: rgba(236, 72, 153, 0.12);
+      color: #db2777;
+      border-color: rgba(236, 72, 153, 0.28);
+    }
+    [data-theme="dark"] .day-tag-saturday {
+      background: rgba(236, 72, 153, 0.22);
+      color: #f472b6;
+      border-color: rgba(236, 72, 153, 0.4);
+    }
+
+    /* RIGHT CLICK CONTEXT MENU */
+    .todo-context-menu {
+      position: fixed;
+      z-index: 10000;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.18), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+      padding: 6px;
+      min-width: 175px;
+      display: none;
+      user-select: none;
+      backdrop-filter: blur(8px);
+      animation: menuFadeIn 0.12s ease-out;
+    }
+
+    @keyframes menuFadeIn {
+      from { opacity: 0; transform: scale(0.96); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .todo-context-menu.active {
+      display: block;
+    }
+
+    .context-menu-header {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      padding: 6px 8px 4px 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .context-menu-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 6px 8px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-main);
+      cursor: pointer;
+      transition: background 0.12s ease;
+    }
+
+    .context-menu-item:hover {
+      background: var(--secondary);
+    }
+
+    .context-menu-item.selected {
+      font-weight: 600;
+    }
+
+    .context-menu-item-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .context-day-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .context-menu-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 4px 0;
+    }
+
+    .context-menu-item.clear-tag {
+      color: #ef4444;
+    }
+
+    .context-menu-item.clear-tag:hover {
+      background: rgba(239, 68, 68, 0.08);
+    }
+
     /* TASK ACTION BUTTONS */
     .task-actions {
       display: flex;
@@ -1695,6 +1887,30 @@
   <!-- TOAST MESSAGE -->
   <div id="toast">Action completed</div>
 
+  <!-- RIGHT CLICK DAY TAG CONTEXT MENU -->
+  <div id="todo-context-menu" class="todo-context-menu">
+    <div class="context-menu-header">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+        <line x1="16" y1="2" x2="16" y2="6"></line>
+        <line x1="8" y1="2" x2="8" y2="6"></line>
+        <line x1="3" y1="10" x2="21" y2="10"></line>
+      </svg>
+      <span>Assign Day Tag</span>
+    </div>
+    <div id="context-menu-days"></div>
+    <div class="context-menu-divider"></div>
+    <div class="context-menu-item clear-tag" id="context-menu-clear" onclick="handleClearDayTag()">
+      <div class="context-menu-item-left">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+        <span>Remove Tag</span>
+      </div>
+    </div>
+  </div>
+
   <script>
     /* ==========================================================================
        TO-DO BOARD CLIENT APPLICATION
@@ -1704,6 +1920,109 @@
     let tasks = [];
     let draggedTaskId = null;
     let draggedSourceCategory = null;
+
+    const DAYS_OF_WEEK = [
+      { name: 'Sunday', color: '#ef4444', class: 'day-tag-sunday' },
+      { name: 'Monday', color: '#f59e0b', class: 'day-tag-monday' },
+      { name: 'Tuesday', color: '#10b981', class: 'day-tag-tuesday' },
+      { name: 'Wednesday', color: '#06b6d4', class: 'day-tag-wednesday' },
+      { name: 'Thursday', color: '#3b82f6', class: 'day-tag-thursday' },
+      { name: 'Friday', color: '#8b5cf6', class: 'day-tag-friday' },
+      { name: 'Saturday', color: '#ec4899', class: 'day-tag-saturday' }
+    ];
+
+    let contextMenuTargetTask = null;
+
+    function openContextMenu(x, y, task) {
+      contextMenuTargetTask = task;
+      const menu = document.getElementById('todo-context-menu');
+      if (!menu) return;
+
+      const currentTag = (task.day_tag || '').trim();
+      const itemsContainer = document.getElementById('context-menu-days');
+      if (itemsContainer) {
+        itemsContainer.innerHTML = DAYS_OF_WEEK.map(d => {
+          const isSelected = currentTag.toLowerCase() === d.name.toLowerCase();
+          return `
+            <div class="context-menu-item ${isSelected ? 'selected' : ''}" onclick="handleSelectDayTag('${d.name}')">
+              <div class="context-menu-item-left">
+                <span class="context-day-dot" style="background-color: ${d.color};"></span>
+                <span>${d.name}</span>
+              </div>
+              ${isSelected ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${d.color}" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>` : ''}
+            </div>
+          `;
+        }).join('');
+      }
+
+      const clearBtn = document.getElementById('context-menu-clear');
+      if (clearBtn) {
+        clearBtn.style.display = currentTag ? 'flex' : 'none';
+      }
+
+      menu.classList.add('active');
+
+      const menuWidth = 190;
+      const menuHeight = 310;
+      let posX = x;
+      let posY = y;
+
+      if (posX + menuWidth > window.innerWidth - 10) {
+        posX = window.innerWidth - menuWidth - 10;
+      }
+      if (posY + menuHeight > window.innerHeight - 10) {
+        posY = window.innerHeight - menuHeight - 10;
+      }
+      if (posX < 10) posX = 10;
+      if (posY < 10) posY = 10;
+
+      menu.style.left = `${posX}px`;
+      menu.style.top = `${posY}px`;
+    }
+
+    function closeContextMenu() {
+      const menu = document.getElementById('todo-context-menu');
+      if (menu) menu.classList.remove('active');
+      contextMenuTargetTask = null;
+    }
+
+    async function handleSelectDayTag(dayName) {
+      if (!contextMenuTargetTask) return;
+      const taskId = contextMenuTargetTask.id;
+      const currentTag = (contextMenuTargetTask.day_tag || '').trim();
+      const newTag = currentTag.toLowerCase() === dayName.toLowerCase() ? '' : dayName;
+      closeContextMenu();
+
+      try {
+        await fetch(`/api/todo/items/${taskId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ day_tag: newTag })
+        });
+        await loadBoardData();
+        showToast(newTag ? `Tag set: ${newTag}` : 'Tag removed');
+      } catch (err) {
+        showToast('Error updating tag');
+      }
+    }
+
+    async function handleClearDayTag() {
+      if (!contextMenuTargetTask) return;
+      const taskId = contextMenuTargetTask.id;
+      closeContextMenu();
+
+      try {
+        await fetch(`/api/todo/items/${taskId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ day_tag: '' })
+        });
+        await loadBoardData();
+        showToast('Tag removed');
+      } catch (err) {
+        showToast('Error removing tag');
+      }
+    }
 
     // Theme handling (mirrors shared theme logic)
     function initTheme() {
@@ -1919,10 +2238,22 @@
         el.addEventListener('dragend', onDragEnd);
       }
 
+      let dayTagHtml = '';
+      if (task.day_tag && task.day_tag.trim()) {
+        const dName = task.day_tag.trim();
+        const dLower = dName.toLowerCase();
+        dayTagHtml = `<span class="day-tag day-tag-${dLower}" title="Day tag: ${escapeHtml(dName)} (Right-click task to change)">${escapeHtml(dName)}</span>`;
+      }
+
       let subLabel = '';
       if (task.status === 'archived') {
         const dateStr = task.archived_at ? new Date(task.archived_at).toLocaleDateString() : 'Archived';
         subLabel = `<span class="archived-tag">Archived ${dateStr}</span>`;
+      }
+
+      let metaRowHtml = '';
+      if (dayTagHtml || subLabel) {
+        metaRowHtml = `<div class="task-meta-row">${dayTagHtml}${subLabel}</div>`;
       }
 
       el.innerHTML = `
@@ -1934,7 +2265,7 @@
         ` : ''}
         <div class="task-content">
           <div class="task-text" title="Double click to edit">${escapeHtml(task.text)}</div>
-          ${subLabel}
+          ${metaRowHtml}
         </div>
         <div class="task-actions">
           ${currentView === 'archived' ? `
@@ -1947,6 +2278,23 @@
           </button>
         </div>
       `;
+
+      // Context menu listener for right-click on task to attach day tag
+      el.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        openContextMenu(e.clientX, e.clientY, task);
+      });
+
+      // Day tag click listener
+      const dayTagEl = el.querySelector('.day-tag');
+      if (dayTagEl) {
+        dayTagEl.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const rect = dayTagEl.getBoundingClientRect();
+          openContextMenu(rect.left, rect.bottom + 4, task);
+        });
+      }
 
       // Checkbox listener
       const cb = el.querySelector('.task-checkbox');
@@ -3184,14 +3532,24 @@
       btnCloseArchivedCatFooter.addEventListener('click', closeArchivedCategoriesModal);
     }
 
-    // Escape key closes modals
+    // Escape key closes modals and context menu
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
+        closeContextMenu();
         if (modalAddCat) modalAddCat.classList.remove('active');
         if (modalArchivedCat) modalArchivedCat.classList.remove('active');
         document.getElementById('modal-confirm').classList.remove('active');
       }
     });
+
+    // Close context menu on window click outside, scroll, resize
+    window.addEventListener('click', (e) => {
+      if (!e.target.closest('#todo-context-menu')) {
+        closeContextMenu();
+      }
+    });
+    window.addEventListener('scroll', closeContextMenu, true);
+    window.addEventListener('resize', closeContextMenu);
 
     // Theme toggle button
     document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
