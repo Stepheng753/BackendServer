@@ -32,7 +32,9 @@ def init_db():
                 status TEXT DEFAULT 'active',
                 display_order INTEGER DEFAULT 0,
                 archived_at TEXT,
-                created_at TEXT NOT NULL
+                created_at TEXT NOT NULL,
+                day_tag TEXT DEFAULT '',
+                size_tag TEXT DEFAULT ''
             );
         """)
         cursor.execute("""
@@ -63,11 +65,14 @@ def init_db():
             cursor.execute("UPDATE categories SET status = 'active' WHERE status != 'active' AND status != 'archived';")
             conn.commit()
 
-        # Schema evolution: Ensure day_tag exists on tasks table
+        # Schema evolution: Ensure day_tag and size_tag exist on tasks table
         cursor.execute("PRAGMA table_info(tasks);")
         task_col_names = [r["name"] for r in cursor.fetchall()]
         if "day_tag" not in task_col_names:
             cursor.execute("ALTER TABLE tasks ADD COLUMN day_tag TEXT DEFAULT '';")
+            conn.commit()
+        if "size_tag" not in task_col_names:
+            cursor.execute("ALTER TABLE tasks ADD COLUMN size_tag TEXT DEFAULT '';")
             conn.commit()
 
         # Seed default categories if table is empty
@@ -410,6 +415,9 @@ def task_row_to_dict(row):
     day_tag = ""
     if "day_tag" in row.keys() and row["day_tag"] is not None:
         day_tag = str(row["day_tag"])
+    size_tag = ""
+    if "size_tag" in row.keys() and row["size_tag"] is not None:
+        size_tag = str(row["size_tag"])
     return {
         "id": row["id"],
         "category": row["category"],
@@ -420,7 +428,8 @@ def task_row_to_dict(row):
         "display_order": row["display_order"],
         "archived_at": row["archived_at"],
         "created_at": row["created_at"],
-        "day_tag": day_tag
+        "day_tag": day_tag,
+        "size_tag": size_tag
     }
 
 
@@ -454,11 +463,12 @@ def get_task_by_id(task_id):
         return task_row_to_dict(row) if row else None
 
 
-def add_task(text, category, day_tag=""):
+def add_task(text, category, day_tag="", size_tag=""):
     """Adds a new active task to a category, always placed above completed tasks."""
     text = (text or "").strip()
     category = (category or "Misc").strip()
     day_tag_val = (day_tag or "").strip()
+    size_tag_val = (size_tag or "").strip()
     if not text:
         raise ValueError("Task text cannot be empty.")
 
@@ -480,9 +490,9 @@ def add_task(text, category, day_tag=""):
         new_order = len(uncompleted_ids) + 1
 
         cursor.execute("""
-            INSERT INTO tasks (category, text, completed, status, display_order, created_at, day_tag)
-            VALUES (?, ?, 0, 'active', ?, ?, ?)
-        """, (category, text, new_order, now_iso, day_tag_val))
+            INSERT INTO tasks (category, text, completed, status, display_order, created_at, day_tag, size_tag)
+            VALUES (?, ?, 0, 'active', ?, ?, ?, ?)
+        """, (category, text, new_order, now_iso, day_tag_val, size_tag_val))
         task_id = cursor.lastrowid
 
         # Normalize uncompleted tasks before new task
@@ -498,8 +508,8 @@ def add_task(text, category, day_tag=""):
     return get_task_by_id(task_id)
 
 
-def update_task(task_id, text=None, category=None, completed=None, display_order=None, day_tag=None):
-    """Updates a task's text, category, completion status, display order, or day tag."""
+def update_task(task_id, text=None, category=None, completed=None, display_order=None, day_tag=None, size_tag=None):
+    """Updates a task's text, category, completion status, display order, day tag, or size tag."""
     task = get_task_by_id(task_id)
     if not task:
         return None
@@ -537,6 +547,10 @@ def update_task(task_id, text=None, category=None, completed=None, display_order
     if day_tag is not None:
         updates.append("day_tag = ?")
         params.append(day_tag.strip() if isinstance(day_tag, str) else "")
+
+    if size_tag is not None:
+        updates.append("size_tag = ?")
+        params.append(size_tag.strip() if isinstance(size_tag, str) else "")
 
     if not updates:
         return task

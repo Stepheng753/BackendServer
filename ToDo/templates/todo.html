@@ -647,16 +647,17 @@
       color: #a5b4fc;
     }
 
-    /* DAY OF THE WEEK TAGS */
+    /* DAY OF THE WEEK & SIZE TAGS */
     .task-meta-row {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
       margin-top: 4px;
       flex-wrap: wrap;
     }
 
-    .day-tag {
+    .day-tag,
+    .size-tag {
       display: inline-flex;
       align-items: center;
       gap: 4px;
@@ -671,7 +672,8 @@
       letter-spacing: 0.01em;
     }
 
-    .day-tag:hover {
+    .day-tag:hover,
+    .size-tag:hover {
       transform: scale(1.04);
       filter: brightness(0.96);
     }
@@ -753,6 +755,40 @@
       border-color: rgba(236, 72, 153, 0.4);
     }
 
+    /* SIZE / EFFORT TAGS */
+    .size-tag-small {
+      background: rgba(16, 185, 129, 0.12);
+      color: #059669;
+      border-color: rgba(16, 185, 129, 0.28);
+    }
+    [data-theme="dark"] .size-tag-small {
+      background: rgba(16, 185, 129, 0.22);
+      color: #6ee7b7;
+      border-color: rgba(16, 185, 129, 0.4);
+    }
+
+    .size-tag-medium {
+      background: rgba(245, 158, 11, 0.12);
+      color: #d97706;
+      border-color: rgba(245, 158, 11, 0.28);
+    }
+    [data-theme="dark"] .size-tag-medium {
+      background: rgba(245, 158, 11, 0.22);
+      color: #fcd34d;
+      border-color: rgba(245, 158, 11, 0.4);
+    }
+
+    .size-tag-long {
+      background: rgba(99, 102, 241, 0.12);
+      color: #4f46e5;
+      border-color: rgba(99, 102, 241, 0.28);
+    }
+    [data-theme="dark"] .size-tag-long {
+      background: rgba(99, 102, 241, 0.22);
+      color: #a5b4fc;
+      border-color: rgba(99, 102, 241, 0.4);
+    }
+
     /* RIGHT CLICK CONTEXT MENU */
     .todo-context-menu {
       position: fixed;
@@ -762,7 +798,9 @@
       border-radius: 10px;
       box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.18), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
       padding: 6px;
-      min-width: 175px;
+      min-width: 185px;
+      max-height: calc(100vh - 20px);
+      overflow-y: auto;
       display: none;
       user-select: none;
       backdrop-filter: blur(8px);
@@ -1887,7 +1925,7 @@
   <!-- TOAST MESSAGE -->
   <div id="toast">Action completed</div>
 
-  <!-- RIGHT CLICK DAY TAG CONTEXT MENU -->
+  <!-- RIGHT CLICK TAG CONTEXT MENU -->
   <div id="todo-context-menu" class="todo-context-menu">
     <div class="context-menu-header">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -1896,17 +1934,29 @@
         <line x1="8" y1="2" x2="8" y2="6"></line>
         <line x1="3" y1="10" x2="21" y2="10"></line>
       </svg>
-      <span>Assign Day Tag</span>
+      <span>Weekday Tag</span>
     </div>
     <div id="context-menu-days"></div>
+
     <div class="context-menu-divider"></div>
-    <div class="context-menu-item clear-tag" id="context-menu-clear" onclick="handleClearDayTag()">
+
+    <div class="context-menu-header">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"></circle>
+        <polyline points="12 6 12 12 16 14"></polyline>
+      </svg>
+      <span>Task Size</span>
+    </div>
+    <div id="context-menu-sizes"></div>
+
+    <div class="context-menu-divider" id="context-menu-clear-divider"></div>
+    <div class="context-menu-item clear-tag" id="context-menu-clear" onclick="handleClearAllTags()">
       <div class="context-menu-item-left">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <line x1="18" y1="6" x2="6" y2="18"></line>
           <line x1="6" y1="6" x2="18" y2="18"></line>
         </svg>
-        <span>Remove Tag</span>
+        <span>Clear All Tags</span>
       </div>
     </div>
   </div>
@@ -1931,6 +1981,12 @@
       { name: 'Saturday', color: '#ec4899', class: 'day-tag-saturday' }
     ];
 
+    const TASK_SIZES = [
+      { name: 'Small', label: 'Small', color: '#10b981', class: 'size-tag-small' },
+      { name: 'Medium', label: 'Medium', color: '#f59e0b', class: 'size-tag-medium' },
+      { name: 'Long', label: 'Long', color: '#6366f1', class: 'size-tag-long' }
+    ];
+
     let contextMenuTargetTask = null;
 
     function openContextMenu(x, y, task) {
@@ -1938,11 +1994,13 @@
       const menu = document.getElementById('todo-context-menu');
       if (!menu) return;
 
-      const currentTag = (task.day_tag || '').trim();
-      const itemsContainer = document.getElementById('context-menu-days');
-      if (itemsContainer) {
-        itemsContainer.innerHTML = DAYS_OF_WEEK.map(d => {
-          const isSelected = currentTag.toLowerCase() === d.name.toLowerCase();
+      const currentDay = (task.day_tag || '').trim();
+      const currentSize = (task.size_tag || '').trim();
+
+      const daysContainer = document.getElementById('context-menu-days');
+      if (daysContainer) {
+        daysContainer.innerHTML = DAYS_OF_WEEK.map(d => {
+          const isSelected = currentDay.toLowerCase() === d.name.toLowerCase();
           return `
             <div class="context-menu-item ${isSelected ? 'selected' : ''}" onclick="handleSelectDayTag('${d.name}')">
               <div class="context-menu-item-left">
@@ -1955,15 +2013,32 @@
         }).join('');
       }
 
-      const clearBtn = document.getElementById('context-menu-clear');
-      if (clearBtn) {
-        clearBtn.style.display = currentTag ? 'flex' : 'none';
+      const sizesContainer = document.getElementById('context-menu-sizes');
+      if (sizesContainer) {
+        sizesContainer.innerHTML = TASK_SIZES.map(s => {
+          const isSelected = currentSize.toLowerCase() === s.name.toLowerCase();
+          return `
+            <div class="context-menu-item ${isSelected ? 'selected' : ''}" onclick="handleSelectSizeTag('${s.name}')">
+              <div class="context-menu-item-left">
+                <span class="context-day-dot" style="background-color: ${s.color};"></span>
+                <span>${s.label}</span>
+              </div>
+              ${isSelected ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${s.color}" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>` : ''}
+            </div>
+          `;
+        }).join('');
       }
+
+      const clearBtn = document.getElementById('context-menu-clear');
+      const clearDivider = document.getElementById('context-menu-clear-divider');
+      const hasAnyTag = Boolean(currentDay || currentSize);
+      if (clearBtn) clearBtn.style.display = hasAnyTag ? 'flex' : 'none';
+      if (clearDivider) clearDivider.style.display = hasAnyTag ? 'block' : 'none';
 
       menu.classList.add('active');
 
-      const menuWidth = 190;
-      const menuHeight = 310;
+      const menuWidth = 195;
+      const menuHeight = menu.offsetHeight || 440;
       let posX = x;
       let posY = y;
 
@@ -2000,13 +2075,33 @@
           body: JSON.stringify({ day_tag: newTag })
         });
         await loadBoardData();
-        showToast(newTag ? `Tag set: ${newTag}` : 'Tag removed');
+        showToast(newTag ? `Day tag: ${newTag}` : 'Day tag removed');
       } catch (err) {
         showToast('Error updating tag');
       }
     }
 
-    async function handleClearDayTag() {
+    async function handleSelectSizeTag(sizeName) {
+      if (!contextMenuTargetTask) return;
+      const taskId = contextMenuTargetTask.id;
+      const currentTag = (contextMenuTargetTask.size_tag || '').trim();
+      const newTag = currentTag.toLowerCase() === sizeName.toLowerCase() ? '' : sizeName;
+      closeContextMenu();
+
+      try {
+        await fetch(`/api/todo/items/${taskId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ size_tag: newTag })
+        });
+        await loadBoardData();
+        showToast(newTag ? `Size tag: ${newTag}` : 'Size tag removed');
+      } catch (err) {
+        showToast('Error updating size tag');
+      }
+    }
+
+    async function handleClearAllTags() {
       if (!contextMenuTargetTask) return;
       const taskId = contextMenuTargetTask.id;
       closeContextMenu();
@@ -2015,12 +2110,12 @@
         await fetch(`/api/todo/items/${taskId}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ day_tag: '' })
+          body: JSON.stringify({ day_tag: '', size_tag: '' })
         });
         await loadBoardData();
-        showToast('Tag removed');
+        showToast('Tags removed');
       } catch (err) {
-        showToast('Error removing tag');
+        showToast('Error removing tags');
       }
     }
 
@@ -2242,7 +2337,14 @@
       if (task.day_tag && task.day_tag.trim()) {
         const dName = task.day_tag.trim();
         const dLower = dName.toLowerCase();
-        dayTagHtml = `<span class="day-tag day-tag-${dLower}" title="Day tag: ${escapeHtml(dName)} (Right-click task to change)">${escapeHtml(dName)}</span>`;
+        dayTagHtml = `<span class="day-tag day-tag-${dLower}" title="Weekday tag: ${escapeHtml(dName)} (Click or right-click to change)">${escapeHtml(dName)}</span>`;
+      }
+
+      let sizeTagHtml = '';
+      if (task.size_tag && task.size_tag.trim()) {
+        const sName = task.size_tag.trim();
+        const sLower = sName.toLowerCase();
+        sizeTagHtml = `<span class="size-tag size-tag-${sLower}" title="Task size: ${escapeHtml(sName)} (Click or right-click to change)">${escapeHtml(sName)}</span>`;
       }
 
       let subLabel = '';
@@ -2252,8 +2354,8 @@
       }
 
       let metaRowHtml = '';
-      if (dayTagHtml || subLabel) {
-        metaRowHtml = `<div class="task-meta-row">${dayTagHtml}${subLabel}</div>`;
+      if (dayTagHtml || sizeTagHtml || subLabel) {
+        metaRowHtml = `<div class="task-meta-row">${dayTagHtml}${sizeTagHtml}${subLabel}</div>`;
       }
 
       el.innerHTML = `
@@ -2279,7 +2381,7 @@
         </div>
       `;
 
-      // Context menu listener for right-click on task to attach day tag
+      // Context menu listener for right-click on task to attach tags
       el.addEventListener('contextmenu', (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -2292,6 +2394,16 @@
         dayTagEl.addEventListener('click', (e) => {
           e.stopPropagation();
           const rect = dayTagEl.getBoundingClientRect();
+          openContextMenu(rect.left, rect.bottom + 4, task);
+        });
+      }
+
+      // Size tag click listener
+      const sizeTagEl = el.querySelector('.size-tag');
+      if (sizeTagEl) {
+        sizeTagEl.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const rect = sizeTagEl.getBoundingClientRect();
           openContextMenu(rect.left, rect.bottom + 4, task);
         });
       }

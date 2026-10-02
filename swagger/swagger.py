@@ -690,7 +690,9 @@ OPENAPI_SPEC = {
                                 "required": ["text"],
                                 "properties": {
                                     "text": {"type": "string", "example": "Grade homework assignments"},
-                                    "category": {"type": "string", "example": "Crossroads Tutoring"}
+                                    "category": {"type": "string", "example": "Crossroads Tutoring"},
+                                    "day_tag": {"type": "string", "example": "Monday"},
+                                    "size_tag": {"type": "string", "enum": ["Small", "Medium", "Long"], "example": "Medium"}
                                 }
                             }
                         }
@@ -710,7 +712,7 @@ OPENAPI_SPEC = {
             "patch": {
                 "tags": ["To Do"],
                 "summary": "Update Task",
-                "description": "Modifies task text, completion status, or category.",
+                "description": "Modifies task text, completion status, category, weekday tag, or size tag.",
                 "parameters": [
                     {
                         "name": "item_id",
@@ -729,7 +731,9 @@ OPENAPI_SPEC = {
                                 "properties": {
                                     "text": {"type": "string"},
                                     "completed": {"type": "integer", "enum": [0, 1]},
-                                    "category": {"type": "string"}
+                                    "category": {"type": "string"},
+                                    "day_tag": {"type": "string", "example": "Monday"},
+                                    "size_tag": {"type": "string", "enum": ["Small", "Medium", "Long", ""], "example": "Small"}
                                 }
                             }
                         }

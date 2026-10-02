@@ -212,12 +212,13 @@ def api_add_item():
     text = data.get("text", "").strip()
     category = data.get("category", "Category 1").strip()
     day_tag = data.get("day_tag", "").strip()
+    size_tag = data.get("size_tag", "").strip()
 
     if not text:
         return jsonify({"error": "Task text is required."}), 400
 
     try:
-        task = add_task(text=text, category=category, day_tag=day_tag)
+        task = add_task(text=text, category=category, day_tag=day_tag, size_tag=size_tag)
         return jsonify({"success": True, "task": task}), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -225,13 +226,14 @@ def api_add_item():
 
 @todo_bp.route("/api/todo/items/<int:item_id>", methods=["PATCH", "PUT"])
 def api_update_item(item_id):
-    """Updates task properties: text, category, completion state, or day tag."""
+    """Updates task properties: text, category, completion state, day tag, or size tag."""
     data = request.get_json(force=True, silent=True) or {}
     text = data.get("text")
     category = data.get("category")
     completed = data.get("completed")
     display_order = data.get("display_order")
     day_tag = data.get("day_tag")
+    size_tag = data.get("size_tag")
 
     try:
         updated = update_task(
@@ -240,7 +242,8 @@ def api_update_item(item_id):
             category=category,
             completed=completed,
             display_order=display_order,
-            day_tag=day_tag
+            day_tag=day_tag,
+            size_tag=size_tag
         )
         if not updated:
             return jsonify({"error": "Task not found."}), 404

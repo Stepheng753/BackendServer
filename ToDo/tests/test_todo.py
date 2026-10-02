@@ -481,6 +481,73 @@ class TestToDoApp(unittest.TestCase):
         self.assertEqual(res_clear.status_code, 200)
         self.assertEqual(res_clear.get_json().get("task", {}).get("day_tag"), "")
 
+    def test_task_size_tags(self):
+        client = app.test_client()
+        from index.index import get_auth_credentials
+        import base64
+        u, p = get_auth_credentials()
+        auth_headers = {}
+        if u and p:
+            token = base64.b64encode(f"{u}:{p}".encode()).decode()
+            auth_headers = {"Authorization": f"Basic {token}"}
+
+        # Create task with size tag and day tag
+        res = client.post(
+            "/api/todo/items",
+            json={
+                "text": "[TEST] Sized Task",
+                "category": "Category 1",
+                "day_tag": "Tuesday",
+                "size_tag": "Small"
+            },
+            headers=auth_headers
+        )
+        self.assertEqual(res.status_code, 201)
+        task = res.get_json().get("task", {})
+        self.assertEqual(task.get("day_tag"), "Tuesday")
+        self.assertEqual(task.get("size_tag"), "Small")
+        task_id = task.get("id")
+
+        # Update size tag to Medium
+        res_patch_med = client.patch(
+            f"/api/todo/items/{task_id}",
+            json={"size_tag": "Medium"},
+            headers=auth_headers
+        )
+        self.assertEqual(res_patch_med.status_code, 200)
+        self.assertEqual(res_patch_med.get_json().get("task", {}).get("size_tag"), "Medium")
+        # Day tag remains intact
+        self.assertEqual(res_patch_med.get_json().get("task", {}).get("day_tag"), "Tuesday")
+
+        # Update size tag to Long
+        res_patch_long = client.patch(
+            f"/api/todo/items/{task_id}",
+            json={"size_tag": "Long"},
+            headers=auth_headers
+        )
+        self.assertEqual(res_patch_long.status_code, 200)
+        self.assertEqual(res_patch_long.get_json().get("task", {}).get("size_tag"), "Long")
+
+        # Fetch active board tasks and verify size_tag is preserved
+        res_get = client.get("/api/todo/items?status=active", headers=auth_headers)
+        self.assertEqual(res_get.status_code, 200)
+        items = res_get.get_json().get("tasks", [])
+        target = next((t for t in items if t["id"] == task_id), None)
+        self.assertIsNotNone(target)
+        self.assertEqual(target.get("size_tag"), "Long")
+        self.assertEqual(target.get("day_tag"), "Tuesday")
+
+        # Clear both tags
+        res_clear = client.patch(
+            f"/api/todo/items/{task_id}",
+            json={"day_tag": "", "size_tag": ""},
+            headers=auth_headers
+        )
+        self.assertEqual(res_clear.status_code, 200)
+        cleared_task = res_clear.get_json().get("task", {})
+        self.assertEqual(cleared_task.get("day_tag"), "")
+        self.assertEqual(cleared_task.get("size_tag"), "")
+
 
 if __name__ == "__main__":
     unittest.main()
